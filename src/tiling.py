@@ -33,3 +33,21 @@ def tile_image(
     """
     pass
 
+
+def validate_tile_parameters(
+    image: Image.Image,
+    slice_height: int,
+    slice_width: int,
+    horizontal_overlap_ratio: float,
+    vertical_overlap_ratio: float,
+):
+    """Validates the parameters for the function 'tile_image'.
+
+    Args : 
+        image (PILImage) - The image to tile.
+        slice_height (int) - The height of each slice.
+        slice_width (int) - The width of each slice.
+        horizontal_overlap_ratio (float) - The amount of left-right overlap between slices.
+        vertical_overlap_ratio (float) - The amount of top-bottom overlap between slices.
+    """
+    pass
