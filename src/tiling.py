@@ -31,7 +31,7 @@ def tile_image(
 
     Returns : A list of sliced images.
     """
-    pass
+    validate_tile_parameters(image, slice_height, slice_width, horizontal_overlap_ratio, vertical_overlap_ratio)
 
 
 def validate_tile_parameters(
@@ -62,3 +62,4 @@ def validate_tile_parameters(
     if not 0 < vertical_overlap_ratio <= 1:
         raise ValueError(f"vertical_overlap_ratio must be greater than 0 and less than or equal to 1 \
                            (vertical_overlap_ratio passed was {vertical_overlap_ratio}.")
+                           
