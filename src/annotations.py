@@ -1,7 +1,7 @@
 """Module that contains dataclasses for storing image annotations."""
 
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 
 @dataclass
@@ -50,9 +50,14 @@ class BoundingBox:
         pass
 
     @property
-    def center(self):
-        pass
+    def center(self) -> Tuple[float]:
+        """This BoundingBox's center."""
+        return (
+            self.left + (1 / 2) * (self.right - self.left),
+            self.top + (1 / 2) * (self.bottom - self.top),
+        )
 
     @property
-    def box(self):
-        pass
+    def box(self) -> List[int]:
+        """A list containing this box's [left, top, right, bottom]."""
+        return [self.left, self.top, self.right, self.bottom]
