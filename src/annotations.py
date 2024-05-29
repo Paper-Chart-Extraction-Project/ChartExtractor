@@ -6,8 +6,7 @@ from typing import Dict, List, Tuple
 
 @dataclass
 class BoundingBox:
-    """
-    The 'BoundingBox' class represents a bounding box around an object in an image.
+    """The 'BoundingBox' class represents a bounding box around an object in an image.
 
 
     Attributes :
@@ -84,3 +83,36 @@ class BoundingBox:
     def box(self) -> List[int]:
         """A list containing this box's [left, top, right, bottom]."""
         return [self.left, self.top, self.right, self.bottom]
+
+
+@dataclass
+class Keypoint:
+    """ """
+
+    keypoint: Tuple[int]
+    bounding_box: BoundingBox
+
+    @staticmethod
+    def from_yolo(
+        yolo_line: str,
+        image_width: int,
+        image_height: int,
+        int_to_category: Dict[int, str],
+    ):
+        """ """
+        pass
+
+    @property
+    def category(self) -> str:
+        """ """
+        pass
+
+    @property
+    def center(self) -> Tuple[float]:
+        """ """
+        pass
+
+    @property
+    def box(self) -> Tuple[float]:
+        """ """
+        pass
