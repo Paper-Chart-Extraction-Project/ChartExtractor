@@ -99,7 +99,20 @@ class Keypoint:
         image_height: int,
         int_to_category: Dict[int, str],
     ):
-        """ """
+        """Constructs a keypoint from a line in a yolo formatted labels file.
+
+        Because the yolo format stores data in normalized xywh format (from 0 to 1), this method
+        requires the original image's width and height. The 'visible' data is optional, and is not
+        read to create the object.
+
+        Args :
+            yolo_line (str) - A string in the yolo label format (c x y w h kpx kpy v).
+            image_width (int) - The original image's width.
+            image_height (int) - The original image's height.
+            int_to_category (Dict) - A dictionary that maps the number in the label to the category.
+
+        Returns : A BoundingBox object containing the yolo_line's data.
+        """
         pass
 
     @property
