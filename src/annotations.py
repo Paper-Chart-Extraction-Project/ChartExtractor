@@ -21,6 +21,19 @@ class BoundingBox:
         image_height: int,
         int_to_category: Dict[int, str],
     ):
+        """Constructs a bounding box from a line in a yolo formatted labels file.
+
+        Because the yolo format stores data in normalized xywh format (from 0 to 1), this method
+        requires the original image's width and height.
+
+        Args :
+            yolo_line (str) - A string in the yolo label format (c x y w h).
+            image_width (int) - The original image's width.
+            image_height (int) - The original image's height.
+            int_to_category (Dict) - A dictionary that maps the number in the label to the category.
+
+        Returns : A BoundingBox object containing the yolo_line's data.
+        """
         pass
 
     @staticmethod
