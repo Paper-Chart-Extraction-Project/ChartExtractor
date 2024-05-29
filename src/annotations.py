@@ -1,7 +1,7 @@
 """Module that contains dataclasses for storing image annotations."""
 
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, List
 
 
 @dataclass
@@ -37,7 +37,16 @@ class BoundingBox:
         pass
 
     @staticmethod
-    def from_coco(coco_dict: Dict):
+    def from_coco(coco_annotation: Dict, image_metadata: Dict, categories: List[Dict]):
+        """Constructs a bounding box from an annotation in a coco data json file.
+
+        Args :
+            coco_annotation (Dict) - A bounding box annotation from the 'annotations' section.
+            image_metadata (Dict) - A dictionary from the 'images' section.
+            categories (List[Dict]) - A list of dictionaries containing their numeric ids and categories.
+
+        Returns : A BoundingBox object containing the coco annotation's data.
+        """
         pass
 
     @property
