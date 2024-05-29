@@ -60,7 +60,22 @@ class BoundingBox:
 
         Returns : A `BoundingBox` object containing the yolo_line's data.
         """
-        pass
+        data = yolo_line.split()
+        x, y, w, h = float(data[1]), float(data[2]), float(data[3]), float(data[4])
+        x, y, w, h = (
+            round(x * image_width),
+            round(y * image_height),
+            round(w * image_width),
+            round(h * image_width),
+        )
+        left, top, right, bottom = (
+            x - (1 / 2) * w,
+            y - (1 / 2) * h,
+            x + (1 / 2) * w,
+            y + (1 / 2) * h,
+        )
+        category = int_to_category[data[0]]
+        return BoundingBox(category, left, top, right, bottom)
 
     @staticmethod
     def from_coco(coco_annotation: Dict, image_metadata: Dict, categories: List[Dict]):
