@@ -147,3 +147,17 @@ class Keypoint:
     def box(self) -> Tuple[float]:
         """This keypoints boundingbox's [left, top, right, bottom]."""
         return self.bounding_box.box
+
+    def to_yolo(
+        self, image_width: int, image_height: int, category_to_int: Dict[str, int]
+    ) -> str:
+        """Writes the data from this Keypoint into a yolo formatted string.
+
+        Args :
+            image_width (int) - The image's width that this keypoint belongs to.
+            image_height (int) - The image's height that this keypoint belongs to.
+            category_to_int (Dict[str, int]) - A dictionary that maps the category string to an int.
+
+        Returns : A string that encodes this Keypoint's data for a single line in a yolo label file.
+        """
+        pass
