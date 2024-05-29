@@ -5,6 +5,7 @@ detection models that need to detect very small objects in high resolution image
 
 from PIL import Image
 from typing import List, Tuple
+import math
 
 
 def tile_image(
@@ -17,9 +18,8 @@ def tile_image(
     """Splits a larger image into smaller 'tiles'.
 
     In the likely event that the exact choices of overlap ratios and slice dimensions do not
-    multiply to make exactly the image's dimensions, the rightmost and bottommost column/row
-    of tiles will simply slide until it hits the right/bottom of the image regardless of whether
-    or not it equals the overlap ratio.
+    multiply to make exactly the image's dimensions, the image.crop method pads the image with
+    black on the right and bottom sides.
 
     Args :
         image (PIL Image) - The image to tile.
@@ -46,7 +46,9 @@ def tile_image(
         horizontal_overlap_ratio,
         vertical_overlap_ratio,
     )
-    images: List[Image.Image] = [image.crop(box) for box in tile_coordinates]
+    images: List[Image.Image] = [
+        [image.crop(box) for box in tc] for tc in tile_coordinates
+    ]
     return images
 
 
@@ -104,4 +106,20 @@ def generate_tile_coordinates(
 
     Returns : A list of four coordinate tuples encoding the left, top, right, and bottom of each tile.
     """
-    pass
+    tile_coords = [
+        [
+            (
+                x * round(slice_width * horizontal_overlap_ratio),
+                y * round(slice_width * vertical_overlap_ratio),
+                slice_width + x * round(slice_width * horizontal_overlap_ratio),
+                slice_height + y * round(slice_width * vertical_overlap_ratio),
+            )
+            for x in range(
+                math.floor(image_width / (slice_width * horizontal_overlap_ratio))
+            )
+        ]
+        for y in range(
+            math.floor(image_height / (slice_height * vertical_overlap_ratio))
+        )
+    ]
+    return tile_coords
