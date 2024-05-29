@@ -47,37 +47,37 @@ class BoundingBox:
         image_height: int,
         int_to_category: Dict[int, str],
     ):
-        """Constructs a bounding box from a line in a yolo formatted labels file.
+        """Constructs a `BoundingBox` from a line in a yolo formatted labels file.
 
         Because the yolo format stores data in normalized xywh format (from 0 to 1), this method
         requires the original image's width and height.
 
         Args :
-            yolo_line (str) - A string in the yolo label format (c x y w h).
-            image_width (int) - The original image's width.
-            image_height (int) - The original image's height.
-            int_to_category (Dict) - A dictionary that maps the number in the label to the category.
+            `yolo_line` (str) - A string in the yolo label format (c x y w h).
+            `image_width` (int) - The original image's width.
+            `image_height` (int) - The original image's height.
+            `int_to_category` (Dict) - A dictionary that maps the number in the label to the category.
 
-        Returns : A BoundingBox object containing the yolo_line's data.
+        Returns : A `BoundingBox` object containing the yolo_line's data.
         """
         pass
 
     @staticmethod
     def from_coco(coco_annotation: Dict, image_metadata: Dict, categories: List[Dict]):
-        """Constructs a bounding box from an annotation in a coco data json file.
+        """Constructs a `BoundingBox` from an annotation in a coco data json file.
 
         Args :
-            coco_annotation (Dict) - A bounding box annotation from the 'annotations' section.
-            image_metadata (Dict) - A dictionary from the 'images' section.
-            categories (List[Dict]) - A list of dictionaries containing their numeric ids and categories.
+            `coco_annotation` (Dict) - A bounding box annotation from the 'annotations' section.
+            `image_metadata` (Dict) - A dictionary from the 'images' section.
+            `categories` (List[Dict]) - A list of dictionaries containing their numeric ids and categories.
 
-        Returns : A BoundingBox object containing the coco annotation's data.
+        Returns : A `BoundingBox` object containing the coco annotation's data.
         """
         pass
 
     @property
     def center(self) -> Tuple[float]:
-        """This BoundingBox's center."""
+        """This `BoundingBox`'s center."""
         return (
             self.left + (1 / 2) * (self.right - self.left),
             self.top + (1 / 2) * (self.bottom - self.top),
@@ -85,20 +85,20 @@ class BoundingBox:
 
     @property
     def box(self) -> List[int]:
-        """A list containing this box's [left, top, right, bottom]."""
+        """A list containing this `BoundingBox`'s [left, top, right, bottom]."""
         return [self.left, self.top, self.right, self.bottom]
 
     def to_yolo(
         self, image_width: int, image_height: int, category_to_int: Dict[str, int]
     ) -> str:
-        """Writes the data from this BoundingBox into a yolo formatted string.
+        """Writes the data from this `BoundingBox` into a yolo formatted string.
 
         Args :
-            image_width (int) - The image's width that this boundingbox belongs to.
-            image_height (int) - The image's height that this boundingbox belongs to.
-            category_to_int (Dict[str, int]) - A dictionary that maps the category string to an int.
+            `image_width` (int) - The image's width that this boundingbox belongs to.
+            `image_height` (int) - The image's height that this boundingbox belongs to.
+            `category_to_int` (Dict[str, int]) - A dictionary that maps the category string to an int.
 
-        Returns : A string that encodes this BoundingBox's data for a single line in a yolo label file.
+        Returns : A string that encodes this `BoundingBox`'s data for a single line in a yolo label file.
         """
         pass
 
@@ -140,30 +140,30 @@ class Keypoint:
         image_height: int,
         int_to_category: Dict[int, str],
     ):
-        """Constructs a keypoint from a line in a yolo formatted labels file.
+        """Constructs a `Keypoint` from a line in a yolo formatted labels file.
 
         Because the yolo format stores data in normalized xywh format (from 0 to 1), this method
         requires the original image's width and height. The 'visible' data is optional, and is not
         read to create the object.
 
         Args :
-            yolo_line (str) - A string in the yolo label format (c x y w h kpx kpy v).
-            image_width (int) - The original image's width.
-            image_height (int) - The original image's height.
-            int_to_category (Dict) - A dictionary that maps the number in the label to the category.
+            `yolo_line` (str) - A string in the yolo label format (c x y w h kpx kpy v).
+            `image_width` (int) - The original image's width.
+            `image_height` (int) - The original image's height.
+            `int_to_category` (Dict) - A dictionary that maps the number in the label to the category.
 
-        Returns : A BoundingBox object containing the yolo_line's data.
+        Returns : A `BoundingBox` object containing the yolo_line's data.
         """
         pass
 
     @property
     def category(self) -> str:
-        """This keypoint's category."""
+        """This `Keypoint`'s category."""
         return self.bounding_box.category
 
     @property
     def center(self) -> Tuple[float]:
-        """This keypoint's boundingbox center."""
+        """This `Keypoint`'s boundingbox center."""
         return self.bounding_box.center
 
     @property
@@ -174,13 +174,13 @@ class Keypoint:
     def to_yolo(
         self, image_width: int, image_height: int, category_to_int: Dict[str, int]
     ) -> str:
-        """Writes the data from this Keypoint into a yolo formatted string.
+        """Writes the data from this `Keypoint` into a yolo formatted string.
 
         Args :
-            image_width (int) - The image's width that this keypoint belongs to.
-            image_height (int) - The image's height that this keypoint belongs to.
-            category_to_int (Dict[str, int]) - A dictionary that maps the category string to an int.
+            `image_width` (int) - The image's width that this keypoint belongs to.
+            `image_height` (int) - The image's height that this keypoint belongs to.
+            `category_to_int` (Dict[str, int]) - A dictionary that maps the category string to an int.
 
-        Returns : A string that encodes this Keypoint's data for a single line in a yolo label file.
+        Returns : A string that encodes this `Keypoint`'s data for a single line in a yolo label file.
         """
         pass
