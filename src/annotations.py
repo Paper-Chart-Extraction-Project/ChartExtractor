@@ -84,6 +84,20 @@ class BoundingBox:
         """A list containing this box's [left, top, right, bottom]."""
         return [self.left, self.top, self.right, self.bottom]
 
+    def to_yolo(
+        self, image_width: int, image_height: int, category_to_int: Dict[str, int]
+    ) -> str:
+        """Writes the data from this BoundingBox into a yolo formatted string.
+
+        Args :
+            image_width (int) - The image's width that this boundingbox belongs to.
+            image_height (int) - The image's height that this boundingbox belongs to.
+            category_to_int (Dict[str, int]) - A dictionary that maps the category string to an int.
+
+        Returns : A string that encodes this BoundingBox's data for a single line in a yolo label file.
+        """
+        pass
+
 
 @dataclass
 class Keypoint:
