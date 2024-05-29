@@ -105,7 +105,30 @@ class BoundingBox:
 
 @dataclass
 class Keypoint:
-    """ """
+    """The `Keypoint` class represents a keypoint associated with an object in an image.
+
+    Attributes :
+        `keypoint` (Tuple[int]) - A tuple containing the (x, y) coordinates of the keypoint relative to the top-left corner of the image.
+        `bounding_box` (BoundingBox) - A `BoundingBox` object that defines the bounding box around the object containing the keypoint.
+
+
+    This class provides static methods to create `Keypoint` objects from data formats:
+    Constructors
+        `from_yolo(yolo_line: str, image_width: int, image_height: int, int_to_category: Dict[int, str])`:
+            Constructs a Keypoint from a line in a YOLO formatted labels file. It requires the original image dimensions and a dictionary mapping category IDs to category names.
+            **Note:** This method ignores the "visibility" information (denoted by 'v') in the YOLO format.
+
+
+    Properties :
+        `category` (str) - The category of the object the keypoint belongs to (inherited from the `bounding_box`).
+        `center` (Tuple[float]) - The (x, y) coordinates of the bounding box's center (inherited from the `bounding_box`).
+        `box` (Tuple[float]) - A list containing the bounding box coordinates as [left, top, right, bottom] (inherited from the `bounding_box`).
+
+
+    Methods :
+        `to_yolo(self, image_width: int, image_height: int, category_to_int: Dict[str, int]) -> str`:
+            Generates a YOLO formatted string representation of this `Keypoint` object. It requires the image dimensions and a dictionary mapping category strings to integer labels.
+    """
 
     keypoint: Tuple[int]
     bounding_box: BoundingBox
