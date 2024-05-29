@@ -117,15 +117,15 @@ class Keypoint:
 
     @property
     def category(self) -> str:
-        """ """
-        pass
+        """This keypoint's category."""
+        return self.bounding_box.category
 
     @property
     def center(self) -> Tuple[float]:
-        """ """
-        pass
+        """This keypoint's boundingbox center."""
+        return self.bounding_box.center
 
     @property
     def box(self) -> Tuple[float]:
-        """ """
-        pass
+        """This keypoints boundingbox's [left, top, right, bottom]."""
+        return self.bounding_box.box
