@@ -28,6 +28,10 @@ class BoundingBox:
     Properties :
         center (Tuple[int]) - A tuple containing the (x, y) coordinates of the bounding box's center.
         box (List[int]) - A list containing the bounding box coordinates as [left, top, right, bottom].
+
+    Methods :
+        to_yolo(image_width: int, image_height: int, category_to_int: Dict[str, int])
+            Writes a yolo formatted string using this bounding box's data.
     """
 
     category: str
