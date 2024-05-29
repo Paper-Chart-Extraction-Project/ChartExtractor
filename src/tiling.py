@@ -4,13 +4,13 @@ detection models that need to detect very small objects in high resolution image
 """
 
 from PIL import Image
-from typing import List
+from typing import List, Tuple
 
 
 def tile_image(
     image: Image.Image,
-    slice_height: int,
     slice_width: int,
+    slice_height: int,
     horizontal_overlap_ratio: float,
     vertical_overlap_ratio: float,
 ) -> List[Image.Image]:
@@ -32,17 +32,28 @@ def tile_image(
     """
     validate_tile_parameters(
         image,
-        slice_height,
         slice_width,
+        slice_height,
         horizontal_overlap_ratio,
         vertical_overlap_ratio,
     )
+    image_width, image_height = image.size
+    tile_coordinates: List[Tuple[int]] = generate_tile_coordinates(
+        image_width,
+        image_height,
+        slice_width,
+        slice_height,
+        horizontal_overlap_ratio,
+        vertical_overlap_ratio,
+    )
+    images: List[Image.Image] = [image.crop(box) for box in tile_coordinates]
+    return images
 
 
 def validate_tile_parameters(
     image: Image.Image,
-    slice_height: int,
     slice_width: int,
+    slice_height: int,
     horizontal_overlap_ratio: float,
     vertical_overlap_ratio: float,
 ):
@@ -71,3 +82,26 @@ def validate_tile_parameters(
         raise ValueError(
             f"vertical_overlap_ratio must be greater than 0 and less than or equal to 1 (vertical_overlap_ratio passed was {vertical_overlap_ratio}."
         )
+
+
+def generate_tile_coordinates(
+    image_width: int,
+    image_height: int,
+    slice_width: int,
+    slice_height: int,
+    horizontal_overlap_ratio: int,
+    vertical_overlap_ratio: int,
+) -> List[Tuple[int]]:
+    """Generates the box coordinates of the tiles for the function 'tile_image'.
+
+    Args :
+        image_width (int) - The image's width.
+        image_height (int) - The image's height.
+        slice_height (int) - The height of each slice.
+        slice_width (int) - The width of each slice.
+        horizontal_overlap_ratio (float) - The amount of left-right overlap between slices.
+        vertical_overlap_ratio (float) - The amount of top-bottom overlap between slices.
+
+    Returns : A list of four coordinate tuples encoding the left, top, right, and bottom of each tile.
+    """
+    pass
