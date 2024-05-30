@@ -29,6 +29,7 @@ class BoundingBox:
         `center` (Tuple[int]) - A tuple containing the (x, y) coordinates of the bounding box's center.
         `box` (List[int]) - A list containing the bounding box coordinates as [left, top, right, bottom].
 
+
     Methods :
         `to_yolo(image_width: int, image_height: int, category_to_int: Dict[str, int])`:
             Writes a yolo formatted string using this bounding box's data.
@@ -133,13 +134,12 @@ class Keypoint:
     """The `Keypoint` class represents a keypoint associated with an object in an image.
 
     Attributes :
-        `keypoint` (Tuple[int]) - A tuple containing the (x, y) coordinates of the keypoint relative to the top-left corner of the image.
+        `keypoint` (Tuple[float]) - A tuple containing the (x, y) coordinates of the keypoint relative to the top-left corner of the image.
         `bounding_box` (BoundingBox) - A `BoundingBox` object that defines the bounding box around the object containing the keypoint.
 
 
-    This class provides static methods to create `Keypoint` objects from data formats:
-    Constructors
-        `from_yolo(yolo_line: str, image_width: int, image_height: int, int_to_category: Dict[int, str])`:
+    Constructors :
+        `from_yolo(yolo_line: str, image_width: int, image_height: int, id_to_category: Dict[int, str])`:
             Constructs a Keypoint from a line in a YOLO formatted labels file. It requires the original image dimensions and a dictionary mapping category IDs to category names.
             **Note:** This method ignores the "visibility" information (denoted by 'v') in the YOLO format.
 
@@ -151,11 +151,11 @@ class Keypoint:
 
 
     Methods :
-        `to_yolo(self, image_width: int, image_height: int, category_to_int: Dict[str, int]) -> str`:
+        `to_yolo(self, image_width: int, image_height: int, category_to_id: Dict[str, int]) -> str`:
             Generates a YOLO formatted string representation of this `Keypoint` object. It requires the image dimensions and a dictionary mapping category strings to integer labels.
     """
 
-    keypoint: Tuple[int]
+    keypoint: Tuple[float]
     bounding_box: BoundingBox
 
     @staticmethod
@@ -163,7 +163,7 @@ class Keypoint:
         yolo_line: str,
         image_width: int,
         image_height: int,
-        int_to_category: Dict[int, str],
+        id_to_category: Dict[int, str],
     ):
         """Constructs a `Keypoint` from a line in a yolo formatted labels file.
 
@@ -175,11 +175,16 @@ class Keypoint:
             `yolo_line` (str) - A string in the yolo label format (c x y w h kpx kpy v).
             `image_width` (int) - The original image's width.
             `image_height` (int) - The original image's height.
-            `int_to_category` (Dict) - A dictionary that maps the number in the label to the category.
+            `id_to_category` (Dict) - A dictionary that maps the id number in the label to the category.
 
         Returns : A `BoundingBox` object containing the yolo_line's data.
         """
-        pass
+        bounding_box = BoundingBox.from_yolo(
+            yolo_line, image_width, image_height, id_to_category
+        )
+        keypoint_x, keypoint_y = yolo_line.split()[5], yolo_line.split()[6]
+        keypoint = (keypoint_x * image_width, keypoint_y * image_height)
+        return Keypoint(keypoint, bounding_box)
 
     @property
     def category(self) -> str:
@@ -197,14 +202,14 @@ class Keypoint:
         return self.bounding_box.box
 
     def to_yolo(
-        self, image_width: int, image_height: int, category_to_int: Dict[str, int]
+        self, image_width: int, image_height: int, category_to_id: Dict[str, int]
     ) -> str:
         """Writes the data from this `Keypoint` into a yolo formatted string.
 
         Args :
             `image_width` (int) - The image's width that this keypoint belongs to.
             `image_height` (int) - The image's height that this keypoint belongs to.
-            `category_to_int` (Dict[str, int]) - A dictionary that maps the category string to an int.
+            `category_to_id` (Dict[str, int]) - A dictionary that maps the category string to an id (int).
 
         Returns : A string that encodes this `Keypoint`'s data for a single line in a yolo label file.
         """
