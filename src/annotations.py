@@ -182,7 +182,8 @@ class Keypoint:
         bounding_box = BoundingBox.from_yolo(
             yolo_line, image_width, image_height, id_to_category
         )
-        keypoint_x, keypoint_y = yolo_line.split()[5], yolo_line.split()[6]
+        keypoint_x = float(yolo_line.split()[5])
+        keypoint_y = float(yolo_line.split()[6])
         keypoint = (keypoint_x * image_width, keypoint_y * image_height)
         return Keypoint(keypoint, bounding_box)
 
