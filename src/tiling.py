@@ -172,3 +172,8 @@ def tile_annotations(
         for tc_list in tile_coordinates
     ]
     return annotation_tiles
+
+
+def get_annotations_in_tile(annotations: List, tile: Tuple[int]) -> List:
+    """ """
+    pass
