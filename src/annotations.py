@@ -1,7 +1,11 @@
 """Module that contains dataclasses for storing image annotations."""
 
+from collections import namedtuple
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
+
+
+Point = namedtuple("Point", ["x", "y"])
 
 
 @dataclass
@@ -155,7 +159,7 @@ class Keypoint:
             Generates a YOLO formatted string representation of this `Keypoint` object. It requires the image dimensions and a dictionary mapping category strings to integer labels.
     """
 
-    keypoint: Tuple[float]
+    keypoint: Point
     bounding_box: BoundingBox
 
     @staticmethod
@@ -184,7 +188,7 @@ class Keypoint:
         )
         keypoint_x = float(yolo_line.split()[5])
         keypoint_y = float(yolo_line.split()[6])
-        keypoint = (keypoint_x * image_width, keypoint_y * image_height)
+        keypoint = Point(keypoint_x * image_width, keypoint_y * image_height)
         return Keypoint(keypoint, bounding_box)
 
     @property
@@ -216,8 +220,8 @@ class Keypoint:
         """
         yolo_line = self.bounding_box.to_yolo(image_width, image_height, category_to_id)
         keypoint_x, keypoint_y = (
-            self.keypoint[0] / image_width,
-            self.keypoint[1] / image_height,
+            self.keypoint.x / image_width,
+            self.keypoint.y / image_height,
         )
         yolo_line += f" {keypoint_x} {keypoint_y}"
         return yolo_line
