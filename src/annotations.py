@@ -3,6 +3,7 @@
 from collections import namedtuple
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
+import warnings
 
 
 Point = namedtuple("Point", ["x", "y"])
@@ -80,6 +81,7 @@ class BoundingBox:
             y + (1 / 2) * h,
         )
         category = id_to_category[int(data[0])]
+        BoundingBox.validate_box_values(left, top, right, bottom)
         return BoundingBox(category, left, top, right, bottom)
 
     @staticmethod
@@ -97,7 +99,53 @@ class BoundingBox:
         category = list(
             filter(lambda c: c["id"] == coco_annotation["category_id"], categories)
         )[0]["name"]
+        BoundingBox.validate_box_values(left, top, right, bottom)
         return BoundingBox(category, left, top, right, bottom)
+
+    @classmethod
+    def validate_box_values(
+        cls, left: float, top: float, right: float, bottom: float
+    ) -> None:
+        """Validates the coordinates of a rectangle (bounding box).
+
+        This classmethod ensures that the left coordinate is less than the right coordinate, and
+        the top coordinate is less than the bottom coordinate. It raises a `ValueError` if these
+        conditions are not met, indicating an invalid box configuration. If the left coordinate
+        is equal to the right coordinate or if the top coordinate is equal to the bottom
+        coordinate, this method issues a warning.
+
+        Args:
+            `left` (float): The left x-coordinate of the box.
+            `top` (float): The top y-coordinate of the box.
+            `right` (float): The right x-coordinate of the box.
+            `bottom` (float): The bottom y-coordinate of the box.
+
+        Raises:
+            ValueError: If `left > right` or `top > bottom`.
+        """
+        if left > right:
+            raise ValueError(
+                f"Box's left side greater than its right side (Left:{left} > Right:{right})."
+            )
+        if top > bottom:
+            raise ValueError(
+                f"Box's top side greater than its bottom side (Top:{top} > Bottom:{bottom})."
+            )
+        if all(left == right, bottom == top):
+            warnings.warn(
+                f"Degenerate rectangle detected. All of the box's parameters are equal (Left:{left}, Top:{top}, Right:{right}, Bottom:{bottom}).",
+                UserWarning,
+            )
+        elif left == right:
+            warnings.warn(
+                f"Degenerate rectangle detected. The box's left side equals it's right side (Left:{left}, Top:{top}, Right:{right}, Bottom:{bottom}).",
+                UserWarning,
+            )
+        elif top == bottom:
+            warnings.warn(
+                f"Degenerate rectangle detected. The box's left side equals it's right side (Left:{left}, Top:{top}, Right:{right}, Bottom:{bottom}).",
+                UserWarning,
+            )
 
     @property
     def center(self) -> Tuple[float]:
