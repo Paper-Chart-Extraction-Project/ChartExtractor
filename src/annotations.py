@@ -122,8 +122,8 @@ class BoundingBox:
         """
         c = category_to_id[self.category]
         x, y = self.center
-        x = x / image_width
-        y = y / image_height
+        x /= image_width
+        y /= image_height
         w = (self.right - self.left) / image_width
         h = (self.bottom - self.top) / image_height
         return f"{c} {x} {y} {w} {h}"
@@ -213,4 +213,10 @@ class Keypoint:
 
         Returns : A string that encodes this `Keypoint`'s data for a single line in a yolo label file.
         """
-        pass
+        yolo_line = self.bounding_box.to_yolo(image_width, image_height, category_to_id)
+        keypoint_x, keypoint_y = (
+            self.keypoint[0] / image_width,
+            self.keypoint[1] / image_height,
+        )
+        yolo_line += f" {keypoint_x} {keypoint_y}"
+        return yolo_line
