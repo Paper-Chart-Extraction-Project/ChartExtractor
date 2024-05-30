@@ -126,3 +126,16 @@ def generate_tile_coordinates(
         )
     ]
     return tile_coords
+
+
+def tile_annotations(
+    annotations: List,
+    image_width: int,
+    image_height: int,
+    slice_width: int,
+    slice_height: int,
+    horizontal_overlap_ratio: int,
+    vertical_overlap_ratio: int,
+):
+    """ """
+    pass
