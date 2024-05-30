@@ -11,18 +11,18 @@ class BoundingBox:
 
     Attributes :
         `category` (str) - The category of the object within the bounding box.
-        `left` (int) - The x-coordinate of the top-left corner of the bounding box.
-        `top` (int) - The y-coordinate of the top-left corner of the bounding box.
-        `right` (int) - The x-coordinate of the bottom-right corner of the bounding box.
-        `bottom` (int) - The y-coordinate of the bottom-right corner of the bounding box.
+        `left` (float) - The x-coordinate of the top-left corner of the bounding box.
+        `top` (float) - The y-coordinate of the top-left corner of the bounding box.
+        `right` (float) - The x-coordinate of the bottom-right corner of the bounding box.
+        `bottom` (float) - The y-coordinate of the bottom-right corner of the bounding box.
 
 
     Constructors :
         `from_yolo(yolo_line: str, image_width: int, image_height: int, int_to_category: Dict[int, str])`:
             Constructs a `BoundingBox` from a line in a YOLO formatted labels file. It requires the original image dimensions and a dictionary mapping category IDs to category names.
 
-        `from_coco(coco_annotation: Dict, image_metadata: Dict, categories: List[Dict])`:
-            Constructs a `BoundingBox` from an annotation in a COCO data JSON file. It requires the annotation dictionary, image metadata dictionary, and a list of category dictionaries.
+        `from_coco(coco_annotation: Dict, categories: List[Dict])`:
+            Constructs a `BoundingBox` from an annotation in a COCO data JSON file. It requires the annotation dictionary and a list of category dictionaries.
 
 
     Properties :
@@ -35,17 +35,17 @@ class BoundingBox:
     """
 
     category: str
-    left: int
-    top: int
-    right: int
-    bottom: int
+    left: float
+    top: float
+    right: float
+    bottom: float
 
     @staticmethod
     def from_yolo(
         yolo_line: str,
         image_width: int,
         image_height: int,
-        int_to_category: Dict[int, str],
+        id_to_category: Dict[int, str],
     ):
         """Constructs a `BoundingBox` from a line in a yolo formatted labels file.
 
@@ -56,17 +56,17 @@ class BoundingBox:
             `yolo_line` (str) - A string in the yolo label format (c x y w h).
             `image_width` (int) - The original image's width.
             `image_height` (int) - The original image's height.
-            `int_to_category` (Dict) - A dictionary that maps the number in the label to the category.
+            `id_to_category` (Dict) - A dictionary that maps the number id in the label to the category.
 
         Returns : A `BoundingBox` object containing the yolo_line's data.
         """
         data = yolo_line.split()
         x, y, w, h = float(data[1]), float(data[2]), float(data[3]), float(data[4])
         x, y, w, h = (
-            round(x * image_width),
-            round(y * image_height),
-            round(w * image_width),
-            round(h * image_width),
+            x * image_width,
+            y * image_height,
+            w * image_width,
+            h * image_width,
         )
         left, top, right, bottom = (
             x - (1 / 2) * w,
@@ -74,21 +74,25 @@ class BoundingBox:
             x + (1 / 2) * w,
             y + (1 / 2) * h,
         )
-        category = int_to_category[data[0]]
+        category = id_to_category[data[0]]
         return BoundingBox(category, left, top, right, bottom)
 
     @staticmethod
-    def from_coco(coco_annotation: Dict, image_metadata: Dict, categories: List[Dict]):
+    def from_coco(coco_annotation: Dict, categories: List[Dict]):
         """Constructs a `BoundingBox` from an annotation in a coco data json file.
 
         Args :
             `coco_annotation` (Dict) - A bounding box annotation from the 'annotations' section.
-            `image_metadata` (Dict) - A dictionary from the 'images' section.
             `categories` (List[Dict]) - A list of dictionaries containing their numeric ids and categories.
 
         Returns : A `BoundingBox` object containing the coco annotation's data.
         """
-        pass
+        left, top, w, h = coco_annotation["bbox"]
+        right, bottom = left + w, top + h
+        category = list(
+            filter(lambda c: c["id"] == coco_annotation["category_id"], categories)
+        )[0]["name"]
+        return BoundingBox(category, left, top, right, bottom)
 
     @property
     def center(self) -> Tuple[float]:
@@ -104,18 +108,24 @@ class BoundingBox:
         return [self.left, self.top, self.right, self.bottom]
 
     def to_yolo(
-        self, image_width: int, image_height: int, category_to_int: Dict[str, int]
+        self, image_width: int, image_height: int, category_to_id: Dict[str, int]
     ) -> str:
         """Writes the data from this `BoundingBox` into a yolo formatted string.
 
         Args :
             `image_width` (int) - The image's width that this boundingbox belongs to.
             `image_height` (int) - The image's height that this boundingbox belongs to.
-            `category_to_int` (Dict[str, int]) - A dictionary that maps the category string to an int.
+            `category_to_id` (Dict[str, int]) - A dictionary that maps the category string to an id (integer).
 
         Returns : A string that encodes this `BoundingBox`'s data for a single line in a yolo label file.
         """
-        pass
+        c = category_to_id[self.category]
+        x, y = self.center
+        x = x / image_width
+        y = y / image_height
+        w = (self.right - self.left) / image_width
+        h = (self.bottom - self.top) / image_height
+        return f"{c} {x} {y} {w} {h}"
 
 
 @dataclass
