@@ -75,7 +75,7 @@ class BoundingBox:
             x + (1 / 2) * w,
             y + (1 / 2) * h,
         )
-        category = id_to_category[data[0]]
+        category = id_to_category[int(data[0])]
         return BoundingBox(category, left, top, right, bottom)
 
     @staticmethod
