@@ -36,8 +36,12 @@ class BoundingBox:
 
 
     Methods :
-        `to_yolo(image_width: int, image_height: int, category_to_int: Dict[str, int])`:
+        `to_yolo(image_width: int, image_height: int, category_to_int: Dict[str, int]) -> str`:
             Writes a yolo formatted string using this bounding box's data.
+        `validate_box_values(cls, left: float, top: float, right: float, bottom: float) -> None`:
+            Validates the box parameters and throws a value error if left > right or top > bottom.
+            Also issues a warning for the case when left == right or top == bottom letting the user
+            know that they are constructing a degenerate rectangle.
     """
 
     category: str
