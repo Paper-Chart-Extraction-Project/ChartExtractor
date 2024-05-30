@@ -80,7 +80,11 @@ class BoundingBox:
             x + (1 / 2) * w,
             y + (1 / 2) * h,
         )
-        category = id_to_category[int(data[0])]
+        category = id_to_category.get(int(data[0]))
+        if category == None:
+            raise ValueError(
+                f"Category {int(data[0])} not found in the id_to_category dictionary."
+            )
         BoundingBox.validate_box_values(left, top, right, bottom)
         return BoundingBox(category, left, top, right, bottom)
 
@@ -98,7 +102,11 @@ class BoundingBox:
         right, bottom = left + w, top + h
         category = list(
             filter(lambda c: c["id"] == coco_annotation["category_id"], categories)
-        )[0]["name"]
+        )[0].get("name")
+        if category == None:
+            raise ValueError(
+                f"Category {int(coco_annotation['category_id'])} not found in the id_to_category dictionary."
+            )
         BoundingBox.validate_box_values(left, top, right, bottom)
         return BoundingBox(category, left, top, right, bottom)
 
