@@ -235,7 +235,7 @@ class Keypoint:
 
     def __init__(self, keypoint: Point, bounding_box: BoundingBox):
         """Overrides the default constructor from dataclass to validate the parameters before constructing."""
-        Keypoint.validate_keypoint(keypoint, bounding_box)
+        Keypoint.validate_keypoint(bounding_box, keypoint)
         self.keypoint = keypoint
         self.bounding_box = bounding_box
 
