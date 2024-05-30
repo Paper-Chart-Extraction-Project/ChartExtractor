@@ -176,4 +176,15 @@ def tile_annotations(
 
 def get_annotations_in_tile(annotations: List, tile: Tuple[int]) -> List:
     """ """
-    pass
+    annotation_in_tile = lambda ann, tile: all(
+        [
+            ann.box[0] >= tile[0],
+            ann.box[1] >= tile[1],
+            ann.box[2] <= tile[2],
+            ann.box[3] <= tile[3],
+        ]
+    )
+    annotations_in_tile: List = list(
+        filter(lambda ann: annotation_in_tile(ann, tile), annotations)
+    )
+    return annotations_in_tile
