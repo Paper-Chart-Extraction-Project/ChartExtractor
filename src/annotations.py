@@ -15,11 +15,11 @@ class BoundingBox:
 
 
     Attributes :
-        `category` (str) - The category of the object within the bounding box.
-        `left` (float) - The x-coordinate of the top-left corner of the bounding box.
-        `top` (float) - The y-coordinate of the top-left corner of the bounding box.
-        `right` (float) - The x-coordinate of the bottom-right corner of the bounding box.
-        `bottom` (float) - The y-coordinate of the bottom-right corner of the bounding box.
+        `category` (str): The category of the object within the bounding box.
+        `left` (float): The x-coordinate of the top-left corner of the bounding box.
+        `top` (float): The y-coordinate of the top-left corner of the bounding box.
+        `right` (float): The x-coordinate of the bottom-right corner of the bounding box.
+        `bottom` (float): The y-coordinate of the bottom-right corner of the bounding box.
 
 
     Constructors :
@@ -31,8 +31,8 @@ class BoundingBox:
 
 
     Properties :
-        `center` (Tuple[int]) - A tuple containing the (x, y) coordinates of the bounding box's center.
-        `box` (List[int]) - A list containing the bounding box coordinates as [left, top, right, bottom].
+        `center` (Tuple[int]): A tuple containing the (x, y) coordinates of the bounding box's center.
+        `box` (List[int]): A list containing the bounding box coordinates as [left, top, right, bottom].
 
 
     Methods :
@@ -74,12 +74,12 @@ class BoundingBox:
         requires the original image's width and height.
 
         Args :
-            `yolo_line` (str) - A string in the yolo label format (c x y w h).
-            `image_width` (int) - The original image's width.
-            `image_height` (int) - The original image's height.
-            `id_to_category` (Dict) - A dictionary that maps the number id in the label to the category.
+            `yolo_line` (str): A string in the yolo label format (c x y w h).
+            `image_width` (int): The original image's width.
+            `image_height` (int): The original image's height.
+            `id_to_category` (Dict): A dictionary that maps the number id in the label to the category.
 
-        Returns : A `BoundingBox` object containing the yolo_line's data.
+        Returns: A `BoundingBox` object containing the yolo_line's data.
         """
         data = yolo_line.split()
         x, y, w, h = float(data[1]), float(data[2]), float(data[3]), float(data[4])
@@ -107,10 +107,10 @@ class BoundingBox:
         """Constructs a `BoundingBox` from an annotation in a coco data json file.
 
         Args :
-            `coco_annotation` (Dict) - A bounding box annotation from the 'annotations' section.
-            `categories` (List[Dict]) - A list of dictionaries containing their numeric ids and categories.
+            `coco_annotation` (Dict): A bounding box annotation from the 'annotations' section.
+            `categories` (List[Dict]): A list of dictionaries containing their numeric ids and categories.
 
-        Returns : A `BoundingBox` object containing the coco annotation's data.
+        Returns: A `BoundingBox` object containing the coco annotation's data.
         """
         left, top, w, h = coco_annotation["bbox"]
         right, bottom = left + w, top + h
@@ -187,11 +187,11 @@ class BoundingBox:
         """Writes the data from this `BoundingBox` into a yolo formatted string.
 
         Args :
-            `image_width` (int) - The image's width that this boundingbox belongs to.
-            `image_height` (int) - The image's height that this boundingbox belongs to.
-            `category_to_id` (Dict[str, int]) - A dictionary that maps the category string to an id (integer).
+            `image_width` (int): The image's width that this boundingbox belongs to.
+            `image_height` (int): The image's height that this boundingbox belongs to.
+            `category_to_id` (Dict[str, int]): A dictionary that maps the category string to an id (integer).
 
-        Returns : A string that encodes this `BoundingBox`'s data for a single line in a yolo label file.
+        Returns: A string that encodes this `BoundingBox`'s data for a single line in a yolo label file.
         """
         c = category_to_id[self.category]
         x, y = self.center
@@ -207,8 +207,8 @@ class Keypoint:
     """The `Keypoint` class represents a keypoint associated with an object in an image.
 
     Attributes :
-        `keypoint` (Tuple[float]) - A tuple containing the (x, y) coordinates of the keypoint relative to the top-left corner of the image.
-        `bounding_box` (BoundingBox) - A `BoundingBox` object that defines the bounding box around the object containing the keypoint.
+        `keypoint` (Tuple[float]): A tuple containing the (x, y) coordinates of the keypoint relative to the top-left corner of the image.
+        `bounding_box` (BoundingBox): A `BoundingBox` object that defines the bounding box around the object containing the keypoint.
 
 
     Constructors :
@@ -218,9 +218,9 @@ class Keypoint:
 
 
     Properties :
-        `category` (str) - The category of the object the keypoint belongs to (inherited from the `bounding_box`).
-        `center` (Tuple[float]) - The (x, y) coordinates of the bounding box's center (inherited from the `bounding_box`).
-        `box` (Tuple[float]) - A list containing the bounding box coordinates as [left, top, right, bottom] (inherited from the `bounding_box`).
+        `category` (str): The category of the object the keypoint belongs to (inherited from the `bounding_box`).
+        `center` (Tuple[float]): The (x, y) coordinates of the bounding box's center (inherited from the `bounding_box`).
+        `box` (Tuple[float]): A list containing the bounding box coordinates as [left, top, right, bottom] (inherited from the `bounding_box`).
 
 
     Methods :
@@ -253,12 +253,12 @@ class Keypoint:
         read to create the object.
 
         Args :
-            `yolo_line` (str) - A string in the yolo label format (c x y w h kpx kpy v).
-            `image_width` (int) - The original image's width.
-            `image_height` (int) - The original image's height.
-            `id_to_category` (Dict) - A dictionary that maps the id number in the label to the category.
+            `yolo_line` (str): A string in the yolo label format (c x y w h kpx kpy v).
+            `image_width` (int): The original image's width.
+            `image_height` (int): The original image's height.
+            `id_to_category` (Dict): A dictionary that maps the id number in the label to the category.
 
-        Returns : A `BoundingBox` object containing the yolo_line's data.
+        Returns: A `BoundingBox` object containing the yolo_line's data.
         """
         bounding_box = BoundingBox.from_yolo(
             yolo_line, image_width, image_height, id_to_category
@@ -313,11 +313,11 @@ class Keypoint:
         """Writes the data from this `Keypoint` into a yolo formatted string.
 
         Args :
-            `image_width` (int) - The image's width that this keypoint belongs to.
-            `image_height` (int) - The image's height that this keypoint belongs to.
-            `category_to_id` (Dict[str, int]) - A dictionary that maps the category string to an id (int).
+            `image_width` (int): The image's width that this `Keypoint` belongs to.
+            `image_height` (int): The image's height that this `Keypoint` belongs to.
+            `category_to_id` (Dict[str, int]): A dictionary that maps the category string to an id (int).
 
-        Returns : A string that encodes this `Keypoint`'s data for a single line in a yolo label file.
+        Returns: A string that encodes this `Keypoint`'s data for a single line in a yolo label file.
         """
         yolo_line = self.bounding_box.to_yolo(image_width, image_height, category_to_id)
         keypoint_x, keypoint_y = (

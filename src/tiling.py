@@ -58,7 +58,7 @@ def validate_tile_parameters(
     slice_height: int,
     horizontal_overlap_ratio: float,
     vertical_overlap_ratio: float,
-):
+) -> None:
     """Validates the parameters for the function 'tile_image'.
 
     Args :
