@@ -50,6 +50,13 @@ class BoundingBox:
     right: float
     bottom: float
 
+    def __init__(
+        self, category: str, left: float, top: float, right: float, bottom: float
+    ):
+        """Overrides the default constructor from dataclass to validate the parameters before constructing."""
+        BoundingBox.validate_box_values(left, top, right, bottom)
+        return BoundingBox(category, left, top, right, bottom)
+
     @staticmethod
     def from_yolo(
         yolo_line: str,
@@ -89,7 +96,6 @@ class BoundingBox:
             raise ValueError(
                 f"Category {int(data[0])} not found in the id_to_category dictionary."
             )
-        BoundingBox.validate_box_values(left, top, right, bottom)
         return BoundingBox(category, left, top, right, bottom)
 
     @staticmethod
@@ -111,7 +117,6 @@ class BoundingBox:
             raise ValueError(
                 f"Category {int(coco_annotation['category_id'])} not found in the id_to_category dictionary."
             )
-        BoundingBox.validate_box_values(left, top, right, bottom)
         return BoundingBox(category, left, top, right, bottom)
 
     @classmethod
