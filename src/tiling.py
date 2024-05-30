@@ -38,7 +38,7 @@ def tile_image(
         vertical_overlap_ratio,
     )
     image_width, image_height = image.size
-    tile_coordinates: List[Tuple[int]] = generate_tile_coordinates(
+    tile_coordinates: List[Tuple[int, int, int, int]] = generate_tile_coordinates(
         image_width,
         image_height,
         slice_width,
@@ -96,7 +96,7 @@ def generate_tile_coordinates(
     slice_height: int,
     horizontal_overlap_ratio: int,
     vertical_overlap_ratio: int,
-) -> List[List[Tuple[int]]]:
+) -> List[List[Tuple[int, int, int, int]]]:
     """Generates the box coordinates of the tiles for the function 'tile_image'.
 
     Args:
@@ -109,7 +109,7 @@ def generate_tile_coordinates(
 
     Returns: A 2d list of four coordinate tuples encoding the left, top, right, and bottom of each tile.
     """
-    tile_coords = [
+    tile_coords: List[List[Tuple[int, int, int, int]]] = [
         [
             (
                 x * round(slice_width * horizontal_overlap_ratio),
@@ -159,7 +159,7 @@ def tile_annotations(
         A list of lists, where each sub-list represents a tile in the grid. Each tile's
         sub-list contains the annotations that intersect fully with that specific tile.
     """
-    tile_coordinates: List[List[Tuple[int]]] = generate_tile_coordinates(
+    tile_coordinates: List[List[Tuple[int, int, int, int]]] = generate_tile_coordinates(
         image_width,
         image_height,
         slice_width,
@@ -174,8 +174,22 @@ def tile_annotations(
     return annotation_tiles
 
 
-def get_annotations_in_tile(annotations: List, tile: Tuple[int]) -> List:
-    """ """
+def get_annotations_in_tile(annotations: List, tile: Tuple[int, int, int, int]) -> List:
+    """Filters annotations that fully intersect with a given tile.
+
+    This function takes a list of annotations (assumed to implement the 'box' property)
+    and a tile represented by its top-left and bottom-right corner coordinates `(left, top, right, bottom)`
+    as a tuple. It returns a new list containing only the annotations that have a bounding box
+    intersecting with the specified tile area.
+
+    Args:
+        `annotations`: A list of annotations (expected to implement the 'box' property).
+        `tile`: A tuple representing the tile's bounding box coordinates
+            `(left, top, right, bottom)`.
+
+    Returns:
+        A list of `BoundingBox` objects that intersect with the specified tile.
+    """
     annotation_in_tile = lambda ann, tile: all(
         [
             ann.box[0] >= tile[0],
