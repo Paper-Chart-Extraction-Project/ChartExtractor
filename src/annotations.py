@@ -55,7 +55,11 @@ class BoundingBox:
     ):
         """Overrides the default constructor from dataclass to validate the parameters before constructing."""
         BoundingBox.validate_box_values(left, top, right, bottom)
-        return BoundingBox(category, left, top, right, bottom)
+        self.category = category
+        self.left = left
+        self.top = top
+        self.right = right
+        self.bottom = bottom
 
     @staticmethod
     def from_yolo(
