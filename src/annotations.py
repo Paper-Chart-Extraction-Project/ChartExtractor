@@ -233,6 +233,12 @@ class Keypoint:
     keypoint: Point
     bounding_box: BoundingBox
 
+    def __init__(self, keypoint: Point, bounding_box: BoundingBox):
+        """Overrides the default constructor from dataclass to validate the parameters before constructing."""
+        Keypoint.validate_keypoint(keypoint, bounding_box)
+        self.keypoint = keypoint
+        self.bounding_box = bounding_box
+
     @staticmethod
     def from_yolo(
         yolo_line: str,
