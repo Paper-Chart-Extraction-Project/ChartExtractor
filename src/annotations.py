@@ -6,31 +6,31 @@ from typing import Dict, List, Tuple
 
 @dataclass
 class BoundingBox:
-    """The 'BoundingBox' class represents a bounding box around an object in an image.
+    """The `BoundingBox` class represents a bounding box around an object in an image.
 
 
     Attributes :
-        category (str) - The category of the object within the bounding box.
-        left (int) - The x-coordinate of the top-left corner of the bounding box.
-        top (int) - The y-coordinate of the top-left corner of the bounding box.
-        right (int) - The x-coordinate of the bottom-right corner of the bounding box.
-        bottom (int) - The y-coordinate of the bottom-right corner of the bounding box.
+        `category` (str) - The category of the object within the bounding box.
+        `left` (int) - The x-coordinate of the top-left corner of the bounding box.
+        `top` (int) - The y-coordinate of the top-left corner of the bounding box.
+        `right` (int) - The x-coordinate of the bottom-right corner of the bounding box.
+        `bottom` (int) - The y-coordinate of the bottom-right corner of the bounding box.
 
 
     Constructors :
-        from_yolo(yolo_line: str, image_width: int, image_height: int, int_to_category: Dict[int, str])
-            Constructs a 'BoundingBox' from a line in a YOLO formatted labels file. It requires the original image dimensions and a dictionary mapping category IDs to category names.
+        `from_yolo(yolo_line: str, image_width: int, image_height: int, int_to_category: Dict[int, str])`:
+            Constructs a `BoundingBox` from a line in a YOLO formatted labels file. It requires the original image dimensions and a dictionary mapping category IDs to category names.
 
-        from_coco(coco_annotation: Dict, image_metadata: Dict, categories: List[Dict])
-            Constructs a 'BoundingBox' from an annotation in a COCO data JSON file. It requires the annotation dictionary, image metadata dictionary, and a list of category dictionaries.
+        `from_coco(coco_annotation: Dict, image_metadata: Dict, categories: List[Dict])`:
+            Constructs a `BoundingBox` from an annotation in a COCO data JSON file. It requires the annotation dictionary, image metadata dictionary, and a list of category dictionaries.
 
 
     Properties :
-        center (Tuple[int]) - A tuple containing the (x, y) coordinates of the bounding box's center.
-        box (List[int]) - A list containing the bounding box coordinates as [left, top, right, bottom].
+        `center` (Tuple[int]) - A tuple containing the (x, y) coordinates of the bounding box's center.
+        `box` (List[int]) - A list containing the bounding box coordinates as [left, top, right, bottom].
 
     Methods :
-        to_yolo(image_width: int, image_height: int, category_to_int: Dict[str, int])
+        `to_yolo(image_width: int, image_height: int, category_to_int: Dict[str, int])`:
             Writes a yolo formatted string using this bounding box's data.
     """
 
