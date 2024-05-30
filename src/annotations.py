@@ -226,6 +226,8 @@ class Keypoint:
     Methods :
         `to_yolo(self, image_width: int, image_height: int, category_to_id: Dict[str, int]) -> str`:
             Generates a YOLO formatted string representation of this `Keypoint` object. It requires the image dimensions and a dictionary mapping category strings to integer labels.
+        `validate_keypoint(cls, bounding_box: BoundingBox, keypoint: Point) -> None`:
+            Validates that a keypoint lies within the specified bounding box. Raises a ValueError if the keypoint is outside the bounding box.
     """
 
     keypoint: Point
@@ -259,6 +261,30 @@ class Keypoint:
         keypoint_y = float(yolo_line.split()[6])
         keypoint = Point(keypoint_x * image_width, keypoint_y * image_height)
         return Keypoint(keypoint, bounding_box)
+
+    @classmethod
+    def validate_keypoint(cls, bounding_box: BoundingBox, keypoint: Point) -> None:
+        """Validates that a keypoint lies within the specified bounding box.
+
+        This classmethod ensures that the `keypoint` (represented by a `Point` object)
+        falls within the confines of the provided `bounding_box` (represented by a
+        `BoundingBox` object). It checks both the x and y coordinates of the keypoint
+        against the left, top, right, and bottom boundaries of the bounding box.
+
+        Args:
+            bounding_box: The `BoundingBox` object representing the enclosing region.
+            keypoint: The `Point` object representing the keypoint to be validated.
+
+        Raises:
+            ValueError: If the keypoint's coordinates are not within the bounding box.
+        """
+        in_bounds_x: bool = bounding_box.left <= keypoint.x <= bounding_box.right
+        in_bounds_y: bool = bounding_box.top <= keypoint.y <= bounding_box.bottom
+        in_bounds: bool = in_bounds_x and in_bounds_y
+        if not in_bounds:
+            raise ValueError(
+                f"Keypoint is not in the bounding box intended to enclose it (Keypoint:{(keypoint.x, keypoint.y)}, BoundingBox:{str(bounding_box)})"
+            )
 
     @property
     def category(self) -> str:
