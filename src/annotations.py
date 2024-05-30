@@ -148,7 +148,7 @@ class BoundingBox:
             raise ValueError(
                 f"Box's top side greater than its bottom side (Top:{top} > Bottom:{bottom})."
             )
-        if all(left == right, bottom == top):
+        if left == right and bottom == top:
             warnings.warn(
                 f"Degenerate rectangle detected. All of the box's parameters are equal (Left:{left}, Top:{top}, Right:{right}, Bottom:{bottom}).",
                 UserWarning,
