@@ -134,10 +134,31 @@ def tile_annotations(
     image_height: int,
     slice_width: int,
     slice_height: int,
-    horizontal_overlap_ratio: int,
-    vertical_overlap_ratio: int,
+    horizontal_overlap_ratio: float,
+    vertical_overlap_ratio: float,
 ):
-    """ """
+    """Tiles image annotations based on a specified grid pattern with overlap.
+
+    This function takes a list of annotations (any annotation that implements the 'box' property)
+    representing objects within an image, and divides the image into a grid of tiles
+    with a specified size and overlap. It then assigns each annotation to the tile(s)
+    based on whether the annotation fully fits into the tile.
+
+    Args:
+        `annotations` (List): A list of annotations (anything that implements the 'box' property).
+        `image_width` (int): The width of the image in pixels.
+        `image_height` (int): The height of the image in pixels.
+        `slice_width` (int): The width of each tile in pixels.
+        `slice_height` (int): The height of each tile in pixels.
+        `horizontal_overlap_ratio` (float): The ratio (0.0 to 1.0) of the tile width that overlaps
+            horizontally between adjacent tiles.
+        `vertical_overlap_ratio` (float): The ratio (0.0 to 1.0) of the tile height that overlaps
+            vertically between adjacent tiles.
+
+    Returns:
+        A list of lists, where each sub-list represents a tile in the grid. Each tile's
+        sub-list contains the annotations that intersect fully with that specific tile.
+    """
     tile_coordinates: List[List[Tuple[int]]] = generate_tile_coordinates(
         image_width,
         image_height,
