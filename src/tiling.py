@@ -138,4 +138,16 @@ def tile_annotations(
     vertical_overlap_ratio: int,
 ):
     """ """
-    pass
+    tile_coordinates: List[List[Tuple[int]]] = generate_tile_coordinates(
+        image_width,
+        image_height,
+        slice_width,
+        slice_height,
+        horizontal_overlap_ratio,
+        vertical_overlap_ratio,
+    )
+    annotation_tiles = [
+        [get_annotations_in_tile(annotations, tc) for tc in tc_list]
+        for tc_list in tile_coordinates
+    ]
+    return annotation_tiles
