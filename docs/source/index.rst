@@ -6,6 +6,10 @@
 Welcome to Chart Extractor's documentation!
 ===========================================
 
+ChartExtractor is a repository for computer vision software that is being developed by UVA's 
+anesthesiology department in coordination with UVA School of Data Science to automatically digitize
+smartphone photographs of paper medical charts.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
