@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Chart Extractor's documentation!
+Welcome to ChartExtractor's documentation!
 ===========================================
 
 ChartExtractor is a repository for computer vision software that is being developed by UVA's 
@@ -14,6 +14,7 @@ smartphone photographs of paper medical charts.
    :maxdepth: 2
    :caption: Contents:
 
+   modules
 
 
 Indices and tables
