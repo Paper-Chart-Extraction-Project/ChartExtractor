@@ -52,13 +52,19 @@ def tile_image(
     black on the right and bottom sides.
 
     Args:
-        `image` (PIL Image): The image to tile.
-        `slice_height` (int): The height of each slice.
-        `slice_width` (int): The width of each slice.
-        `horizontal_overlap_ratio` (float) - The amount of left-right overlap between slices.
-        `vertical_overlap_ratio` (float) - The amount of top-bottom overlap between slices.
+        `image` (PIL Image):
+            The image to tile.
+        `slice_height` (int):
+            The height of each slice.
+        `slice_width` (int):
+            The width of each slice.
+        `horizontal_overlap_ratio` (float):
+            The amount of left-right overlap between slices.
+        `vertical_overlap_ratio` (float):
+            The amount of top-bottom overlap between slices.
 
-    Returns: A list of sliced images.
+    Returns:
+        A list of sliced images.
     """
     validate_tile_parameters(
         image,
@@ -92,14 +98,20 @@ def validate_tile_parameters(
     """Validates the parameters for the function 'tile_image'.
 
     Args:
-        `image` (PIL Image) - The image to tile.
-        `slice_height` (int) - The height of each slice.
-        `slice_width` (int) - The width of each slice.
-        `horizontal_overlap_ratio` (float) - The amount of left-right overlap between slices.
-        `vertical_overlap_ratio` (float) - The amount of top-bottom overlap between slices.
+        `image` (PIL Image):
+            The image to tile.
+        `slice_height` (int):
+            The height of each slice.
+        `slice_width` (int):
+            The width of each slice.
+        `horizontal_overlap_ratio` (float):
+            The amount of left-right overlap between slices.
+        `vertical_overlap_ratio` (float):
+            The amount of top-bottom overlap between slices.
 
     Raises:
-        ValueError: If slice_width is not within (0, image_width], slice_height not within (0, image_height), or horizontal/vertical overlap ratio not in (0, 1].
+        ValueError:
+            If slice_width is not within (0, image_width], slice_height not within (0, image_height), or horizontal/vertical overlap ratio not in (0, 1].
     """
     if not 0 < slice_width <= image.size[0]:
         raise ValueError(
@@ -130,14 +142,21 @@ def generate_tile_coordinates(
     """Generates the box coordinates of the tiles for the function 'tile_image'.
 
     Args:
-        `image_width` (int): The image's width.
-        `image_height` (int): The image's height.
-        `slice_height` (int): The height of each slice.
-        `slice_width` (int): The width of each slice.
-        `horizontal_overlap_ratio` (float): The amount of left-right overlap between slices.
-        `vertical_overlap_ratio` (float): The amount of top-bottom overlap between slices.
+        `image_width` (int):
+            The image's width.
+        `image_height` (int):
+            The image's height.
+        `slice_height` (int):
+            The height of each slice.
+        `slice_width` (int):
+            The width of each slice.
+        `horizontal_overlap_ratio` (float):
+            The amount of left-right overlap between slices.
+        `vertical_overlap_ratio` (float):
+            The amount of top-bottom overlap between slices.
 
-    Returns: A 2d list of four coordinate tuples encoding the left, top, right, and bottom of each tile.
+    Returns:
+        A 2d list of four coordinate tuples encoding the left, top, right, and bottom of each tile.
     """
     tile_coords: List[List[Tuple[int, int, int, int]]] = [
         [
@@ -175,15 +194,20 @@ def tile_annotations(
     based on whether the annotation fully fits into the tile.
 
     Args:
-        `annotations` (List): A list of annotations (anything that implements the 'box' property).
-        `image_width` (int): The width of the image in pixels.
-        `image_height` (int): The height of the image in pixels.
-        `slice_width` (int): The width of each tile in pixels.
-        `slice_height` (int): The height of each tile in pixels.
-        `horizontal_overlap_ratio` (float): The ratio (0.0 to 1.0) of the tile width that overlaps
-            horizontally between adjacent tiles.
-        `vertical_overlap_ratio` (float): The ratio (0.0 to 1.0) of the tile height that overlaps
-            vertically between adjacent tiles.
+        `annotations` (List):
+            A list of annotations (anything that implements the 'box' property).
+        `image_width` (int):
+            The width of the image in pixels.
+        `image_height` (int):
+            The height of the image in pixels.
+        `slice_width` (int):
+            The width of each tile in pixels.
+        `slice_height` (int):
+            The height of each tile in pixels.
+        `horizontal_overlap_ratio` (float):
+            The ratio (0.0 to 1.0) of the tile width that overlaps horizontally between adjacent tiles.
+        `vertical_overlap_ratio` (float):
+            The ratio (0.0 to 1.0) of the tile height that overlaps vertically between adjacent tiles.
 
     Returns:
         A list of lists, where each sub-list represents a tile in the grid. Each tile's
@@ -213,9 +237,10 @@ def get_annotations_in_tile(annotations: List, tile: Tuple[int, int, int, int]) 
     intersecting with the specified tile area.
 
     Args:
-        `annotations`: A list of annotations (expected to implement the 'box' property).
-        `tile`: A tuple representing the tile's bounding box coordinates
-            `(left, top, right, bottom)`.
+        `annotations`:
+            A list of annotations (expected to implement the 'box' property).
+        `tile` (Tuple[int, int, int, int]):
+            A tuple representing the tile's bounding box coordinates `(left, top, right, bottom)`.
 
     Returns:
         A list of `BoundingBox` objects that intersect with the specified tile.
