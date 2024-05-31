@@ -1,18 +1,23 @@
-name: Deploy Sphinx documentation to Pages
+name: "Sphinx: Render docs"
 
-on:
-  push:
-    branches: [master] # branch to trigger deployment
+on: push
 
 jobs:
-  pages:
-    runs-on: ubuntu-20.04
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    permissions:
-      pages: write
-      id-token: write
+  build:
+    runs-on: ubuntu-latest
     steps:
-    - id: deployment
-      uses: sphinx-notes/pages@v3
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.x'
+
+    - name: Install Sphinx & Dependencies
+      run: pip install sphinx sphinx_markdown_builder sphinx_rtd_theme
+    - name: Build Documentation
+      run: cd "$GITHUB_WORKSPACE/docs" && make html
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: Documentation
+        path: "$GITHUB_WORKSPACE/docs/build/html/"
