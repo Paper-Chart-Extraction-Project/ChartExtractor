@@ -28,6 +28,10 @@ release = "0.1"
 
 # -- General configuration ---------------------------------------------------
 
+# Orders what shows up in the documentation by how it appears in the source
+# instead of the default (alphabetically).
+autodoc_member_order = "bysource"
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
