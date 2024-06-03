@@ -153,12 +153,13 @@ class BoundingBox:
         """
         left, top, w, h = coco_annotation["bbox"]
         right, bottom = left + w, top + h
-        category = list(
-            filter(lambda c: c["id"] == coco_annotation["category_id"], categories)
-        )[0].get("name")
-        if category == None:
+        try:
+            category = list(
+                filter(lambda c: c["id"] == coco_annotation["category_id"], categories)
+            )[0].get("name")
+        except IndexError:
             raise ValueError(
-                f"Category {int(coco_annotation['category_id'])} not found in the id_to_category dictionary."
+                f"Category {int(coco_annotation['category_id'])} not found in the categories list."
             )
         return BoundingBox(category, left, top, right, bottom)
 
