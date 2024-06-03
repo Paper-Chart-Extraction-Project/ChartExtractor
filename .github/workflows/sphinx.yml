@@ -27,8 +27,23 @@ jobs:
         name: html-docs
         path: docs/build/html/
 
-    - name: Deploy to Pages
-      uses: actions/deploy-pages@v4
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        source: docs/build/html
+    deploy:
+      needs: build
+      runs-on: ubuntu-latest
+
+      permissions:
+        pages: write
+        id-token: write
+
+      environment:
+        name: github-pages
+        url: ${{ steps.deployment.outputs.page_url }}
+      
+      steps:
+        - name: Deploy to GitHub Pages
+          id: deployment
+          uses: actions/deploy-pages@v4 # or specific "vX.X.X" version tag for this action
+          with:
+            token: ${{ github.token }}
+            artifact_name: html-docs
+
