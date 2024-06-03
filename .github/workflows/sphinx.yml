@@ -14,6 +14,7 @@ jobs:
 
     - name: Install Sphinx & Dependencies
       run: pip install sphinx sphinx_markdown_builder sphinx_rtd_theme
+      run: pip install -r requirements.txt
     - name: Build Documentation
       run: cd "$GITHUB_WORKSPACE/docs" && make html
 
