@@ -202,12 +202,12 @@ class BoundingBox:
             )
         elif left == right:
             warnings.warn(
-                f"Degenerate rectangle detected. The box's left side equals it's right side (Left:{left}, Top:{top}, Right:{right}, Bottom:{bottom}).",
+                f"Degenerate rectangle detected. The box's left side equals its right side (Left:{left}, Top:{top}, Right:{right}, Bottom:{bottom}).",
                 UserWarning,
             )
         elif top == bottom:
             warnings.warn(
-                f"Degenerate rectangle detected. The box's left side equals it's right side (Left:{left}, Top:{top}, Right:{right}, Bottom:{bottom}).",
+                f"Degenerate rectangle detected. The box's top side equals its bottom side (Left:{left}, Top:{top}, Right:{right}, Bottom:{bottom}).",
                 UserWarning,
             )
 
