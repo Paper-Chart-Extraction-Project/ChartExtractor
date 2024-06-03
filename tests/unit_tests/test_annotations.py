@@ -114,3 +114,9 @@ class TestBoundingBox:
         category_to_id = {"Test": 0}
         yolo_str = bbox.to_yolo(image_width, image_height, category_to_id)
         assert yolo_str == "0 0.25 0.25 0.5 0.5"
+
+
+class TestKeypoint:
+    """Tests the Keypoint class."""
+
+    pass
