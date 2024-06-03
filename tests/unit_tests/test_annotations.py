@@ -96,4 +96,5 @@ class TestBoundingBox:
     # Center
     def test_center(self):
         """Tests the 'center' property."""
-        pass
+        bbox = BoundingBox("Test", 0, 0, 1, 1)
+        assert (0.5, 0.5) == bbox.center
