@@ -1,4 +1,4 @@
-""" """
+"""Tests for the annotations module."""
 
 import sys
 import os
