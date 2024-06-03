@@ -1,6 +1,13 @@
 name: "Sphinx: Render docs"
 
-on: push
+on:
+  pull_request:
+    types: [closed]
+    branches: [ main ]
+    conditions: # Optional, add this section for successful merge check
+      # Ensures the pull request was merged
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true
 
 jobs:
   build:
