@@ -103,4 +103,9 @@ class TestBoundingBox:
     def test_box(self):
         """Tests the 'box' property."""
         bbox = BoundingBox("Test", 0, 0, 1, 1)
-        assert [0, 0, 1, 1] == bbox.center
+        assert [0, 0, 1, 1] == bbox.box
+
+    # to_yolo
+    def test_to_yolo(self):
+        """Tests the to_yolo method."""
+        pass
