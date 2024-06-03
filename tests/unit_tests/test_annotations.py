@@ -119,8 +119,21 @@ class TestBoundingBox:
 class TestKeypoint:
     """Tests the Keypoint class."""
 
+    # Init
     def test_init(self):
         """Tests the init function with valid parameters."""
-        kp = Point(0.5, 0.5)
+        kp = Point(0.25, 0.25)
         bbox = BoundingBox("Test", 0, 0, 1, 1)
         Keypoint(kp, bbox)
+
+    def test_from_yolo(self):
+        """Tests the from_yolo constructor."""
+        true_kp = Keypoint(Point(0.25, 0.25), BoundingBox("Test", 0, 0, 1, 1))
+        yolo_line = "0 0.25 0.25 0.5 0.5 0.125 0.125"
+        image_width = 2
+        image_height = 2
+        id_to_category = {0: "Test"}
+        created_kp = Keypoint.from_yolo(
+            yolo_line, image_width, image_height, id_to_category
+        )
+        assert true_kp == created_kp
