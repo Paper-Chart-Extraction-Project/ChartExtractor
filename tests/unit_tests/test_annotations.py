@@ -119,4 +119,6 @@ class TestBoundingBox:
 class TestKeypoint:
     """Tests the Keypoint class."""
 
-    pass
+    def test_init(self):
+        """Tests the init function with valid parameters."""
+        pass
