@@ -19,7 +19,7 @@ class TestBoundingBox:
 
     # from_yolo
     def test_from_yolo(self):
-        """Tests the from_yolo function."""
+        """Tests the from_yolo constructor."""
         true_bbox = BoundingBox("Test", 0, 0, 1, 1)
         yolo_line = "0 0.25 0.25 0.5 0.5"
         image_width = 2
@@ -31,7 +31,7 @@ class TestBoundingBox:
         assert true_bbox == created_bbox
 
     def test_from_yolo_category_not_in_id_to_category_dict(self):
-        """Tests the from_yolo function where the supplied id is not in the id_to_category dictionary."""
+        """Tests the from_yolo constructor where the supplied id is not in the id_to_category dictionary."""
         yolo_line = "0 0.25 0.25 0.5 0.5"
         image_width = 2
         image_height = 2
@@ -40,6 +40,32 @@ class TestBoundingBox:
             ValueError, match="not found in the id_to_category dictionary"
         ):
             BoundingBox.from_yolo(yolo_line, image_width, image_height, id_to_category)
+
+    # from_coco
+    def test_from_coco(self):
+        """Tests the from_coco constructor."""
+        true_bbox = BoundingBox("Test", 0, 0, 1, 1)
+        coco_annotation = {
+            "id": 0,
+            "image_id": 0,
+            "category_id": 0,
+            "bbox": [0, 0, 1, 1],
+        }
+        categories = [{"id": 0, "name": "Test"}]
+        created_bbox = BoundingBox.from_coco(coco_annotation, categories)
+        assert true_bbox == created_bbox
+
+    def test_from_coco_category_not_found_in_(self):
+        """Tests the from_coco constructor where the supplied category is not in the list of category dictionaries."""
+        coco_annotation = {
+            "id": 0,
+            "image_id": 0,
+            "category_id": 0,
+            "bbox": [0, 0, 1, 1],
+        }
+        categories = [{"id": 1, "name": "Test"}]
+        with pytest.raises(ValueError, match="not found in the categories list"):
+            BoundingBox.from_coco(coco_annotation, categories)
 
     # validate_box_values
     def test_validate_box_values_left_greater_than_right(self):
