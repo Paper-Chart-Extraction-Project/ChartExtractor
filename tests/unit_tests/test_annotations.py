@@ -139,6 +139,7 @@ class TestKeypoint:
         )
         assert true_kp == created_kp
 
+    # validate_keyoint
     def test_validate_keypoint_out_of_bounds_x(self):
         """Tests the validate_keypoint method where the keypoint is not within the left-right bounds."""
         # Left of box.
@@ -156,3 +157,13 @@ class TestKeypoint:
         # Below box
         with pytest.raises(ValueError):
             Keypoint(Point(1, 4), BoundingBox("Test", 0, 2, 2, 3))
+
+    # to_yolo
+    def test_to_yolo(self):
+        """Tests the to_yolo method."""
+        kp = Keypoint(Point(0.25, 0.25), BoundingBox("Test", 0, 0, 1, 1))
+        image_width = 2
+        image_height = 2
+        category_to_id = {"Test": 0}
+        yolo_str = kp.to_yolo(image_width, image_height, category_to_id)
+        assert yolo_str == "0 0.25 0.25 0.5 0.5 0.125 0.125"
