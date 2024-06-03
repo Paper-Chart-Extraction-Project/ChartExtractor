@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>annotations module &mdash; Chart Extractor 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=2709fde1"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="tiling module" href="tiling.html" />
+    <link rel="prev" title="src" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Chart Extractor
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">annotations module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#annotations.Point"><code class="docutils literal notranslate"><span class="pre">Point</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.Point.x"><code class="docutils literal notranslate"><span class="pre">Point.x</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.Point.y"><code class="docutils literal notranslate"><span class="pre">Point.y</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#annotations.BoundingBox"><code class="docutils literal notranslate"><span class="pre">BoundingBox</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.BoundingBox.category"><code class="docutils literal notranslate"><span class="pre">BoundingBox.category</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.BoundingBox.left"><code class="docutils literal notranslate"><span class="pre">BoundingBox.left</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.BoundingBox.top"><code class="docutils literal notranslate"><span class="pre">BoundingBox.top</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.BoundingBox.right"><code class="docutils literal notranslate"><span class="pre">BoundingBox.right</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.BoundingBox.bottom"><code class="docutils literal notranslate"><span class="pre">BoundingBox.bottom</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.BoundingBox.from_yolo"><code class="docutils literal notranslate"><span class="pre">BoundingBox.from_yolo()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.BoundingBox.from_coco"><code class="docutils literal notranslate"><span class="pre">BoundingBox.from_coco()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.BoundingBox.validate_box_values"><code class="docutils literal notranslate"><span class="pre">BoundingBox.validate_box_values()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.BoundingBox.center"><code class="docutils literal notranslate"><span class="pre">BoundingBox.center</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.BoundingBox.box"><code class="docutils literal notranslate"><span class="pre">BoundingBox.box</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.BoundingBox.to_yolo"><code class="docutils literal notranslate"><span class="pre">BoundingBox.to_yolo()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#annotations.Keypoint"><code class="docutils literal notranslate"><span class="pre">Keypoint</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.Keypoint.keypoint"><code class="docutils literal notranslate"><span class="pre">Keypoint.keypoint</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.Keypoint.bounding_box"><code class="docutils literal notranslate"><span class="pre">Keypoint.bounding_box</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.Keypoint.from_yolo"><code class="docutils literal notranslate"><span class="pre">Keypoint.from_yolo()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.Keypoint.validate_keypoint"><code class="docutils literal notranslate"><span class="pre">Keypoint.validate_keypoint()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.Keypoint.category"><code class="docutils literal notranslate"><span class="pre">Keypoint.category</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.Keypoint.center"><code class="docutils literal notranslate"><span class="pre">Keypoint.center</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.Keypoint.box"><code class="docutils literal notranslate"><span class="pre">Keypoint.box</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#annotations.Keypoint.to_yolo"><code class="docutils literal notranslate"><span class="pre">Keypoint.to_yolo()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tiling.html">tiling module</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Chart Extractor</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">src</a></li>
+      <li class="breadcrumb-item active">annotations module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/annotations.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-annotations">
+<span id="annotations-module"></span><h1>annotations module<a class="headerlink" href="#module-annotations" title="Link to this heading"></a></h1>
+<p>This module defines classes for representing bounding boxes and keypoints associated with objects in images.</p>
+<p>It also provides helper functions for constructing these objects from YOLO formatted labels.</p>
+<p><strong>Classes:</strong></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><cite>Point</cite> (namedtuple):</dt><dd><p>A simple namedtuple to represent a 2D point with <cite>x</cite> and <cite>y</cite> coordinates.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><cite>BoundingBox</cite> (dataclass):</dt><dd><p>Represents a bounding box around an object in an image. It includes attributes for the category,
+bounding box coordinates (left, top, right, bottom), center of the box, and a list representation of the box coordinates.
+It provides methods to construct a <cite>BoundingBox</cite> from a YOLO formatted string, construct a <cite>BoundingBox</cite> from a COCO
+formatted annotation dictionary, convert it back to YOLO format, and validates the box dimensions.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><cite>Keypoint</cite> (dataclass):</dt><dd><p>Represents a keypoint associated with an object in an image. It includes attributes for the keypoint
+location (as a <cite>Point</cite>), the enclosing bounding box (<cite>BoundingBox</cite>), category (inherited from the bounding box), center of
+the bounding box (inherited from the bounding box), and a list representation of the bounding box coordinates (inherited from
+the bounding box). It provides methods to construct a <cite>Keypoint</cite> from a YOLO formatted string, convert it back to YOLO format,
+and validates that the keypoint lies within the bounding box.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p><strong>Requirements:</strong></p>
+<ul class="simple">
+<li><p><cite>typing</cite></p></li>
+<li><p><cite>warnings</cite></p></li>
+<li><p><cite>dataclasses</cite> (optional, for <cite>dataclass</cite> syntax)</p></li>
+<li><p><cite>collections</cite> (optional, for <cite>namedtuple</cite> syntax)</p></li>
+</ul>
+<dl class="py class">
+<dt class="sig sig-object py" id="annotations.Point">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">annotations.</span></span><span class="sig-name descname"><span class="pre">Point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotations.Point" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="annotations.Point.x">
+<span class="sig-name descname"><span class="pre">x</span></span><a class="headerlink" href="#annotations.Point.x" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="annotations.Point.y">
+<span class="sig-name descname"><span class="pre">y</span></span><a class="headerlink" href="#annotations.Point.y" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="annotations.BoundingBox">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">annotations.</span></span><span class="sig-name descname"><span class="pre">BoundingBox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bottom</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotations.BoundingBox" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The <cite>BoundingBox</cite> class represents a bounding box around an object in an image.</p>
+<dl class="simple">
+<dt>Attributes :</dt><dd><dl class="simple">
+<dt><cite>category</cite> (str):</dt><dd><p>The category of the object within the bounding box.</p>
+</dd>
+<dt><cite>left</cite> (float):</dt><dd><p>The x-coordinate of the top-left corner of the bounding box.</p>
+</dd>
+<dt><cite>top</cite> (float):</dt><dd><p>The y-coordinate of the top-left corner of the bounding box.</p>
+</dd>
+<dt><cite>right</cite> (float):</dt><dd><p>The x-coordinate of the bottom-right corner of the bounding box.</p>
+</dd>
+<dt><cite>bottom</cite> (float):</dt><dd><p>The y-coordinate of the bottom-right corner of the bounding box.</p>
+</dd>
+</dl>
+</dd>
+<dt>Constructors :</dt><dd><dl class="simple">
+<dt><cite>from_yolo(yolo_line: str, image_width: int, image_height: int, int_to_category: Dict[int, str])</cite>:</dt><dd><p>Constructs a <cite>BoundingBox</cite> from a line in a YOLO formatted labels file. It requires the original image dimensions and a dictionary mapping category IDs to category names.</p>
+</dd>
+<dt><cite>from_coco(coco_annotation: Dict, categories: List[Dict])</cite>:</dt><dd><p>Constructs a <cite>BoundingBox</cite> from an annotation in a COCO data JSON file. It requires the annotation dictionary and a list of category dictionaries.</p>
+</dd>
+</dl>
+</dd>
+<dt>Properties :</dt><dd><dl class="simple">
+<dt><cite>center</cite> (Tuple[int]):</dt><dd><p>A tuple containing the (x, y) coordinates of the bounding box’s center.</p>
+</dd>
+<dt><cite>box</cite> (List[int]):</dt><dd><p>A list containing the bounding box coordinates as [left, top, right, bottom].</p>
+</dd>
+</dl>
+</dd>
+<dt>Methods :</dt><dd><dl class="simple">
+<dt><cite>to_yolo(image_width: int, image_height: int, category_to_int: Dict[str, int]) -&gt; str</cite>:</dt><dd><p>Writes a yolo formatted string using this bounding box’s data.</p>
+</dd>
+<dt><cite>validate_box_values(cls, left: float, top: float, right: float, bottom: float) -&gt; None</cite>:</dt><dd><p>Validates the box parameters and throws a value error if left &gt; right or top &gt; bottom.
+Also issues a warning for the case when left == right or top == bottom letting the user
+know that they are constructing a degenerate rectangle.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="annotations.BoundingBox.category">
+<span class="sig-name descname"><span class="pre">category</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#annotations.BoundingBox.category" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="annotations.BoundingBox.left">
+<span class="sig-name descname"><span class="pre">left</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#annotations.BoundingBox.left" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="annotations.BoundingBox.top">
+<span class="sig-name descname"><span class="pre">top</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#annotations.BoundingBox.top" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="annotations.BoundingBox.right">
+<span class="sig-name descname"><span class="pre">right</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#annotations.BoundingBox.right" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="annotations.BoundingBox.bottom">
+<span class="sig-name descname"><span class="pre">bottom</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#annotations.BoundingBox.bottom" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="annotations.BoundingBox.from_yolo">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yolo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yolo_line</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_to_category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotations.BoundingBox.from_yolo" title="Link to this definition"></a></dt>
+<dd><p>Constructs a <cite>BoundingBox</cite> from a line in a yolo formatted labels file.</p>
+<p>Because the yolo format stores data in normalized xywh format (from 0 to 1), this method
+requires the original image’s width and height.</p>
+<dl class="simple">
+<dt>Args :</dt><dd><dl class="simple">
+<dt><cite>yolo_line</cite> (str):</dt><dd><p>A string in the yolo label format (c x y w h).</p>
+</dd>
+<dt><cite>image_width</cite> (int):</dt><dd><p>The original image’s width.</p>
+</dd>
+<dt><cite>image_height</cite> (int):</dt><dd><p>The original image’s height.</p>
+</dd>
+<dt><cite>id_to_category</cite> (Dict):</dt><dd><p>A dictionary that maps the number id in the label to the category.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A <cite>BoundingBox</cite> object containing the yolo_line’s data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="annotations.BoundingBox.from_coco">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_coco</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coco_annotation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotations.BoundingBox.from_coco" title="Link to this definition"></a></dt>
+<dd><p>Constructs a <cite>BoundingBox</cite> from an annotation in a coco data json file.</p>
+<dl class="simple">
+<dt>Args :</dt><dd><p><cite>coco_annotation</cite> (Dict): A bounding box annotation from the ‘annotations’ section.
+<cite>categories</cite> (List[Dict]): A list of dictionaries containing their numeric ids and categories.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A <cite>BoundingBox</cite> object containing the coco annotation’s data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="annotations.BoundingBox.validate_box_values">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_box_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bottom</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#annotations.BoundingBox.validate_box_values" title="Link to this definition"></a></dt>
+<dd><p>Validates the coordinates of a rectangle (bounding box).</p>
+<p>This classmethod ensures that the left coordinate is less than the right coordinate, and
+the top coordinate is less than the bottom coordinate. It raises a <cite>ValueError</cite> if these
+conditions are not met, indicating an invalid box configuration. If the left coordinate
+is equal to the right coordinate or if the top coordinate is equal to the bottom
+coordinate, this method issues a warning.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>left</strong> (<em>float</em>) – The left x-coordinate of the box.</p></li>
+<li><p><strong>top</strong> (<em>float</em>) – The top y-coordinate of the box.</p></li>
+<li><p><strong>right</strong> (<em>float</em>) – The right x-coordinate of the box.</p></li>
+<li><p><strong>bottom</strong> (<em>float</em>) – The bottom y-coordinate of the box.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>left &gt; right</cite> or <cite>top &gt; bottom</cite>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="annotations.BoundingBox.center">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">center</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#annotations.BoundingBox.center" title="Link to this definition"></a></dt>
+<dd><p>This <cite>BoundingBox</cite>’s center.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="annotations.BoundingBox.box">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">box</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#annotations.BoundingBox.box" title="Link to this definition"></a></dt>
+<dd><p>A list containing this <cite>BoundingBox</cite>’s [left, top, right, bottom].</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="annotations.BoundingBox.to_yolo">
+<span class="sig-name descname"><span class="pre">to_yolo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category_to_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#annotations.BoundingBox.to_yolo" title="Link to this definition"></a></dt>
+<dd><p>Writes the data from this <cite>BoundingBox</cite> into a yolo formatted string.</p>
+<dl class="simple">
+<dt>Args :</dt><dd><dl class="simple">
+<dt><cite>image_width</cite> (int):</dt><dd><p>The image’s width that this boundingbox belongs to.</p>
+</dd>
+<dt><cite>image_height</cite> (int):</dt><dd><p>The image’s height that this boundingbox belongs to.</p>
+</dd>
+<dt><cite>category_to_id</cite> (Dict[str, int]):</dt><dd><p>A dictionary that maps the category string to an id (integer).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A string that encodes this <cite>BoundingBox</cite>’s data for a single line in a yolo label file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="annotations.Keypoint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">annotations.</span></span><span class="sig-name descname"><span class="pre">Keypoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keypoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#annotations.Point" title="annotations.Point"><span class="pre">Point</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounding_box</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#annotations.BoundingBox" title="annotations.BoundingBox"><span class="pre">BoundingBox</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotations.Keypoint" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The <cite>Keypoint</cite> class represents a keypoint associated with an object in an image.</p>
+<dl class="simple">
+<dt>Attributes :</dt><dd><dl class="simple">
+<dt><cite>keypoint</cite> (Tuple[float]):</dt><dd><p>A tuple containing the (x, y) coordinates of the keypoint relative to the top-left corner of the image.</p>
+</dd>
+<dt><cite>bounding_box</cite> (BoundingBox):</dt><dd><p>A <cite>BoundingBox</cite> object that defines the bounding box around the object containing the keypoint.</p>
+</dd>
+</dl>
+</dd>
+<dt>Constructors :</dt><dd><dl class="simple">
+<dt><cite>from_yolo(yolo_line: str, image_width: int, image_height: int, id_to_category: Dict[int, str])</cite>:</dt><dd><p>Constructs a Keypoint from a line in a YOLO formatted labels file. It requires the original image dimensions and a dictionary mapping category IDs to category names.
+<strong>Note:</strong> This method ignores the “visibility” information (denoted by ‘v’) in the YOLO format.</p>
+</dd>
+</dl>
+</dd>
+<dt>Properties :</dt><dd><dl class="simple">
+<dt><cite>category</cite> (str):</dt><dd><p>The category of the object the keypoint belongs to (inherited from the <cite>bounding_box</cite>).</p>
+</dd>
+<dt><cite>center</cite> (Tuple[float]):</dt><dd><p>The (x, y) coordinates of the bounding box’s center (inherited from the <cite>bounding_box</cite>).</p>
+</dd>
+<dt><cite>box</cite> (Tuple[float]):</dt><dd><p>A list containing the bounding box coordinates as [left, top, right, bottom] (inherited from the <cite>bounding_box</cite>).</p>
+</dd>
+</dl>
+</dd>
+<dt>Methods :</dt><dd><dl class="simple">
+<dt><cite>to_yolo(self, image_width: int, image_height: int, category_to_id: Dict[str, int]) -&gt; str</cite>:</dt><dd><p>Generates a YOLO formatted string representation of this <cite>Keypoint</cite> object. It requires the image dimensions and a dictionary mapping category strings to integer labels.</p>
+</dd>
+<dt><cite>validate_keypoint(cls, bounding_box: BoundingBox, keypoint: Point) -&gt; None</cite>:</dt><dd><p>Validates that a keypoint lies within the specified bounding box. Raises a ValueError if the keypoint is outside the bounding box.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="annotations.Keypoint.keypoint">
+<span class="sig-name descname"><span class="pre">keypoint</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#annotations.Point" title="annotations.Point"><span class="pre">Point</span></a></em><a class="headerlink" href="#annotations.Keypoint.keypoint" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="annotations.Keypoint.bounding_box">
+<span class="sig-name descname"><span class="pre">bounding_box</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#annotations.BoundingBox" title="annotations.BoundingBox"><span class="pre">BoundingBox</span></a></em><a class="headerlink" href="#annotations.Keypoint.bounding_box" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="annotations.Keypoint.from_yolo">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yolo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yolo_line</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_to_category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#annotations.Keypoint.from_yolo" title="Link to this definition"></a></dt>
+<dd><p>Constructs a <cite>Keypoint</cite> from a line in a yolo formatted labels file.</p>
+<p>Because the yolo format stores data in normalized xywh format (from 0 to 1), this method
+requires the original image’s width and height. The ‘visible’ data is optional, and is not
+read to create the object.</p>
+<dl class="simple">
+<dt>Args :</dt><dd><dl class="simple">
+<dt><cite>yolo_line</cite> (str):</dt><dd><p>A string in the yolo label format (c x y w h kpx kpy v).</p>
+</dd>
+<dt><cite>image_width</cite> (int):</dt><dd><p>The original image’s width.</p>
+</dd>
+<dt><cite>image_height</cite> (int):</dt><dd><p>The original image’s height.</p>
+</dd>
+<dt><cite>id_to_category</cite> (Dict):</dt><dd><p>A dictionary that maps the id number in the label to the category.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A <cite>BoundingBox</cite> object containing the yolo_line’s data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="annotations.Keypoint.validate_keypoint">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_keypoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounding_box</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#annotations.BoundingBox" title="annotations.BoundingBox"><span class="pre">BoundingBox</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">keypoint</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#annotations.Point" title="annotations.Point"><span class="pre">Point</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#annotations.Keypoint.validate_keypoint" title="Link to this definition"></a></dt>
+<dd><p>Validates that a keypoint lies within the specified bounding box.</p>
+<p>This classmethod ensures that the <cite>keypoint</cite> (represented by a <cite>Point</cite> object)
+falls within the confines of the provided <cite>bounding_box</cite> (represented by a
+<cite>BoundingBox</cite> object). It checks both the x and y coordinates of the keypoint
+against the left, top, right, and bottom boundaries of the bounding box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bounding_box</strong> – The <cite>BoundingBox</cite> object representing the enclosing region.</p></li>
+<li><p><strong>keypoint</strong> – The <cite>Point</cite> object representing the keypoint to be validated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the keypoint’s coordinates are not within the bounding box.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="annotations.Keypoint.category">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">category</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#annotations.Keypoint.category" title="Link to this definition"></a></dt>
+<dd><p>This <cite>Keypoint</cite>’s category.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="annotations.Keypoint.center">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">center</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#annotations.Keypoint.center" title="Link to this definition"></a></dt>
+<dd><p>This <cite>Keypoint</cite>’s boundingbox center.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="annotations.Keypoint.box">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">box</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#annotations.Keypoint.box" title="Link to this definition"></a></dt>
+<dd><p>This keypoints boundingbox’s [left, top, right, bottom].</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="annotations.Keypoint.to_yolo">
+<span class="sig-name descname"><span class="pre">to_yolo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category_to_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#annotations.Keypoint.to_yolo" title="Link to this definition"></a></dt>
+<dd><p>Writes the data from this <cite>Keypoint</cite> into a yolo formatted string.</p>
+<dl class="simple">
+<dt>Args :</dt><dd><dl class="simple">
+<dt><cite>image_width</cite> (int):</dt><dd><p>The image’s width that this <cite>Keypoint</cite> belongs to.</p>
+</dd>
+<dt><cite>image_height</cite> (int):</dt><dd><p>The image’s height that this <cite>Keypoint</cite> belongs to.</p>
+</dd>
+<dt><cite>category_to_id</cite> (Dict[str, int]):</dt><dd><p>A dictionary that maps the category string to an id (int).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A string that encodes this <cite>Keypoint</cite>’s data for a single line in a yolo label file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="src" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tiling.html" class="btn btn-neutral float-right" title="tiling module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Ryan D. Folks.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
