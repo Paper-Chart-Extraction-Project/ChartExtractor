@@ -108,4 +108,9 @@ class TestBoundingBox:
     # to_yolo
     def test_to_yolo(self):
         """Tests the to_yolo method."""
-        pass
+        bbox = BoundingBox("Test", 0, 0, 1, 1)
+        image_width = 2
+        image_height = 2
+        category_to_id = {"Test": 0}
+        yolo_str = bbox.to_yolo(image_width, image_height, category_to_id)
+        assert yolo_str == "0 0.25 0.25 0.5 0.5"
