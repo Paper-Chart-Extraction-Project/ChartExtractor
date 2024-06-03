@@ -12,10 +12,21 @@ from annotations import BoundingBox, Keypoint, Point
 class TestBoundingBox:
     """Tests the BoundingBox class."""
 
+    # Init
     def test_init(self):
         """Tests the init function with valid parameters."""
         BoundingBox("Test", 0, 0, 1, 1)
 
+    # from_yolo
+    def test_from_yolo(self):
+        """Tests the from_yolo function."""
+        pass
+
+    def test_from_yolo_category_not_in_id_to_category_dict(self):
+        """Tests the from_yolo function where the supplied id is not in the id_to_category dictionary."""
+        pass
+
+    # validate_box_values
     def test_validate_box_values_left_greater_than_right(self):
         """Tests the validate_box_values classmethod with invalid parameters (left > right)."""
         with pytest.raises(ValueError, match="left side greater than its right side"):
