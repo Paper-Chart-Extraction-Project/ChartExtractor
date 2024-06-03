@@ -92,3 +92,8 @@ class TestBoundingBox:
         """Tests the validate_box_values classmethod with degernate rectangle parameters (left == right == top == bottom)."""
         with pytest.warns(UserWarning, match="box's parameters are equal"):
             BoundingBox("Test", 0, 0, 0, 0)
+
+    # Center
+    def test_center(self):
+        """Tests the 'center' property."""
+        pass
