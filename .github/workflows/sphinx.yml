@@ -27,8 +27,8 @@ jobs:
         name: html-docs
         path: docs/build/html/
 
-    - name: Deploy
-      uses: peaceiris/actions-gh-pages@v3
+    - name: Deploy to Pages
+      uses: actions/deploy-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: docs/build/html
+        source: ${{ path.cwd }}/docs/build/html
