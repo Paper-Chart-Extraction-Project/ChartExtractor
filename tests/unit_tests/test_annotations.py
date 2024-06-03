@@ -6,7 +6,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
 
 import pytest
-import annotations
+from annotations import BoundingBox, Keypoint, Point
 
 
 class TestBoundingBox:
@@ -14,4 +14,4 @@ class TestBoundingBox:
 
     def test_init(self):
         """Tests the init function with valid parameters."""
-        pass
+        BoundingBox("Test", 0, 0, 1, 1)
