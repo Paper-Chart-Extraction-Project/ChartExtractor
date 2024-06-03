@@ -126,6 +126,7 @@ class TestKeypoint:
         bbox = BoundingBox("Test", 0, 0, 1, 1)
         Keypoint(kp, bbox)
 
+    # from_yolo
     def test_from_yolo(self):
         """Tests the from_yolo constructor."""
         true_kp = Keypoint(Point(0.25, 0.25), BoundingBox("Test", 0, 0, 1, 1))
@@ -137,3 +138,21 @@ class TestKeypoint:
             yolo_line, image_width, image_height, id_to_category
         )
         assert true_kp == created_kp
+
+    def test_validate_keypoint_out_of_bounds_x(self):
+        """Tests the validate_keypoint method where the keypoint is not within the left-right bounds."""
+        # Left of box.
+        with pytest.raises(ValueError, match="not in the bounding box"):
+            Keypoint(Point(1, 1), BoundingBox("Test", 2, 0, 3, 2))
+        # Right of box.
+        with pytest.raises(ValueError, match="not in the bounding box"):
+            Keypoint(Point(4, 1), BoundingBox("Test", 2, 0, 3, 2))
+
+    def test_validate_keypoint_out_of_bounds_y(self):
+        """Tests the validate_keypoint method where the keypoint is not within the left-right bounds."""
+        # Above box
+        with pytest.raises(ValueError):
+            Keypoint(Point(1, 1), BoundingBox("Test", 0, 2, 2, 3))
+        # Below box
+        with pytest.raises(ValueError):
+            Keypoint(Point(1, 4), BoundingBox("Test", 0, 2, 2, 3))
