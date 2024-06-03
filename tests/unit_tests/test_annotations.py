@@ -20,11 +20,26 @@ class TestBoundingBox:
     # from_yolo
     def test_from_yolo(self):
         """Tests the from_yolo function."""
-        pass
+        true_bbox = BoundingBox("Test", 0, 0, 1, 1)
+        yolo_line = "0 0.25 0.25 0.5 0.5"
+        image_width = 2
+        image_height = 2
+        id_to_category = {0: "Test"}
+        created_bbox = BoundingBox.from_yolo(
+            yolo_line, image_width, image_height, id_to_category
+        )
+        assert true_bbox == created_bbox
 
     def test_from_yolo_category_not_in_id_to_category_dict(self):
         """Tests the from_yolo function where the supplied id is not in the id_to_category dictionary."""
-        pass
+        yolo_line = "0 0.25 0.25 0.5 0.5"
+        image_width = 2
+        image_height = 2
+        id_to_category = {1: "Test"}
+        with pytest.raises(
+            ValueError, match="not found in the id_to_category dictionary"
+        ):
+            BoundingBox.from_yolo(yolo_line, image_width, image_height, id_to_category)
 
     # validate_box_values
     def test_validate_box_values_left_greater_than_right(self):
