@@ -121,4 +121,6 @@ class TestKeypoint:
 
     def test_init(self):
         """Tests the init function with valid parameters."""
-        pass
+        kp = Point(0.5, 0.5)
+        bbox = BoundingBox("Test", 0, 0, 1, 1)
+        Keypoint(kp, bbox)
