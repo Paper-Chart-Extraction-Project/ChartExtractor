@@ -17,3 +17,9 @@ def test_image(self):
     image_data = [0, 1, 2, 3, 4, 5, 6, 7, 8]
     image.putdata(image_data)
     return image
+
+
+class TestValidateTileParameters:
+    """Tests the validate_tile_image function."""
+
+    pass
