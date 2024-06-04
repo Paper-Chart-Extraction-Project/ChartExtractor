@@ -23,7 +23,11 @@ def test_image():
 @pytest.fixture()
 def test_annotations():
     """Creates a short list of annotations for testing."""
-    return [BoundingBox("Test", 0, 0, 1, 1), BoundingBox("Test", 2, 2, 3, 3)]
+    return [
+        BoundingBox("Test", 0, 0, 1, 1),
+        BoundingBox("Test", 2, 2, 3, 3),
+        BoundingBox("Test", 3, 3, 4, 4),
+    ]
 
 
 class TestValidateTileParameters:
@@ -157,6 +161,22 @@ def test_generate_tile_coordinates():
     assert created_tile_coordinates == true_tile_coordinates
 
 
-def test_tile_annotations():
+def test_tile_annotations(test_annotations):
     """Function that tests tile_annotations."""
-    pass
+    image_width, image_height = 4, 4
+    slice_width, slice_height = 3, 3
+    horizontal_overlap_ratio, vertical_overlap_ratio = 0.5, 0.5
+    created_tiled_annotations = tiling.tile_annotations(
+        test_annotations,
+        image_width,
+        image_height,
+        slice_width,
+        slice_height,
+        horizontal_overlap_ratio,
+        vertical_overlap_ratio,
+    )
+    true_tiled_annotations = [
+        [[test_annotations[0], test_annotations[1]], [test_annotations[1]]],
+        [[test_annotations[1]], [test_annotations[1], test_annotations[2]]],
+    ]
+    assert created_tiled_annotations == true_tiled_annotations
