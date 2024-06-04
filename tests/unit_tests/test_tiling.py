@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
 import pytest
 from PIL import Image
 import tiling
+from annotations import BoundingBox
 
 
 @pytest.fixture()
@@ -22,7 +23,7 @@ def test_image():
 @pytest.fixture()
 def test_annotations():
     """Creates a short list of annotations for testing."""
-    pass
+    return [BoundingBox("Test", 0, 0, 1, 1), BoundingBox("Test", 2, 2, 3, 3)]
 
 
 class TestValidateTileParameters:
