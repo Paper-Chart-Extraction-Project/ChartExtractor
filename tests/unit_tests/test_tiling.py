@@ -10,8 +10,8 @@ from PIL import Image
 import tiling
 
 
-@pytest.fixture(scope="class", autouse=True)
-def test_image(self):
+@pytest.fixture()
+def test_image():
     """Creates a PIL Image for testing purposes."""
     image = Image.new("L", (3, 3))
     image_data = [0, 1, 2, 3, 4, 5, 6, 7, 8]
@@ -24,7 +24,16 @@ class TestValidateTileParameters:
 
     def test_slice_width_too_small(self, test_image):
         """Tests the validate_tile_parameters function when the slice width is less than or equal to 0."""
-        pass
+        with pytest.raises(ValueError, match="slice_width must be"):
+            slice_width, slice_height = 0, 1
+            horizontal_overlap_ratio, vertical_overlap_ratio = 0.5, 0.5
+            tiling.validate_tile_parameters(
+                test_image,
+                slice_width,
+                slice_height,
+                horizontal_overlap_ratio,
+                vertical_overlap_ratio,
+            )
 
     def test_slice_width_too_large(self, test_image):
         """Tests the validate_tile_parameters function when the slice width is greater than the image width."""
