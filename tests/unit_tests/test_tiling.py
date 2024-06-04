@@ -37,7 +37,16 @@ class TestValidateTileParameters:
 
     def test_slice_width_too_large(self, test_image):
         """Tests the validate_tile_parameters function when the slice width is greater than the image width."""
-        pass
+        with pytest.raises(ValueError, match="slice_width must be"):
+            slice_width, slice_height = 4, 1
+            horizontal_overlap_ratio, vertical_overlap_ratio = 0.5, 0.5
+            tiling.validate_tile_parameters(
+                test_image,
+                slice_width,
+                slice_height,
+                horizontal_overlap_ratio,
+                vertical_overlap_ratio,
+            )
 
     def test_slice_height_too_small(self, test_image):
         """Tests the validate_tile_parameters function when the slice height is less than or equal to 0."""
