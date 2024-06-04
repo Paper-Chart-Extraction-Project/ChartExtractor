@@ -20,7 +20,7 @@ def test_image():
 
 
 class TestValidateTileParameters:
-    """Tests the validate_tile_image function."""
+    """Class that organizes test functions for validate_tile_parameters."""
 
     def test_slice_width_too_small(self, test_image):
         """Tests the validate_tile_parameters function when the slice width is less than or equal to 0."""
@@ -125,3 +125,27 @@ class TestValidateTileParameters:
                 horizontal_overlap_ratio,
                 vertical_overlap_ratio,
             )
+
+
+def test_generate_tile_coordinates():
+    """Class that organizes test functions for generate_tile_coordinates."""
+
+    image_width, image_height = 8, 8
+    slice_width, slice_height = 4, 4
+    horizontal_overlap_ratio, vertical_overlap_ratio = 0.5, 0.5
+
+    created_tile_coordinates = tiling.generate_tile_coordinates(
+        image_width,
+        image_height,
+        slice_width,
+        slice_height,
+        horizontal_overlap_ratio,
+        vertical_overlap_ratio,
+    )
+    true_tile_coordinates = [
+        [(0, 0, 4, 4), (2, 0, 6, 4), (4, 0, 8, 4), (6, 0, 10, 4)],
+        [(0, 2, 4, 6), (2, 2, 6, 6), (4, 2, 8, 6), (6, 2, 10, 6)],
+        [(0, 4, 4, 8), (2, 4, 6, 8), (4, 4, 8, 8), (6, 4, 10, 8)],
+        [(0, 6, 4, 10), (2, 6, 6, 10), (4, 6, 8, 10), (6, 6, 10, 10)],
+    ]
+    assert created_tile_coordinates == true_tile_coordinates
