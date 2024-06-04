@@ -22,4 +22,34 @@ def test_image(self):
 class TestValidateTileParameters:
     """Tests the validate_tile_image function."""
 
-    pass
+    def test_slice_width_too_small(self, test_image):
+        """Tests the validate_tile_parameters function when the slice width is less than or equal to 0."""
+        pass
+
+    def test_slice_width_too_large(self, test_image):
+        """Tests the validate_tile_parameters function when the slice width is greater than the image width."""
+        pass
+
+    def test_slice_height_too_small(self, test_image):
+        """Tests the validate_tile_parameters function when the slice height is less than or equal to 0."""
+        pass
+
+    def test_slice_height_too_large(self, test_image):
+        """Tests the validate_tile_parameters function when the slice height is greater than the image height."""
+        pass
+
+    def test_horizontal_overlap_ratio_too_small(self, test_image):
+        """Tests the validate_tile_parameters function when the horizontal overlap ratio is less than or equal to 0."""
+        pass
+
+    def test_horizontal_overlap_ratio_too_large(self, test_image):
+        """Tests the validate_tile_parameters function when the horizontal overlap ratio is greater than 1."""
+        pass
+
+    def test_vertical_overlap_ratio_too_small(self, test_image):
+        """Tests the validate_tile_parameters function when the vertical overlap ratio is less than or equal to 0."""
+        pass
+
+    def test_vertical_overlap_ratio_too_large(self, test_image):
+        """Tests the validate_tile_parameters function when the vertical overlap ratio is greater than 1."""
+        pass
