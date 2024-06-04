@@ -19,6 +19,12 @@ def test_image():
     return image
 
 
+@pytest.fixture()
+def test_annotations():
+    """Creates a short list of annotations for testing."""
+    pass
+
+
 class TestValidateTileParameters:
     """Class that organizes test functions for validate_tile_parameters."""
 
@@ -128,8 +134,7 @@ class TestValidateTileParameters:
 
 
 def test_generate_tile_coordinates():
-    """Class that organizes test functions for generate_tile_coordinates."""
-
+    """Function that tests generate_tile_coordinates."""
     image_width, image_height = 8, 8
     slice_width, slice_height = 4, 4
     horizontal_overlap_ratio, vertical_overlap_ratio = 0.5, 0.5
@@ -149,3 +154,8 @@ def test_generate_tile_coordinates():
         [(0, 6, 4, 10), (2, 6, 6, 10), (4, 6, 8, 10), (6, 6, 10, 10)],
     ]
     assert created_tile_coordinates == true_tile_coordinates
+
+
+def test_tile_annotations():
+    """Function that tests tile_annotations."""
+    pass
