@@ -180,3 +180,12 @@ def test_tile_annotations(test_annotations):
         [[test_annotations[1]], [test_annotations[1], test_annotations[2]]],
     ]
     assert created_tiled_annotations == true_tiled_annotations
+
+
+def test_get_annotations_in_tile(test_annotations):
+    """Function that tests get_annotations_in_tile."""
+    created_annotations_in_tile = tiling.get_annotations_in_tile(
+        test_annotations, [0, 0, 3, 3]
+    )
+    true_annotations_in_tile = [test_annotations[0], test_annotations[1]]
+    assert created_annotations_in_tile == true_annotations_in_tile
