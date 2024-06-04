@@ -115,4 +115,13 @@ class TestValidateTileParameters:
 
     def test_vertical_overlap_ratio_too_large(self, test_image):
         """Tests the validate_tile_parameters function when the vertical overlap ratio is greater than 1."""
-        pass
+        slice_width, slice_height = 1, 1
+        horizontal_overlap_ratio, vertical_overlap_ratio = 0.5, 1.1
+        with pytest.raises(ValueError, match="vertical_overlap_ratio must be"):
+            tiling.validate_tile_parameters(
+                test_image,
+                slice_width,
+                slice_height,
+                horizontal_overlap_ratio,
+                vertical_overlap_ratio,
+            )
