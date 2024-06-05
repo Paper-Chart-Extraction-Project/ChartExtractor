@@ -19,6 +19,7 @@ def test_detections() -> List[Detection]:
         Detection(BoundingBox("Test", 0, 0, 1, 1), 1.0),
         Detection(BoundingBox("Test", 0.5, 0, 1, 1), 0.5),
         Detection(BoundingBox("Test", 2, 2, 3, 3), 0.75),
+        Detection(BoundingBox("Test", 2.25, 2.25, 2.75, 2.75), 0.9),
     ]
 
 
@@ -48,3 +49,16 @@ class TestIntersectionOverUnion:
         )
         true_iou = 1
         assert created_iou == true_iou
+
+
+def test_non_maximum_suppression(test_detections):
+    """Function that tests non_maximum_suppression."""
+    created_filtered_detections = detection_reassembly.non_maximum_suppression(
+        test_detections
+    )
+    true_filtered_detections = [
+        test_detections[0],
+        test_detections[3],
+        test_detections[2],
+    ]
+    assert created_filtered_detections == true_filtered_detections
