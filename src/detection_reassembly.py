@@ -5,8 +5,33 @@ from detections import Detection
 
 
 def intersection_over_union(detection_1: Detection, detection_2: Detection):
-    """Divides two detection's area of intersection by their union area."""
-    pass
+    """Calculates the Intersection over Union (IoU) between two detections.
+
+    This function calculates the area of overlap between the bounding boxes of two
+    detection objects and divides it by the total area covered by their bounding boxes.
+
+    Args:
+        detection_1:
+            A Detection object representing the first detection.
+        detection_2:
+            A Detection object representing the second detection.
+
+    Returns:
+        A float value between 0.0 and 1.0 representing the IoU between the two detections.
+    """
+    area = lambda box: (box[2] - box[0]) * (box[3] - box[1])
+
+    intersection_left = max(detection_1.box[0], detection_2.box[0])
+    intersection_top = max(detection_1.box[1], detection_2.box[1])
+    intersection_right = min(detection_1.box[2], detection_2.box[2])
+    intersection_bottom = min(detection_1.box[3], detection_2.box[3])
+    intersection_area = area(
+        intersection_left, intersection_top, intersection_right, intersection_bottom
+    )
+
+    union_area = area(detection_1.box) + area(detection_2.box) - intersection_area
+
+    return intersection_area / union_area
 
 
 def intersection_over_minimum(detection_1: Detection, detection_2: Detection):
