@@ -34,11 +34,6 @@ def intersection_over_union(detection_1: Detection, detection_2: Detection):
     return intersection_area / union_area
 
 
-def intersection_over_minimum(detection_1: Detection, detection_2: Detection):
-    """Divides two detection's area of intersection over the area of the smaller of the two detections."""
-    pass
-
-
 def non_maximum_suppression(
     detections: List[Detection],
     threshold: float = 0.5,
