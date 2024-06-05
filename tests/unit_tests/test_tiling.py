@@ -6,7 +6,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
 
 import pytest
-from PIL import Image
+from PIL import Image, ImageChops
 import tiling
 from annotations import BoundingBox
 
@@ -28,6 +28,48 @@ def test_annotations():
         BoundingBox("Test", 2, 2, 3, 3),
         BoundingBox("Test", 3, 3, 4, 4),
     ]
+
+
+def test_tile_image(test_image):
+    """Function that tests tile_image"""
+
+    def image_from_list(l, size):
+        image = Image.new("L", (size, size))
+        image.putdata(l)
+        return image
+
+    slice_width, slice_height = 2, 2
+    horizontal_overlap_ratio, vertical_overlap_ratio = 0.5, 0.5
+    created_tiles = tiling.tile_image(
+        test_image,
+        slice_width,
+        slice_height,
+        horizontal_overlap_ratio,
+        vertical_overlap_ratio,
+    )
+    true_tiles = [
+        [
+            image_from_list([0, 1, 3, 4], 2),
+            image_from_list([1, 2, 4, 5], 2),
+            image_from_list([2, 0, 5, 0], 2),
+        ],
+        [
+            image_from_list([3, 4, 6, 7], 2),
+            image_from_list([4, 5, 7, 8], 2),
+            image_from_list([5, 0, 8, 0], 2),
+        ],
+        [
+            image_from_list([6, 7, 0, 0], 2),
+            image_from_list([7, 8, 0, 0], 2),
+            image_from_list([8, 0, 0, 0], 2),
+        ],
+    ]
+    assert len(true_tiles) == len(created_tiles)
+    assert len(true_tiles[0]) == len(created_tiles[0])
+    for ix, im_list in enumerate(created_tiles):
+        for jx, im in enumerate(im_list):
+            diff = ImageChops.difference(im, true_tiles[ix][jx])
+            assert diff.getbbox() is None
 
 
 class TestValidateTileParameters:
