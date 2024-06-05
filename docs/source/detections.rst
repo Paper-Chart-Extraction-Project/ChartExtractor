@@ -1,5 +1,5 @@
 detections module
-=============
+=================
 
 .. automodule:: detections
    :members:

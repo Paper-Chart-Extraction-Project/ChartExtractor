@@ -230,7 +230,7 @@ def tile_annotations(
 
 
 def get_annotations_in_tile(
-    annotations: List[BoundingBox, Keypoint], tile: Tuple[int, int, int, int]
+    annotations: List[Union[BoundingBox, Keypoint]], tile: Tuple[int, int, int, int]
 ) -> List:
     """Filters annotations that fully intersect with a given tile.
 

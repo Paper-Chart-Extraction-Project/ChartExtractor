@@ -6,5 +6,5 @@ src
 
    annotations
    detections
-   detections_reassembly
+   detection_reassembly
    tiling
