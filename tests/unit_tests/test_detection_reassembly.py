@@ -51,14 +51,22 @@ class TestIntersectionOverUnion:
         assert created_iou == true_iou
 
 
-def test_non_maximum_suppression(test_detections):
-    """Function that tests non_maximum_suppression."""
-    created_filtered_detections = detection_reassembly.non_maximum_suppression(
-        test_detections
-    )
-    true_filtered_detections = [
-        test_detections[0],
-        test_detections[3],
-        test_detections[2],
-    ]
-    assert created_filtered_detections == true_filtered_detections
+class TestNonMaximumSuppression:
+    """Tests the non_maximum_suppression function."""
+
+    def test_typical_inputs(self, test_detections):
+        """Tests the non_maximum_suppression with typical inputs."""
+        created_filtered_detections = detection_reassembly.non_maximum_suppression(
+            test_detections
+        )
+        true_filtered_detections = [
+            test_detections[0],
+            test_detections[3],
+            test_detections[2],
+        ]
+        assert created_filtered_detections == true_filtered_detections
+
+    def test_no_inputs(self):
+        """Tests the non_maximum_suppression function with no detections."""
+        created_filtered_detections = detection_reassembly.non_maximum_suppression([])
+        assert created_filtered_detections == []
