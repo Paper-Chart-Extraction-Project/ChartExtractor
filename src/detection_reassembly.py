@@ -31,17 +31,18 @@ def intersection_over_union(detection_1: Detection, detection_2: Detection) -> f
     """
     area = lambda box: (box[2] - box[0]) * (box[3] - box[1])
 
-    intersection_left = max(detection_1.box[0], detection_2.box[0])
-    intersection_top = max(detection_1.box[1], detection_2.box[1])
-    intersection_right = min(detection_1.box[2], detection_2.box[2])
-    intersection_bottom = min(detection_1.box[3], detection_2.box[3])
+    box_1, box_2 = detection_1.annotation.box, detection_2.annotation.box
+    intersection_left = max(box_1[0], box_2[0])
+    intersection_top = max(box_1[1], box_2[1])
+    intersection_right = min(box_1[2], box_2[2])
+    intersection_bottom = min(box_1[3], box_2[3])
     if intersection_right < intersection_left or intersection_bottom < intersection_top:
         return 0
     intersection_area = area(
-        intersection_left, intersection_top, intersection_right, intersection_bottom
+        [intersection_left, intersection_top, intersection_right, intersection_bottom]
     )
 
-    union_area = area(detection_1.box) + area(detection_2.box) - intersection_area
+    union_area = area(box_1) + area(box_2) - intersection_area
 
     return intersection_area / union_area
 

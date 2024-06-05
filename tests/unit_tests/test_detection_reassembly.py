@@ -25,14 +25,26 @@ def test_detections() -> List[Detection]:
 class TestIntersectionOverUnion:
     """Tests the intersection_over_union function."""
 
-    def test_intersection_over_union(self, test_detections):
+    def test_typical_inputs(self, test_detections):
         """Tests the intersection_over_union function with typical inputs."""
-        pass
+        created_iou = detection_reassembly.intersection_over_union(
+            test_detections[0], test_detections[1]
+        )
+        true_iou = 0.5
+        assert created_iou == true_iou
 
-    def test_intersection_over_union_no_overlap(self, test_detections):
+    def test_inputs_with_no_overlap(self, test_detections):
         """Tests the intersection_over_union function with non-overlapping detections."""
-        pass
+        created_iou = detection_reassembly.intersection_over_union(
+            test_detections[0], test_detections[2]
+        )
+        true_iou = 0
+        assert created_iou == true_iou
 
-    def test_intersection_over_union_total_overlap(self, test_detections):
+    def test_inputs_with_total_overlap(self, test_detections):
         """Tests the intersection_over_union function with totally overlapping detections."""
-        pass
+        created_iou = detection_reassembly.intersection_over_union(
+            test_detections[0], test_detections[0]
+        )
+        true_iou = 1
+        assert created_iou == true_iou
