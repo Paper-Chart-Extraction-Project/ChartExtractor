@@ -17,13 +17,6 @@ It also provides helper functions for constructing these objects from YOLO forma
     the bounding box (inherited from the bounding box), and a list representation of the bounding box coordinates (inherited from
     the bounding box). It provides methods to construct a `Keypoint` from a YOLO formatted string, convert it back to YOLO format, 
     and validates that the keypoint lies within the bounding box.
-
-**Requirements:**
-
-* `typing`
-* `warnings`
-* `dataclasses` (optional, for `dataclass` syntax)
-* `collections` (optional, for `namedtuple` syntax)
 """
 
 from collections import namedtuple
