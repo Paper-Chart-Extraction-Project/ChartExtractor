@@ -1,10 +1,20 @@
-""" """
+"""This module defines functions for reassembling tiled detections.
+
+**Functions:**
+
+* `intersection_over_union(detection_1: Detection, detection_2: Detection) -> List[Detection]`:
+    Calculates the IoU between two bounding boxes represented by `Detection` objects. 
+* `non_maximum_suppression(detections: List[Detection], threshold: float = 0.5, overlap_comparator: Callable[[Detection, Detection], float] = intersection_over_union,) -> float`: 
+    Applies NMS to a list of detections, filtering out detections with lower confidence 
+    scores that overlap with higher-scoring detections based on a user-defined threshold 
+    and a function that quantifies area of overlap (defaults to IOU).
+"""
 
 from typing import Callable, List
 from detections import Detection
 
 
-def intersection_over_union(detection_1: Detection, detection_2: Detection):
+def intersection_over_union(detection_1: Detection, detection_2: Detection) -> float:
     """Calculates the Intersection over Union (IoU) between two detections.
 
     This function calculates the area of overlap between the bounding boxes of two
@@ -25,6 +35,8 @@ def intersection_over_union(detection_1: Detection, detection_2: Detection):
     intersection_top = max(detection_1.box[1], detection_2.box[1])
     intersection_right = min(detection_1.box[2], detection_2.box[2])
     intersection_bottom = min(detection_1.box[3], detection_2.box[3])
+    if intersection_right < intersection_left or intersection_bottom < intersection_top:
+        return 0
     intersection_area = area(
         intersection_left, intersection_top, intersection_right, intersection_bottom
     )
@@ -40,7 +52,7 @@ def non_maximum_suppression(
     overlap_comparator: Callable[
         [Detection, Detection], float
     ] = intersection_over_union,
-):
+) -> List[Detection]:
     """Applies Non-Maximum Suppression (NMS) to a list of detections.
 
     This function filters a list of detections to remove overlapping bounding boxes
