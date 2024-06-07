@@ -118,7 +118,7 @@ class BoundingBox:
             x * image_width,
             y * image_height,
             w * image_width,
-            h * image_width,
+            h * image_height,
         )
         left, top, right, bottom = (
             x - (1 / 2) * w,
