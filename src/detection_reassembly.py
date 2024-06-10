@@ -68,7 +68,10 @@ def intersection_over_minimum(detection_1: Detection, detection_2: Detection) ->
     Returns:
         A float value between 0.0 and 1.0 representing the IoM between the two detections.
     """
-    pass
+    box_1, box_2 = detection_1.annotation.box, detection_2.annotation.box
+    intersection_area = compute_intersection_area(box_1, box_2)
+    minimum_area = min(compute_area(box_1), compute_area(box_2))
+    return intersection_area / minimum_area
 
 
 def intersection_over_union(detection_1: Detection, detection_2: Detection) -> float:
