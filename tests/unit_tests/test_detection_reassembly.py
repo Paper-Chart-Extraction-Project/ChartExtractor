@@ -23,6 +23,72 @@ def test_detections() -> List[Detection]:
     ]
 
 
+def test_compute_area(test_detections):
+    """Tests the compute_area function."""
+    area_1 = detection_reassembly.compute_area(test_detections[0].annotation.box)
+    area_2 = detection_reassembly.compute_area(test_detections[1].annotation.box)
+    area_3 = detection_reassembly.compute_area(test_detections[2].annotation.box)
+    area_4 = detection_reassembly.compute_area(test_detections[3].annotation.box)
+
+    assert area_1 == 1
+    assert area_2 == 0.5
+    assert area_3 == 1
+    assert area_4 == 0.25
+
+
+class TestComputeIntersectionArea:
+    """Tests the compute_intersection_area function."""
+
+    def test_typical_inputs(self, test_detections):
+        """Tests the compute_intersection_area function with normal inputs."""
+        intersection_area = detection_reassembly.compute_intersection_area(
+            test_detections[0].annotation.box, test_detections[1].annotation.box
+        )
+        assert intersection_area == 0.5
+
+    def test_inscribed(self, test_detections):
+        """Tests the compute_intersection_area function where one rectangle is within the other."""
+        intersection_area = detection_reassembly.compute_intersection_area(
+            test_detections[2].annotation.box, test_detections[3].annotation.box
+        )
+        assert intersection_area == 0.25
+
+    def test_no_overlap(self, test_detections):
+        """Tests the compute_intersection_area function with no overlap."""
+        intersection_area = detection_reassembly.compute_intersection_area(
+            test_detections[0].annotation.box, test_detections[2].annotation.box
+        )
+        assert intersection_area == 0
+
+
+class TestIntersectionOverMinimum:
+    """Tests the intersection_over_minimum function."""
+
+    def test_typical_inputs(self, test_detections):
+        """Tests the intersection_over_minimum function with normal inputs."""
+        created_iom = detection_reassembly.intersection_over_minimum(
+            test_detections[0], test_detections[1]
+        )
+        true_iom = 1
+        assert created_iom == true_iom
+
+    def test_inputs_with_no_overlap(self, test_detections):
+        """Tests the intersection_over_minimum function with no overlap."""
+        created_iom = detection_reassembly.intersection_over_minimum(
+            test_detections[0], test_detections[2]
+        )
+        true_iom = 0
+        assert created_iom == true_iom
+
+    def test_inputs_with_total_overlap(self, test_detections):
+        """Tests the intersection_over_minimum function with totally overlapping detections."""
+        created_iom = detection_reassembly.intersection_over_minimum(
+            test_detections[0], test_detections[0]
+        )
+        true_iom = 1
+        assert created_iom == true_iom
+
+
 class TestIntersectionOverUnion:
     """Tests the intersection_over_union function."""
 
