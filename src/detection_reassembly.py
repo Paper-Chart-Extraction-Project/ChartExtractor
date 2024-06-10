@@ -24,7 +24,7 @@ def compute_area(box: Tuple[float, float, float, float]):
     Returns:
         The area of the rectangle.
     """
-    pass
+    return (box[2] - box[0]) * (box[3] - box[1])
 
 
 def compute_intersection_area(
