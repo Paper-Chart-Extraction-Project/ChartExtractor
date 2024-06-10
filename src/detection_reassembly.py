@@ -87,18 +87,8 @@ def intersection_over_union(detection_1: Detection, detection_2: Detection) -> f
         A float value between 0.0 and 1.0 representing the IoU between the two detections.
     """
     box_1, box_2 = detection_1.annotation.box, detection_2.annotation.box
-    intersection_left = max(box_1[0], box_2[0])
-    intersection_top = max(box_1[1], box_2[1])
-    intersection_right = min(box_1[2], box_2[2])
-    intersection_bottom = min(box_1[3], box_2[3])
-    if intersection_right < intersection_left or intersection_bottom < intersection_top:
-        return 0
-    intersection_area = compute_area(
-        [intersection_left, intersection_top, intersection_right, intersection_bottom]
-    )
-
+    intersection_area = compute_intersection_area(box_1, box_2)
     union_area = compute_area(box_1) + compute_area(box_2) - intersection_area
-
     return intersection_area / union_area
 
 
