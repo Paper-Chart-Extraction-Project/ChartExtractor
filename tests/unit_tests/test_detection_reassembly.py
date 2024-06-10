@@ -36,6 +36,31 @@ def test_compute_area(test_detections):
     assert area_4 == 0.25
 
 
+class TestComputeIntersectionArea:
+    """Tests the compute_intersection_area function."""
+
+    def test_compute_intersection_area(self, test_detections):
+        """Tests the compute_intersection_area function with normal inputs."""
+        intersection_area = detection_reassembly.compute_intersection_area(
+            test_detections[0].annotation.box, test_detections[1].annotation.box
+        )
+        assert intersection_area == 0.5
+
+    def test_compute_intersection_area_inscribed(self, test_detections):
+        """Tests the compute_intersection_area function where one rectangle is within the other."""
+        intersection_area = detection_reassembly.compute_intersection_area(
+            test_detections[2].annotation.box, test_detections[3].annotation.box
+        )
+        assert intersection_area == 0.25
+
+    def test_compute_intersection_area_no_overlap(self, test_detections):
+        """Tests the compute_intersection_area function with no overlap."""
+        intersection_area = detection_reassembly.compute_intersection_area(
+            test_detections[0].annotation.box, test_detections[2].annotation.box
+        )
+        assert intersection_area == 0
+
+
 class TestIntersectionOverUnion:
     """Tests the intersection_over_union function."""
 
