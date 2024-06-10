@@ -23,6 +23,19 @@ def test_detections() -> List[Detection]:
     ]
 
 
+def test_compute_area(test_detections):
+    """Tests the compute_area function."""
+    area_1 = detection_reassembly.compute_area(test_detections[0].annotation.box)
+    area_2 = detection_reassembly.compute_area(test_detections[1].annotation.box)
+    area_3 = detection_reassembly.compute_area(test_detections[2].annotation.box)
+    area_4 = detection_reassembly.compute_area(test_detections[3].annotation.box)
+
+    assert area_1 == 1
+    assert area_2 == 0.5
+    assert area_3 == 1
+    assert area_4 == 0.25
+
+
 class TestIntersectionOverUnion:
     """Tests the intersection_over_union function."""
 
