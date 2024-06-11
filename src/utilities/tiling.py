@@ -36,7 +36,7 @@ their location within the image. Each annotation is assigned to the tile(s) that
 from PIL import Image
 from typing import List, Tuple, Union
 import math
-from annotations import BoundingBox, Keypoint
+from utilities.annotations import BoundingBox, Keypoint
 
 
 def tile_image(

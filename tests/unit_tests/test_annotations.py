@@ -3,7 +3,7 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
+sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src", "utilities")))
 
 import pytest
 from annotations import BoundingBox, Keypoint, Point
