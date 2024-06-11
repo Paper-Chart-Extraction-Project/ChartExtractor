@@ -37,7 +37,8 @@ def pil_to_cv2(pil_image: Image.Image) -> np.ndarray:
         raise ValueError(
             f"Unsupported image mode: {pil_image.mode}. Only RGB and BGR modes are supported."
         )
-    cv2_image = cv2_image[:, :, ::-1].copy()
+    if pil_image.mode == "RGB":
+        cv2_image = cv2_image[:, :, ::-1].copy()
     return cv2_image
 
 
