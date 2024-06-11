@@ -3,13 +3,13 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src", "utilities")))
+sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
 
 import pytest
 from typing import List
-from annotations import BoundingBox
-from detections import Detection
-import detection_reassembly
+from utilities.annotations import BoundingBox
+from utilities.detections import Detection
+from utilities import detection_reassembly
 
 
 @pytest.fixture()
