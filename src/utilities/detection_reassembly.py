@@ -11,7 +11,7 @@
 """
 
 from typing import Callable, List, Tuple
-from detections import Detection
+from utilities.detections import Detection
 
 
 def compute_area(box: Tuple[float, float, float, float]):
