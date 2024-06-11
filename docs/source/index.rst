@@ -11,7 +11,7 @@ anesthesiology department in coordination with UVA School of Data Science to aut
 smartphone photographs of paper medical charts.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    modules
