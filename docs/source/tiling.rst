@@ -1,7 +1,7 @@
 tiling module
 =============
 
-.. automodule:: tiling
+.. automodule:: utilities.tiling
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,7 +1,7 @@
 detections module
 =================
 
-.. automodule:: detections
+.. automodule:: utilities.detections
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,7 +1,7 @@
 annotations module
 ==================
 
-.. automodule:: annotations
+.. automodule:: utilities.annotations
    :members:
    :undoc-members:
    :show-inheritance:
