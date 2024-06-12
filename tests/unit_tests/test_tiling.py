@@ -3,13 +3,13 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src", "utilities")))
+sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
 
 import pytest
 from typing import List
 from PIL import Image, ImageChops
-import tiling
-from annotations import BoundingBox
+from utilities.annotations import BoundingBox
+from utilities import tiling
 
 
 @pytest.fixture()

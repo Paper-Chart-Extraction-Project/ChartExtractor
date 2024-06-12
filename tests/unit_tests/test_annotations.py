@@ -3,10 +3,10 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src", "utilities")))
+sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
 
 import pytest
-from annotations import BoundingBox, Keypoint, Point
+from utilities.annotations import BoundingBox, Keypoint, Point
 
 
 class TestBoundingBox:
