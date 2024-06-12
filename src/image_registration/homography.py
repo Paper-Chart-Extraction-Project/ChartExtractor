@@ -50,7 +50,7 @@ def homography_transform(
             in the source image correspond to (where the source image should be warped to).
         original_image_size (Tuple[float, float]):
             A tuple (width, height) representing the size of the control image.
-    .       Defaults to (3300, 2250).
+            Defaults to (3300, 2250).
 
     Returns:
         A PIL image object representing the transformed source image.
