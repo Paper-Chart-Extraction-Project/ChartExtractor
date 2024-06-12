@@ -18,10 +18,6 @@ input. It then:
     5. Warps the source image to the destination perspective using
        `cv2.warpPerspective`.
     6. Converts the resulting OpenCV image back to PIL format.
-
-Functions:
-    `homography_transform(src_image, src_points, dest_points, original_image_size=None)`:
-        Performs homography transformation on an image based on corresponding points.
 """
 
 from typing import List, Tuple

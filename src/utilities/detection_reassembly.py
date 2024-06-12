@@ -1,14 +1,4 @@
-"""This module defines functions for reassembling tiled detections.
-
-**Functions:**
-
-* `intersection_over_union(detection_1: Detection, detection_2: Detection) -> List[Detection]`:
-    Calculates the IoU between two bounding boxes represented by `Detection` objects. 
-* `non_maximum_suppression(detections: List[Detection], threshold: float = 0.5, overlap_comparator: Callable[[Detection, Detection], float] = intersection_over_union,) -> float`: 
-    Applies NMS to a list of detections, filtering out detections with lower confidence 
-    scores that overlap with higher-scoring detections based on a user-defined threshold 
-    and a function that quantifies area of overlap (defaults to IOU).
-"""
+"""This module defines functions for reassembling tiled detections."""
 
 from typing import Callable, List, Tuple
 from utilities.detections import Detection

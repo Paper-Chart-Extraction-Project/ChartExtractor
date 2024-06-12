@@ -2,15 +2,6 @@
 
 This module provides functions to convert between Python Imaging Library (PIL)
 image format and OpenCV image format.
-
-**Functions:**
-* `pil_to_cv2(pil_image)`: 
-    Converts a PIL image to a NumPy array representing the image in OpenCV 
-    format (BGR channel order). Raises ValueError if the PIL image mode is 
-    not RGB or BGR.
-* `cv2_to_pil(cv2_image)`:
-    Converts a NumPy array representing an OpenCV image (BGR channel order) 
-    to a PIL image object.
 """
 
 import cv2

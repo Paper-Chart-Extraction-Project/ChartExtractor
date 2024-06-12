@@ -7,4 +7,5 @@ utilities
    annotations
    detections
    detection_reassembly
+   image_conversion
    tiling

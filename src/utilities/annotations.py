@@ -1,22 +1,6 @@
 """This module defines classes for representing bounding boxes and keypoints associated with objects in images. 
 
 It also provides helper functions for constructing these objects from YOLO formatted labels.
-
-**Classes:**
-
-* `Point` (namedtuple): 
-    A simple namedtuple to represent a 2D point with `x` and `y` coordinates.
-* `BoundingBox` (dataclass): 
-    Represents a bounding box around an object in an image. It includes attributes for the category, 
-    bounding box coordinates (left, top, right, bottom), center of the box, and a list representation of the box coordinates. 
-    It provides methods to construct a `BoundingBox` from a YOLO formatted string, construct a `BoundingBox` from a COCO 
-    formatted annotation dictionary, convert it back to YOLO format, and validates the box dimensions.
-* `Keypoint` (dataclass): 
-    Represents a keypoint associated with an object in an image. It includes attributes for the keypoint 
-    location (as a `Point`), the enclosing bounding box (`BoundingBox`), category (inherited from the bounding box), center of 
-    the bounding box (inherited from the bounding box), and a list representation of the bounding box coordinates (inherited from
-    the bounding box). It provides methods to construct a `Keypoint` from a YOLO formatted string, convert it back to YOLO format, 
-    and validates that the keypoint lies within the bounding box.
 """
 
 from collections import namedtuple
