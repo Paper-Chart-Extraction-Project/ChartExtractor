@@ -1,4 +1,28 @@
-""" """
+"""Performs homography transformation on images.
+
+This module provides a function for performing homography transformation on
+images. Homography is a technique used to map points from one image (source)
+to another image (destination) based on corresponding point locations.
+The homography is a linear mapping, so non-linear distortions in the image
+cannot be resolved by the homography alone.
+
+The `homography_transform` function takes a source PIL image, corresponding
+source and destination point lists, and an optional original image size as
+input. It then:
+
+    1. Converts source and destination points to NumPy arrays.
+    2. Validates that both point lists have the same number of elements
+       (and at least 4 points for homography calculation).
+    3. Converts the source PIL image to OpenCV format.
+    4. Calculates the homography matrix using `cv2.findHomography`.
+    5. Warps the source image to the destination perspective using
+       `cv2.warpPerspective`.
+    6. Converts the resulting OpenCV image back to PIL format.
+
+Functions:
+    `homography_transform(src_image, src_points, dest_points, original_image_size=None)`:
+        Performs homography transformation on an image based on corresponding points.
+"""
 
 from typing import List, Tuple
 import cv2
