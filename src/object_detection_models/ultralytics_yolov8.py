@@ -1,7 +1,23 @@
-""" """
+"""This module implements the `UltralyticsYOLOv8` class, which inherits from the `ObjectDetectionModel` interface.
+
+The `UltralyticsYOLOv8` class provides a wrapper for the YOLOv8 object detection model from the
+Ultralytics library. It enables you to use the YOLOv8 model within your program through the common 
+interface defined in `object_detection_model.py`.
+
+Key functionalities include:
+- Loading the YOLOv8 model from a weights file path.
+- Performing object detection on an image using the YOLOv8 model.
+- Converting the YOLOv8 model's output to a list of Detection objects as defined in `utilities.detections.py`. 
+
+These `Detection` objects encapsulate details about detected objects, including bounding boxes, 
+confidence scores, and potentially keypoints (if available in the model's output).
+
+This approach simplifies the integration and usage of YOLOv8 within this program, promoting code 
+modularity and reusability.
+"""
 
 from pathlib import Path
-from typing import Callable, List
+from typing import List
 from PIL import Image
 from ultralytics import YOLO
 from utilities.detections import Detection
