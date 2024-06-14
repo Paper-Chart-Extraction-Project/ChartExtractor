@@ -26,9 +26,9 @@ class ObjectDetectionModel(ABC):
 
     @abstractmethod
     @staticmethod
-    def from_weights_path(self, model_weights_path:Path)  -> "ObjectDetectionModel":
+    def from_weights_path(self, model_weights_path: Path) -> "ObjectDetectionModel":
         """Initializes the ObjectDetectionModel from a path to its weights.
-        
+
         Args:
             model_path (Path):
                 The path to the model's weights file.
@@ -38,7 +38,7 @@ class ObjectDetectionModel(ABC):
                 If the filepath does not lead to a file.
 
         Returns:
-            ObjectDetectionModel: 
+            ObjectDetectionModel:
                 An instance of the concrete subclass initialized from the weights.
         """
         pass
@@ -49,7 +49,7 @@ class ObjectDetectionModel(ABC):
         """Initializes the ObjectDetectionModel from a model object.
 
         Args:
-            model: 
+            model:
                 An object from another package that performs object detection.
 
         Returns:
@@ -58,13 +58,13 @@ class ObjectDetectionModel(ABC):
         pass
 
     @abstractmethod
-    def __call__(self, image:Image.Image) -> List[Detection]:
-        """Detections objects on the image.
+    def __call__(self, image: Image.Image) -> List[Detection]:
+        """Detects objects on the image.
 
         Args:
             image (Image.Image):
                 A PIL image that this model detects on.
-        
+
         Returns (List[Detection]):
             A list of Detection objects.
         """

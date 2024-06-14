@@ -26,7 +26,15 @@ from object_detection_model import ObjectDetectionModel
 
 
 class UltralyticsYOLOv8(ObjectDetectionModel):
-    """ """
+    """Provides a wrapper for the YOLOv8 object detection model from the Ultralytics library.
+
+    This class inherits from the `ObjectDetectionModel` interface, enabling us to use the YOLOv8
+    model within our program through a consistent interface.
+
+    Attributes:
+        model:
+            The underlying Ultralytics YOLOv8 model object.
+    """
 
     def __init__(self, model):
         """Initializes the UltralyticsYOLOv8 object.
