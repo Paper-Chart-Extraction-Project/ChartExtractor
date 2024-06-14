@@ -7,8 +7,8 @@ This class is used to store the output of an object detection model, including:
 """
 
 from dataclasses import dataclass
-from typing import List, Union
-from utilities.annotations import BoundingBox, Keypoint, Point
+from typing import Union
+from utilities.annotations import BoundingBox, Keypoint
 
 
 @dataclass
