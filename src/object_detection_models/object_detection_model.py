@@ -1,10 +1,14 @@
-"""Defines an interface (ObjectDetectionModel) for any object detector to be used with the program.
+"""This module defines the `ObjectDetectionModel` interface, which serves as a base class
+for any object detection model to be used with this program.
 
-The state of the art for object detection changes every few months, and it will be helpful to test
-new or alternative object detectors in the future. Rather than write all new functionality in other
-places, new detectors will simply need to create an subclass of ObjectDetectionModel, and so long
-as they override the __call__ method to detect on a PIL image and output a list of Detections,
-all other functions don't need changing.
+The field of object detection is constantly evolving, with new and improved models
+emerging frequently. This interface facilitates the integration and testing of such models
+within the program. Instead of rewriting functionality for each new detector, developers can
+create subclasses that inherit from `ObjectDetectionModel`. As long as these subclasses
+override the `__call__` method to handle object detection on a PIL image and return a list
+of `Detection` objects, existing code remains compatible.
+
+This approach promotes modularity, flexibility, and future-proofing of the program.
 """
 
 from abc import ABC, abstractmethod, abstractstaticmethod
@@ -15,10 +19,13 @@ from PIL import Image
 
 
 class ObjectDetectionModel(ABC):
-    """Abstract base class for object detection models."""
+    """Abstract base class for object detection models.
+
+    This class defines the interface that all concrete object detection models must adhere to.
+    """
 
     @abstractstaticmethod
-    def from_weights_path(self, model_weights_path:Path):
+    def from_weights_path(self, model_weights_path:Path)  -> "ObjectDetectionModel":
         """Initializes the ObjectDetectionModel from a path to its weights.
         
         Args:
@@ -28,16 +35,23 @@ class ObjectDetectionModel(ABC):
         Raises:
             FileNotFoundError:
                 If the filepath does not lead to a file.
+
+        Returns:
+            ObjectDetectionModel: 
+                An instance of the concrete subclass initialized from the weights.
         """
         pass
 
     @abstractstaticmethod
-    def from_model(self, model):
+    def from_model(self, model) -> "ObjectDetectionModel":
         """Initializes the ObjectDetectionModel from a model object.
 
         Args:
             model: 
                 An object from another package that performs object detection.
+
+        Returns:
+            ObjectDetectionModel: An instance of the concrete subclass initialized from the model.
         """
         pass
 
@@ -49,7 +63,7 @@ class ObjectDetectionModel(ABC):
             image (Image.Image):
                 A PIL image that this model detects on.
         
-        Returns:
+        Returns (List[Detection]):
             A list of Detection objects.
         """
         pass
