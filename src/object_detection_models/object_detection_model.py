@@ -24,8 +24,8 @@ class ObjectDetectionModel(ABC):
     This class defines the interface that all concrete object detection models must adhere to.
     """
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def from_weights_path(model_weights_path: Path) -> "ObjectDetectionModel":
         """Initializes the ObjectDetectionModel from a path to its weights.
 
@@ -43,8 +43,8 @@ class ObjectDetectionModel(ABC):
         """
         pass
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def from_model(model) -> "ObjectDetectionModel":
         """Initializes the ObjectDetectionModel from a model object.
 
