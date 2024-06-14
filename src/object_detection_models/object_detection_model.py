@@ -11,7 +11,7 @@ of `Detection` objects, existing code remains compatible.
 This approach promotes modularity, flexibility, and future-proofing of the program.
 """
 
-from abc import ABC, abstractmethod, abstractstaticmethod
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List
 from utilities.detections import Detection
@@ -24,7 +24,8 @@ class ObjectDetectionModel(ABC):
     This class defines the interface that all concrete object detection models must adhere to.
     """
 
-    @abstractstaticmethod
+    @abstractmethod
+    @staticmethod
     def from_weights_path(self, model_weights_path:Path)  -> "ObjectDetectionModel":
         """Initializes the ObjectDetectionModel from a path to its weights.
         
@@ -42,7 +43,8 @@ class ObjectDetectionModel(ABC):
         """
         pass
 
-    @abstractstaticmethod
+    @abstractmethod
+    @staticmethod
     def from_model(self, model) -> "ObjectDetectionModel":
         """Initializes the ObjectDetectionModel from a model object.
 
