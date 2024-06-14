@@ -45,9 +45,11 @@ class UltralyticsYOLOv8(ObjectDetectionModel):
         """
         return UltralyticsYOLOv8(model)
 
-    def __call__(self, Image: Image.Image) -> List[Detection]:
+    def __call__(self, image: Image.Image) -> List[Detection]:
         """ """
-        pass
+        results = self.model(image)
+        detections: List[Detection] = self.yolov8_results_to_detections(results)
+        return detections
 
     def yolov8_results_to_detections(self, results) -> List[Detection]:
         """Converts ultralytics' YOLOv8 model object's results to a list of Detection objects.
