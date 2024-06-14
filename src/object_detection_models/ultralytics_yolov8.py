@@ -71,9 +71,9 @@ class UltralyticsYOLOv8(ObjectDetectionModel):
         """
         return UltralyticsYOLOv8(model)
 
-    def __call__(self, image: Image.Image) -> List[Detection]:
+    def __call__(self, image: Image.Image, verbose: bool = False) -> List[Detection]:
         """ """
-        results = self.model(image)
+        results = self.model(image, verbose=verbose)
         detections: List[Detection] = self.yolov8_results_to_detections(results)
         return detections
 
@@ -94,7 +94,7 @@ class UltralyticsYOLOv8(ObjectDetectionModel):
         Raises:
             Exception:
                 If an error occurs during processing of the results (e.g., keypoints are
-                not found). The specific error message will be printed.
+                not found).
         """
         detections: List[Detection] = [
             Detection(
@@ -118,5 +118,5 @@ class UltralyticsYOLOv8(ObjectDetectionModel):
                 for ix, d in enumerate(detections)
             ]
         except Exception as e:
-            print(e)
+            pass
         return detections
