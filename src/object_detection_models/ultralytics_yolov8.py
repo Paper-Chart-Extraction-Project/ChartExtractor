@@ -48,7 +48,7 @@ class UltralyticsYOLOv8(ObjectDetectionModel):
         self.model = model
 
     @staticmethod
-    def from_weights_path(self, weights_path: Path) -> "UltralyticsYOLOv8":
+    def from_weights_path(weights_path: Path) -> "UltralyticsYOLOv8":
         """Creates an UltralyticsYOLOv8 object from a path to the weights file.
 
         Args:
@@ -62,7 +62,7 @@ class UltralyticsYOLOv8(ObjectDetectionModel):
         return UltralyticsYOLOv8.from_model(model)
 
     @staticmethod
-    def from_model(self, model) -> "UltralyticsYOLOv8":
+    def from_model(model) -> "UltralyticsYOLOv8":
         """Creates an UltralyticsYOLOv8 object from the Ultralytics model object.
 
         Args:

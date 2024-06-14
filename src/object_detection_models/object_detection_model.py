@@ -26,7 +26,7 @@ class ObjectDetectionModel(ABC):
 
     @abstractmethod
     @staticmethod
-    def from_weights_path(self, model_weights_path: Path) -> "ObjectDetectionModel":
+    def from_weights_path(model_weights_path: Path) -> "ObjectDetectionModel":
         """Initializes the ObjectDetectionModel from a path to its weights.
 
         Args:
@@ -45,7 +45,7 @@ class ObjectDetectionModel(ABC):
 
     @abstractmethod
     @staticmethod
-    def from_model(self, model) -> "ObjectDetectionModel":
+    def from_model(model) -> "ObjectDetectionModel":
         """Initializes the ObjectDetectionModel from a model object.
 
         Args:
