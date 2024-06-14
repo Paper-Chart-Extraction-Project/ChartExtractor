@@ -24,7 +24,7 @@ from PIL import Image
 from ultralytics import YOLO
 from utilities.detections import Detection
 from utilities.annotations import BoundingBox, Keypoint, Point
-from object_detection_model import ObjectDetectionModel
+from object_detection_models.object_detection_model import ObjectDetectionModel
 
 
 class UltralyticsYOLOv8(ObjectDetectionModel):
