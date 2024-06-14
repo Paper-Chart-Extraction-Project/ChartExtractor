@@ -7,8 +7,8 @@ This class is used to store the output of an object detection model, including:
 """
 
 from dataclasses import dataclass
-from typing import List, Union
-from utilities.annotations import BoundingBox, Keypoint, Point
+from typing import Union
+from utilities.annotations import BoundingBox, Keypoint
 
 
 @dataclass
@@ -26,46 +26,3 @@ class Detection:
 
     annotation: Union[BoundingBox, Keypoint]
     confidence: float
-
-
-def yolov8_results_to_detections(results) -> List[Detection]:
-    """Converts YOLOv8 model results to a list of Detection objects.
-
-    Args:
-        results:
-            List containing the output from a YOLOv8 model prediction. Refer to the YOLOv8
-            documentation for details on the output format.
-
-    Returns:
-        A list of Detection objects. Each Detection object contains information about a
-        detected object including its bounding box (category, coordinates), and confidence
-        score. Additionally, if keypoints are present in the results, they are added
-        to the Detection objects.
-
-    Raises:
-        Exception:
-            If an error occurs during processing of the results (e.g., keypoints are
-            not found). The specific error message will be printed.
-    """
-    detections: List[Detection] = [
-        Detection(
-            annotation=BoundingBox(
-                category=results[0].names[box_conf_cls[5]],
-                left=box_conf_cls[0],
-                top=box_conf_cls[1],
-                right=box_conf_cls[2],
-                bottom=box_conf_cls[3],
-            ),
-            confidence=box_conf_cls[4],
-        )
-        for box_conf_cls in results[0].boxes.data.tolist()
-    ]
-    try:
-        keypoints = results[0].keypoints.data.tolist()
-        detections = [
-            Detection(Keypoint(Point(*keypoints[ix][0]), d.annotation), d.confidence)
-            for ix, d in enumerate(detections)
-        ]
-    except Exception as e:
-        print(e)
-    return detections
