@@ -4,7 +4,7 @@ from pathlib import Path
 from object_detection_model import ObjectDetectionModel
 
 
-class YOLOv8(ObjectDetectionModel):
+class UltralyticsYOLOv8(ObjectDetectionModel):
     """ """
 
     def __init__(self):
