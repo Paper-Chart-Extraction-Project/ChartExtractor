@@ -6,3 +6,4 @@ src
 
    utilities
    image_registration
+   object_detection_models
