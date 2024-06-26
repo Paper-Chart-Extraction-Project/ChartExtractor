@@ -1,5 +1,5 @@
-utilities
-=========
+object_detection_models
+=======================
 
 .. toctree::
    :maxdepth: 4
