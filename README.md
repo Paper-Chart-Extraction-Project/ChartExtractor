@@ -33,3 +33,11 @@ Successive years brought new groups who each assessed the feasibility of a new p
 All this work, however, was for one side of a single chart, at a single site. So, in 2023, we decided to prospectively create our own chart that implemented a workaround the most difficult part of the traditional handwritten anesthesia records: handwritten words.
 
 This repository houses the computer vision code designed to work on the chart that we created. When this repository is finished, a site needs only to adopt the chart in order to have a machine readable anesthesia chart.
+
+## The Paper Anesthesia Record
+While we hope to expand to charts from the ICU and beyond, the first chart this program will operate on is the anesthesia record. The anesthesia record has two sides, one to record preoperative and postoperative information, and the other dedicated to only intraoperative data.
+
+### Front
+![Front side of the anesthesia chart](docs/assets/unified_intraoperative_preoperative_flowsheet_v1_1_front.png)
+### Back
+![Front side of the anesthesia chart](docs/assets/unified_intraoperative_preoperative_flowsheet_v1_1_back.png)
