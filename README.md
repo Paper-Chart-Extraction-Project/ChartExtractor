@@ -22,5 +22,14 @@ Although these benefits are exceptionally valuable, adopting electronic medical 
 
 Due to these challenges, developing nations have been slow to adopt EMRs.
 
-ChartExtractor, a project launched in 2019, offers a non-EMR solution to bridge the gap. This free, easily accessible smartphone application digitizes paper charts, requiring minimal changes to clinical operations. 
+## History
+ChartExtractor, a project launched in 2019, offers a non-EMR solution to bridge the gap between having no EMR system, and having a full EMR system. 
+This free, easily accessible smartphone application digitizes paper charts, requiring minimal changes to clinical operations. 
 
+This project began in [2019 as a capstone project](https://ieeexplore.ieee.org/document/9106679) as a data science master's capstone at the University of Virginia. 
+The goal of this project was to read the data from an paper anesthesia record from the University Teaching Hospital in Kigali, Rwanda using only a smartphone image of it.
+Successive years brought new groups who each assessed the feasibility of a new part of the chart, and improved on the work of the previous groups [[1]](https://ieeexplore.ieee.org/document/9106679), [[2]](https://ieeexplore.ieee.org/document/9483723), [[3]](https://ieeexplore.ieee.org/document/9799426), [[4]](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-024-05785-8).
+
+All this work, however, was for one side of a single chart, at a single site. So, in 2023, we decided to prospectively create our own chart that implemented a workaround the most difficult part of the traditional handwritten anesthesia records: handwritten words.
+
+This repository houses the computer vision code designed to work on the chart that we created. When this repository is finished, a site needs only to adopt the chart in order to have a machine readable anesthesia chart.
