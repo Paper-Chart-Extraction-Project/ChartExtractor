@@ -202,6 +202,28 @@ class BoundingBox:
         """A list containing this `BoundingBox`'s [left, top, right, bottom]."""
         return [self.left, self.top, self.right, self.bottom]
 
+    def set_box(self, new_left: int, new_top: int, new_right: int, new_bottom: int):
+        """Sets this BoundingBox's values for left, top, right, bottom.
+
+        Args :
+            new_left (int):
+                The new left side for the box.
+            new_top (int):
+                The new top side for the box.
+            new_right (int):
+                The new right side for the box.
+            new_bottom (int):
+                The new bottom side for the box.
+        """
+        self.validate_box_values(new_left, new_top, new_right, new_bottom)
+        return BoundingBox(
+            category=self.category,
+            left=new_left,
+            top=new_top,
+            right=new_right,
+            bottom=new_bottom,
+        )
+
     def to_yolo(
         self, image_width: int, image_height: int, category_to_id: Dict[str, int]
     ) -> str:
@@ -343,6 +365,44 @@ class Keypoint:
     def box(self) -> Tuple[float]:
         """This keypoints boundingbox's [left, top, right, bottom]."""
         return self.bounding_box.box
+
+    def set_box(
+        self, new_left: int, new_top: int, new_right: int, new_bottom: int
+    ) -> BoundingBox:
+        """Sets this Keypoints's BoundingBox's values for left, top, right, bottom.
+
+        Args:
+            new_left (int):
+                The new left side for the box.
+            new_top (int):
+                The new top side for the box.
+            new_right (int):
+                The new right side for the box.
+            new_bottom (int):
+                The new bottom side for the box.
+
+        Returns: A new Keypoint with a new bounding box.
+        """
+        return Keypoint(
+            point=self.point,
+            bounding_box=self.bounding_box.set_box(
+                new_left, new_top, new_right, new_bottom
+            ),
+        )
+
+    def set_keypoint(self, new_x: int, new_y: int) -> "Keypoint":
+        """Sets this Keypoint's Keypoint to a new point.
+
+        Args:
+            new_x (int):
+                The new x value for the Keypoint.
+            new_y (int):
+                The new y value for the Keypoint.
+
+        Returns: A new Keypoint with a new Point as its keypoint.
+        """
+        self.validate_keypoint(self.bounding_box, Point(new_x, new_y))
+        return Keypoint(Point(new_x, new_y), self.bounding_box)
 
     def to_yolo(
         self, image_width: int, image_height: int, category_to_id: Dict[str, int]
