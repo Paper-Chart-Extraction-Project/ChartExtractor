@@ -219,8 +219,35 @@ def test_tile_annotations(test_annotations):
         vertical_overlap_ratio,
     )
     true_tiled_annotations = [
-        [[test_annotations[0], test_annotations[1]], [test_annotations[1]]],
-        [[test_annotations[1]], [test_annotations[1], test_annotations[2]]],
+        [
+            [test_annotations[0], test_annotations[1]],
+            [
+                test_annotations[1].set_box(
+                    new_left=0,
+                    new_top=test_annotations[1].top,
+                    new_right=1,
+                    new_bottom=test_annotations[1].bottom,
+                )
+            ],
+        ],
+        [
+            [
+                test_annotations[1].set_box(
+                    new_left=test_annotations[1].left,
+                    new_top=0,
+                    new_right=test_annotations[1].right,
+                    new_bottom=1,
+                )
+            ],
+            [
+                test_annotations[1].set_box(
+                    new_left=0, new_top=0, new_right=1, new_bottom=1
+                ),
+                test_annotations[2].set_box(
+                    new_left=1, new_top=1, new_right=2, new_bottom=2
+                ),
+            ],
+        ],
     ]
     assert created_tiled_annotations == true_tiled_annotations
 
