@@ -9,6 +9,7 @@ import pytest
 from typing import List
 from utilities.annotations import BoundingBox
 from utilities.detections import Detection
+from utilities.tiling import tile_annotations
 from utilities import detection_reassembly
 
 
@@ -136,3 +137,17 @@ class TestNonMaximumSuppression:
         """Tests the non_maximum_suppression function with no detections."""
         created_filtered_detections = detection_reassembly.non_maximum_suppression([])
         assert created_filtered_detections == []
+
+
+def test_untile_detections(test_detections):
+    """Tests the untile_detections function."""
+    tiled_annotations = tile_annotations(test_detections, 4, 4, 2, 2, 0.5, 0.5)
+    tiled_detections = [
+        [
+            [Detection(ann, 0.5) for ann in tile_annotations]
+            for tile_annotations in row_annotations
+        ]
+        for row_annotations in tiled_annotations
+    ]
+    untiled_detections = untiled_detections(tiled_detections, 2, 2, 0.5, 0.5)
+    assert test_detections == untiled_detections

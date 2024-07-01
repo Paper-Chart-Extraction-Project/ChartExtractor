@@ -2,13 +2,14 @@
 
 from typing import Callable, List, Tuple
 from utilities.detections import Detection
+from utilities.tiling import correct_annotation_coords
 
 
 def compute_area(box: Tuple[float, float, float, float]):
     """Computes the area of a rectangle.
 
     Args:
-        box (Tuple[float, float, float, float]):
+        `box` (Tuple[float, float, float, float]):
             A tuple of four floats that define the (left, top, right, bottom) of a rectangle.
 
     Returns:
@@ -23,9 +24,9 @@ def compute_intersection_area(
     """Computes the area of the intersection of two rectangle.
 
     Args:
-        box_1 (Tuple[float, float, float, float]):
+        `box_1` (Tuple[float, float, float, float]):
             A tuple of four floats that define the (left, top, right, bottom) of the first rectangle.
-        box_2 (Tuple[float, float, float, float]):
+        `box_2` (Tuple[float, float, float, float]):
             A tuple of four floats that define the (left, top, right, bottom) of the second rectangle.
 
     Returns:
@@ -50,9 +51,9 @@ def intersection_over_minimum(detection_1: Detection, detection_2: Detection) ->
     detection objects and divides it by the area of the smaller detection.
 
     Args:
-        detection_1 (Detection):
+        `detection_1` (Detection):
             A Detection object representing the first detection.
-        detection_2 (Detection):
+        `detection_2` (Detection):
             A Detection object representing the second detection.
 
     Returns:
@@ -71,9 +72,9 @@ def intersection_over_union(detection_1: Detection, detection_2: Detection) -> f
     detection objects and divides it by the total area covered by their bounding boxes.
 
     Args:
-        detection_1 (Detection):
+        `detection_1` (Detection):
             A Detection object representing the first detection.
-        detection_2 (Detection):
+        `detection_2` (Detection):
             A Detection object representing the second detection.
 
     Returns:
@@ -99,13 +100,13 @@ def non_maximum_suppression(
     confidence scores for each object.
 
     Args:
-        detections:
+        `detections` (List[Detection]):
             A list of `Detection` objects representing the detections to be filtered.
-        threshold (float):
+        `threshold` (float):
             A float value between 0.0 and 1.0, representing the minimum IoU (Intersection
             over Union) threshold for discarding detections considered to overlap with
             a higher-confidence detection. (default: 0.5)
-        overlap_comparator:
+        `overlap_comparator`:
             A callable function that takes two `Detection` objects as arguments and returns
             a float value representing the IoU (overlap) between their bounding boxes.
             (default: `intersection_over_union` function)
@@ -124,3 +125,50 @@ def non_maximum_suppression(
                 jx += 1
         ix += 1
     return detections
+
+
+def untile_detections(
+    tiled_detections: List[List[List[Detection]]],
+    tile_width: int,
+    tile_height: int,
+    horizontal_overlap_ratio: float,
+    vertical_overlap_ratio: float,
+) -> List[Detection]:
+    """Squashes multiple detection lists into one and corrects their location on the main image.
+
+    Args:
+        `tiled_detections` (List[List[Detection]]):
+            A list of detections made on tiles.
+        `slice_height` (int):
+            The height of each slice.
+        `slice_width` (int):
+            The width of each slice.
+        `horizontal_overlap_ratio` (float):
+            The amount of left-right overlap between slices.
+        `vertical_overlap_ratio` (float):
+            The amount of top-bottom overlap between slices.
+    """
+    generate_tile_left = lambda ix: int(ix * tile_width * horizontal_overlap_ratio)
+    generate_tile_top = lambda iy: int(iy * tile_height * vertical_overlap_ratio)
+    flatten_list = lambda l: [item for sublist in l for item in sublist]
+
+    untiled_detections: List[List[List[Detection]]] = [
+        [
+            [
+                Detection(
+                    correct_annotation_coords(
+                        detection.annotation,
+                        generate_tile_left(ix),
+                        generate_tile_top(iy),
+                        "tile_to_image",
+                    ),
+                    detection.confidence,
+                )
+                for detection in tile_detections
+            ]
+            for ix, tile_detections in enumerate(detection_row)
+        ]
+        for iy, detection_row in enumerate(tiled_detections)
+    ]
+    untiled_detections: List[Detection] = flatten_list(flatten_list(untiled_detections))
+    return untiled_detections

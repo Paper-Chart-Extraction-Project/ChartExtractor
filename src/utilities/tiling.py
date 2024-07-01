@@ -9,7 +9,7 @@ their location within the image. Each annotation is assigned to the tile(s) that
 """
 
 from PIL import Image
-from typing import List, Tuple, Union
+from typing import List, Literal, Tuple, Union
 import math
 from utilities.annotations import BoundingBox, Keypoint
 
@@ -189,21 +189,6 @@ def tile_annotations(
         A list of lists, where each sub-list represents a tile in the grid. Each tile's
         sub-list contains the annotations that intersect fully with that specific tile.
     """
-
-    def correct_bounding_box(annotation, tile_left, tile_top) -> None:
-        return annotation.set_box(
-            annotation.box[0] - tile_left,
-            annotation.box[1] - tile_top,
-            annotation.box[2] - tile_left,
-            annotation.box[3] - tile_top,
-        )
-
-    def correct_keypoint(annotation, tile_left, tile_top):
-        annotation = correct_bounding_box(annotation, tile_left, tile_top)
-        return annotation.set_keypoint(
-            annotation.point.x - tile_left, annotation.point.y - tile_top
-        )
-
     tile_coordinates: List[List[Tuple[int, int, int, int]]] = generate_tile_coordinates(
         image_width,
         image_height,
@@ -220,12 +205,11 @@ def tile_annotations(
         [
             [
                 (
-                    correct_bounding_box(
-                        ann, tile_coordinates[iy][ix][0], tile_coordinates[iy][ix][1]
-                    )
-                    if isinstance(ann, BoundingBox)
-                    else correct_keypoint(
-                        ann, tile_coordinates[iy][ix][0], tile_coordinates[iy][ix][1]
+                    correct_annotation_coords(
+                        ann,
+                        tile_coordinates[iy][ix][0],
+                        tile_coordinates[iy][ix][1],
+                        "image_to_tile",
                     )
                 )
                 for ann in tile_anns
@@ -268,3 +252,42 @@ def get_annotations_in_tile(
         filter(lambda ann: annotation_in_tile(ann, tile), annotations)
     )
     return annotations_in_tile
+
+
+def correct_annotation_coords(
+    annotation: Union[BoundingBox, Keypoint],
+    tile_left: int,
+    tile_top: int,
+    direction: Literal["image_to_tile", "tile_to_image"],
+) -> Union[BoundingBox, Keypoint]:
+    """Corrects annotation coordinates from tiles to full images or from full images to tiles.
+
+    Args:
+        `annotation` (Union[BoundingBox, Keypoint]):
+            The annotation to correct.
+        `tile_left` (int):
+            The tile's left side coordinate relative to the entire untiled image.
+        `tile_top` (int):
+            The tile's left side coordinate relative to the entire untiled image.
+        `direction` (Literal["image_to_tile", "tile_to_image"]):
+            Determines whether the function subtracts or adds the tile's left and top.
+            Either "image_to_tile" or "tile_to_image".
+
+    Returns: A new annotation with changed coordinates.
+    """
+    if direction not in ["image_to_tile", "tile_to_image"]:
+        raise ValueError("Invalid option. Choose 'image_to_tile' or 'tile_to_image'")
+
+    operation = lambda x, y: x + y if direction == "tile_to_image" else x - y
+    new_annotation: Union[BoundingBox, Keypoint] = annotation.set_box(
+        operation(annotation.box[0], tile_left),
+        operation(annotation.box[1], tile_top),
+        operation(annotation.box[2], tile_left),
+        operation(annotation.box[3], tile_top),
+    )
+    if isinstance(annotation, Keypoint):
+        new_annotation: Union[BoundingBox, Keypoint] = annotation.set_keypoint(
+            operation(annotation.keypoint.x, tile_left),
+            operation(annotation.keypoint.y, tile_top),
+        )
+    return new_annotation
