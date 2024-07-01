@@ -205,11 +205,11 @@ def tile_annotations(
         [
             [
                 (
-                    correct_bounding_box(
+                    correct_bounding_box_to_fit_in_tile(
                         ann, tile_coordinates[iy][ix][0], tile_coordinates[iy][ix][1]
                     )
                     if isinstance(ann, BoundingBox)
-                    else correct_keypoint(
+                    else correct_keypoint_to_fit_in_tile(
                         ann, tile_coordinates[iy][ix][0], tile_coordinates[iy][ix][1]
                     )
                 )
@@ -255,7 +255,7 @@ def get_annotations_in_tile(
     return annotations_in_tile
 
 
-def correct_bounding_box(
+def correct_bounding_box_to_fit_in_tile(
     annotation: Union[BoundingBox, Keypoint],
     tile_left: int,
     tile_top: int,
@@ -280,7 +280,9 @@ def correct_bounding_box(
     )
 
 
-def correct_keypoint(annotation: Keypoint, tile_left: int, tile_top: int) -> Keypoint:
+def correct_keypoint_to_fit_in_tile(
+    annotation: Keypoint, tile_left: int, tile_top: int
+) -> Keypoint:
     """Corrects the location of a keypoint given the tile's left and top relative to the entire image.
 
     Args:
@@ -293,7 +295,7 @@ def correct_keypoint(annotation: Keypoint, tile_left: int, tile_top: int) -> Key
 
     Returns: A Keypoint with new coordinates that fit within the new tile.
     """
-    annotation = correct_bounding_box(annotation, tile_left, tile_top)
+    annotation = correct_bounding_box_to_fit_in_tile(annotation, tile_left, tile_top)
     return annotation.set_keypoint(
         annotation.point.x - tile_left, annotation.point.y - tile_top
     )
