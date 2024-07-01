@@ -9,7 +9,7 @@ their location within the image. Each annotation is assigned to the tile(s) that
 """
 
 from PIL import Image
-from typing import List, Tuple, Union
+from typing import List, Literal, Tuple, Union
 import math
 from utilities.annotations import BoundingBox, Keypoint
 
@@ -253,6 +253,30 @@ def get_annotations_in_tile(
         filter(lambda ann: annotation_in_tile(ann, tile), annotations)
     )
     return annotations_in_tile
+
+
+def correct_annotation_coords(
+    annotation: Union[BoundingBox, Keypoint],
+    tile_left: int,
+    tile_top: int,
+    direction: Literal["image_to_tile", "tile_to_image"],
+) -> Union[BoundingBox, Keypoint]:
+    """Corrects annotation coordinates from tiles to full images or from full images to tiles.
+
+    Args:
+        `annotation` (Union[BoundingBox, Keypoint]):
+            The annotation to correct.
+        `tile_left` (int):
+            The tile's left side coordinate relative to the entire untiled image.
+        `tile_top` (int):
+            The tile's left side coordinate relative to the entire untiled image.
+        `direction` (Literal["image_to_tile", "tile_to_image"]):
+            Determines whether the function subtracts or adds the tile's left and top.
+            Either "image_to_tile" or "tile_to_image".
+
+    Returns: A new annotation with changed coordinates.
+    """
+    pass
 
 
 def correct_bounding_box_to_fit_in_tile(
