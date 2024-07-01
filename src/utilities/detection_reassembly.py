@@ -2,6 +2,7 @@
 
 from typing import Callable, List, Tuple
 from utilities.detections import Detection
+from utilities.tiling import correct_annotation_coords
 
 
 def compute_area(box: Tuple[float, float, float, float]):
@@ -147,4 +148,22 @@ def untile_detections(
         `vertical_overlap_ratio` (float):
             The amount of top-bottom overlap between slices.
     """
-    pass
+    generate_tile_left = lambda ix: int(ix * tile_width * horizontal_overlap_ratio)
+    generate_tile_top = lambda iy: int(iy * tile_height * vertical_overlap_ratio)
+
+    untiled_detections: List[List[Detection]] = [
+        [
+            correct_annotation_coords(
+                detection,
+                generate_tile_left(ix),
+                generate_tile_top(iy),
+                "tile_to_image",
+            )
+            for ix, detection in enumerate(detection_row)
+        ]
+        for iy, detection_row in enumerate(tiled_detections)
+    ]
+    untiled_detections: List[Detection] = [
+        item for sublist in untiled_detections for item in sublist
+    ]
+    return untiled_detections
