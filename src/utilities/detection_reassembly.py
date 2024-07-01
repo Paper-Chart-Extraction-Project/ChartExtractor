@@ -128,7 +128,7 @@ def non_maximum_suppression(
 
 
 def untile_detections(
-    tiled_detections: List[List[Detection]],
+    tiled_detections: List[List[List[Detection]]],
     tile_width: int,
     tile_height: int,
     horizontal_overlap_ratio: float,
@@ -151,19 +151,27 @@ def untile_detections(
     generate_tile_left = lambda ix: int(ix * tile_width * horizontal_overlap_ratio)
     generate_tile_top = lambda iy: int(iy * tile_height * vertical_overlap_ratio)
 
-    untiled_detections: List[List[Detection]] = [
+    untiled_detections: List[List[List[Detection]]] = [
         [
-            correct_annotation_coords(
-                detection,
-                generate_tile_left(ix),
-                generate_tile_top(iy),
-                "tile_to_image",
-            )
-            for ix, detection in enumerate(detection_row)
+            [
+                Detection(
+                    correct_annotation_coords(
+                        detection.annotation,
+                        generate_tile_left(ix),
+                        generate_tile_top(iy),
+                        "tile_to_image",
+                    ),
+                    detection.confidence,
+                )
+                for detection in tile_detections
+            ]
+            for ix, tile_detections in enumerate(detection_row)
         ]
         for iy, detection_row in enumerate(tiled_detections)
     ]
     untiled_detections: List[Detection] = [
-        item for sublist in untiled_detections for item in sublist
+        item
+        for sublist in [item for sublist in untiled_detections for item in sublist]
+        for item in sublist
     ]
     return untiled_detections
