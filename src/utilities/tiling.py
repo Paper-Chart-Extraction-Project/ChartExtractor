@@ -189,21 +189,6 @@ def tile_annotations(
         A list of lists, where each sub-list represents a tile in the grid. Each tile's
         sub-list contains the annotations that intersect fully with that specific tile.
     """
-
-    def correct_bounding_box(annotation, tile_left, tile_top) -> None:
-        return annotation.set_box(
-            annotation.box[0] - tile_left,
-            annotation.box[1] - tile_top,
-            annotation.box[2] - tile_left,
-            annotation.box[3] - tile_top,
-        )
-
-    def correct_keypoint(annotation, tile_left, tile_top):
-        annotation = correct_bounding_box(annotation, tile_left, tile_top)
-        return annotation.set_keypoint(
-            annotation.point.x - tile_left, annotation.point.y - tile_top
-        )
-
     tile_coordinates: List[List[Tuple[int, int, int, int]]] = generate_tile_coordinates(
         image_width,
         image_height,
@@ -268,3 +253,19 @@ def get_annotations_in_tile(
         filter(lambda ann: annotation_in_tile(ann, tile), annotations)
     )
     return annotations_in_tile
+
+
+def correct_bounding_box(annotation, tile_left, tile_top) -> None:
+    return annotation.set_box(
+        annotation.box[0] - tile_left,
+        annotation.box[1] - tile_top,
+        annotation.box[2] - tile_left,
+        annotation.box[3] - tile_top,
+    )
+
+
+def correct_keypoint(annotation, tile_left, tile_top):
+    annotation = correct_bounding_box(annotation, tile_left, tile_top)
+    return annotation.set_keypoint(
+        annotation.point.x - tile_left, annotation.point.y - tile_top
+    )
