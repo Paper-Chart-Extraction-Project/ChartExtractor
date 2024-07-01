@@ -205,12 +205,11 @@ def tile_annotations(
         [
             [
                 (
-                    correct_bounding_box_to_fit_in_tile(
-                        ann, tile_coordinates[iy][ix][0], tile_coordinates[iy][ix][1]
-                    )
-                    if isinstance(ann, BoundingBox)
-                    else correct_keypoint_to_fit_in_tile(
-                        ann, tile_coordinates[iy][ix][0], tile_coordinates[iy][ix][1]
+                    correct_annotation_coords(
+                        ann,
+                        tile_coordinates[iy][ix][0],
+                        tile_coordinates[iy][ix][1],
+                        "image_to_tile",
                     )
                 )
                 for ann in tile_anns
@@ -276,7 +275,22 @@ def correct_annotation_coords(
 
     Returns: A new annotation with changed coordinates.
     """
-    pass
+    if direction not in ["image_to_tile", "tile_to_image"]:
+        raise ValueError("Invalid option. Choose 'image_to_tile' or 'tile_to_image'")
+
+    operation = lambda x, y: x + y if direction == "tile_to_image" else x - y
+    new_annotation: Union[BoundingBox, Keypoint] = annotation.set_box(
+        operation(annotation.box[0], tile_left),
+        operation(annotation.box[1], tile_top),
+        operation(annotation.box[2], tile_left),
+        operation(annotation.box[3], tile_top),
+    )
+    if isinstance(annotation, Keypoint):
+        new_annotation: Union[BoundingBox, Keypoint] = annotation.set_keypoint(
+            operation(annotation.keypoint.x, tile_left),
+            operation(annotation.keypoint.y, tile_top),
+        )
+    return new_annotation
 
 
 def correct_bounding_box_to_fit_in_tile(
