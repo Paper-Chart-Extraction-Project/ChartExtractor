@@ -150,6 +150,7 @@ def untile_detections(
     """
     generate_tile_left = lambda ix: int(ix * tile_width * horizontal_overlap_ratio)
     generate_tile_top = lambda iy: int(iy * tile_height * vertical_overlap_ratio)
+    flatten_list = lambda l: [item for sublist in l for item in sublist]
 
     untiled_detections: List[List[List[Detection]]] = [
         [
@@ -169,9 +170,5 @@ def untile_detections(
         ]
         for iy, detection_row in enumerate(tiled_detections)
     ]
-    untiled_detections: List[Detection] = [
-        item
-        for sublist in [item for sublist in untiled_detections for item in sublist]
-        for item in sublist
-    ]
+    untiled_detections: List[Detection] = flatten_list(flatten_list(untiled_detections))
     return untiled_detections
