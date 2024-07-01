@@ -57,7 +57,7 @@ Image tiling involves splitting a larger image into smaller, overlapping 'tiles'
 Benefits of Tiling for Small Objects
 ************************************
 
-Image tiling comes with two main benefits:
+Image tiling is very effective for increasing accuracy in datasets with many small objects [#]_. It comes with two main benefits:
 
 1. **Increased Relative Size:** Small objects in a large image occupy a small portion of the total pixels. By dividing the image, the object becomes relatively larger within each tile, making it easier for the model to detect.
 2. **Reduced Computational Cost:** Running the model on smaller tiles requires less processing power and memory compared to analyzing the entire high-resolution image at once.
@@ -76,7 +76,11 @@ There are, however, some challenges with image tiling. However, our project is m
 2. **Larger Objects Do Not Fit Into Small Tiles:** If a dataset has large and small objects mixed in with each other, large objects might not be able to fit within a single tile, causing large objects to be discarded entirely. All of the objects we are interested in are small, and roughly the same size, letting us use image tiling without leaving any objects out.
 3. **Overlapping Tiles Cause Multiple Detections:** In order to ensure all objects get detected, some level of overlap is required for the tiles. The default in our implementation is a 50% horizontal and vertical overlap. This causes detections to be made multiple times on a single object. Our program uses non-maximum-suppression in conjunction with intersection-over-minimum rather than intersection-over-union to remove duplicate detections.
 
+.. image:: ../assets/non_maximum_suppression.png
+    :width: 100%
 
+(Non maximum suppression (NMS) culls overlapping detections to leave us with the bounding box with the highest confidence score from the model. NMS is used in most object detectors,
+but we use it after the fact to remove overlapping detections after reassembling the tiled detections. Credit to [#]_.)
 
 
 Sources
@@ -86,3 +90,4 @@ Sources
 .. [#] https://arxiv.org/abs/1512.02325
 .. [#] https://leimao.github.io/blog/YOLOs/
 .. [#] https://doi.org/10.1109/CVPRW.2019.00084
+.. [#] https://doi.org/10.13140/RG.2.2.10266.47046
