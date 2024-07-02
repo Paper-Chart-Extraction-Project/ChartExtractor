@@ -5,3 +5,4 @@ Key Concepts
    :maxdepth: 1
 
    image_tiling
+   image_registration
