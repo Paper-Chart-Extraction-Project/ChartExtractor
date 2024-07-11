@@ -4,5 +4,5 @@ Key Concepts
 .. toctree::
    :maxdepth: 1
 
-   image_tiling
-   image_registration
+   kc_image_tiling
+   kc_image_registration
