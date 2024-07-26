@@ -9,7 +9,20 @@ from typing import Dict, List, Tuple
 import warnings
 
 
-Point = namedtuple("Point", ["x", "y"])
+class Point:
+    """The `Point` class is a struct which contains an x and y value for a point.
+    
+    Attributes :
+        `x` (float):
+            The x coordinate for the point.
+        `y` (float):
+            The y coordinate for the point.
+    """
+
+    def __init__(self, x:float, y:float):
+        """inits this point."""
+        self.x = x
+        self.y = y
 
 
 @dataclass
