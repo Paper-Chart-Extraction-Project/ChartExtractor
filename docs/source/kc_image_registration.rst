@@ -3,6 +3,9 @@ Image Registration
 
 Introduction
 ############
+
+Motivation
+**********
 No matter how vigilant the camera operator is, there will be some amount of distortion of the chart added by photography.  
 These distortions cause the important document landmarks and data to be in different locations for every photograph of a chart.
 Most commonly, these distortions come in the form of linear image deformations due to slightly off angle photography.  
@@ -12,11 +15,14 @@ Most commonly, these distortions come in the form of linear image deformations d
 
 (An example of how cameras introduce distortions to images of flat surfaces. Credit to [#]_)
 
+What is Image Registration?
+***************************
 Therefore, the photographed image needs an alignment process to take place in order to ensure that the information on the 
 document is in roughly the correct location. This process is called "image registration" [#]_.
+Image registration can be linear and non-linear, but for our project (at the moment) we are only using linear image registration.
 
-Homography
-##########
+Our Solution: The Homography Transformation
+###########################################
 There are two main ways to do image registration: intensity-based and feature-based.
 Our project uses feature-based methods. Specifically, we employ the homography transformation.
 A homography is the most general linear mapping between two quadralaterals.
