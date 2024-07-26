@@ -3,7 +3,6 @@
 It also provides helper functions for constructing these objects from YOLO formatted labels.
 """
 
-from collections import namedtuple
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 import warnings
@@ -23,6 +22,10 @@ class Point:
         """inits this point."""
         self.x = x
         self.y = y
+
+    def __eq__(self, other):
+        """Determines if two points are the same."""
+        return self.x == other.x and self.y == other.y
 
 
 @dataclass
