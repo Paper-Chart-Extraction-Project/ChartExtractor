@@ -9,7 +9,7 @@ The availability of readily accessible, digital medical data offers two major be
 2. Quantify how medicine is being used and how practice varies geographically.
 3. Create retrospective studies that can then be used for prospective randomized control trials to study causality.
 
-EMRs are now widespread in the west, with 96% adoption in American hospitals and 78% in office-based clinics [National Trends in Hospital and Physician Adoption of Electronic Health Records](https://www.healthit.gov/data/quickstats/national-trends-hospital-and-physician-adoption-electronic-health-records). Their adoption has allowed groups like MPOG and NACOR to form, which collate massive datasets of medical records. These datasets enable researchers to perform large meta-analyses on millions of data points, including studies of uncommon and poorly understood conditions by providing enough data for statistically significant analysis.
+EMRs are now widespread in the west, with 96% adoption in American hospitals and 78% in office-based clinics [National Trends in Hospital and Physician Adoption of Electronic Health Records](https://www.healthit.gov/data/quickstats/national-trends-hospital-and-physician-adoption-electronic-health-records). Their adoption has allowed groups like MPOG and NACOR to form, which amalgamate massive datasets of medical records. These datasets enable researchers to perform large meta-analyses on millions of data points, including studies of uncommon and poorly understood conditions by providing enough data for statistically significant analysis.
 
 Additionally, a physician caring for a patient recovering in an ICU can easily access a hyperlinked version of their surgical case and history, speeding up the application of interventions or tests.
 
