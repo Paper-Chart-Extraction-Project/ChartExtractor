@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "chart-extractor"
+version = "0.1.0"
+description = "ChartExtractor uses computer vision to convert images of paper charts to digital data."
+authors = [
+    "RyanDoesMath <vcz2aj@uvahealth.org>",
+    "charbelmarche33 <cmarche@mail.umw.edu>",
+    "mattbeck1 <mtb2tgk@virginia.edu>",
+    "hvalenty <unc6kr@virginia.edu>",
+]
+license = "GPL-3.0-or-later"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+opencv-python = "^4.10.0.84"
+numpy = "^2.1.2"
+pillow = "^10.4.0"
+ultralytics = "^8.3.6"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
