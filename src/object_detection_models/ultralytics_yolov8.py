@@ -117,6 +117,6 @@ class UltralyticsYOLOv8(ObjectDetectionModel):
                 )
                 for ix, d in enumerate(detections)
             ]
-        except Exception as e:
+        except Exception:
             pass
         return detections
