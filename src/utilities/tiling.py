@@ -1,10 +1,10 @@
 """This module provides functions for splitting an image and its annotations into smaller, overlapping tiles.
 
-The `tile_image` function splits a PIL `Image` object into a grid of tiles with a specified size and overlap ratio. 
+The `tile_image` function splits a PIL `Image` object into a grid of tiles with a specified size and overlap ratio.
 It handles padding the image with black pixels if necessary to ensure all tiles fit perfectly within the image boundaries.
 
-The `tile_annotations` function is a sister function to `tile_image` and can be used to tile annotations associated with the 
-image using (nearly) the same parameters as `tile_image`. It assumes annotations implement a `'box'` property representing 
+The `tile_annotations` function is a sister function to `tile_image` and can be used to tile annotations associated with the
+image using (nearly) the same parameters as `tile_image`. It assumes annotations implement a `'box'` property representing
 their location within the image. Each annotation is assigned to the tile(s) that completely enclose its bounding box.
 """
 

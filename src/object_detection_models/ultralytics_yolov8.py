@@ -1,8 +1,8 @@
 """This module implements the `UltralyticsYOLOv8` wrapper class
 
-The `UltralyticsYOLOv8` class, which inherits from the `ObjectDetectionModel` interface, 
-provides a wrapper for the YOLOv8 object detection model from the Ultralytics library. 
-It enables you to use the YOLOv8 model within your program through the common interface defined 
+The `UltralyticsYOLOv8` class, which inherits from the `ObjectDetectionModel` interface,
+provides a wrapper for the YOLOv8 object detection model from the Ultralytics library.
+It enables you to use the YOLOv8 model within your program through the common interface defined
 in `object_detection_model.py`.
 
 Key functionalities include:
@@ -11,10 +11,10 @@ Key functionalities include:
     - Performing object detection on an image using the YOLOv8 model.
     - Converting the YOLOv8 model's output to a list of Detection objects.
 
-These `Detection` objects encapsulate details about detected objects, including bounding boxes, 
+These `Detection` objects encapsulate details about detected objects, including bounding boxes,
 confidence scores, and potentially keypoints (if available in the model's output).
 
-This approach simplifies the integration and usage of YOLOv8 within this program, promoting code 
+This approach simplifies the integration and usage of YOLOv8 within this program, promoting code
 modularity and reusability.
 """
 
@@ -117,6 +117,6 @@ class UltralyticsYOLOv8(ObjectDetectionModel):
                 )
                 for ix, d in enumerate(detections)
             ]
-        except Exception as e:
+        except Exception:
             pass
         return detections

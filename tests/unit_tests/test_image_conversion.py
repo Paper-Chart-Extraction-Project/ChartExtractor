@@ -7,7 +7,6 @@ sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
 
 import pytest
 from PIL import Image, ImageChops
-import cv2
 import numpy as np
 from utilities import image_conversion
 

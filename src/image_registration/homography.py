@@ -7,7 +7,7 @@ The homography is a linear mapping, so non-linear distortions in the image
 cannot be resolved by the homography alone.
 
 The `homography_transform` function takes a source PIL image, corresponding
-source and destination point lists, and an original image size as input. 
+source and destination point lists, and an original image size as input.
 It then:
 
     1. Converts source and destination points to NumPy arrays.
