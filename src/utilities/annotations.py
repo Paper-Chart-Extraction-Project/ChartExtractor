@@ -452,7 +452,9 @@ class Keypoint:
         Returns:
             A string that encodes this `Keypoint`'s data for a single line in a yolo label file.
         """
-        yolo_line = self.bounding_box.to_yolo(image_width, image_height, category_to_id)
+        yolo_line = self.bounding_box.to_yolo(
+            image_width, image_height, category_to_id, precision
+        )
         keypoint_x, keypoint_y = (
             self.keypoint.x / image_width,
             self.keypoint.y / image_height,
