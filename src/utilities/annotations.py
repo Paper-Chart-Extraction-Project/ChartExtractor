@@ -241,7 +241,11 @@ class BoundingBox:
         )
 
     def to_yolo(
-        self, image_width: int, image_height: int, category_to_id: Dict[str, int]
+        self,
+        image_width: int,
+        image_height: int,
+        category_to_id: Dict[str, int],
+        precision: int = 8,
     ) -> str:
         """Writes the data from this `BoundingBox` into a yolo formatted string.
 
@@ -252,6 +256,10 @@ class BoundingBox:
                 The image's height that this boundingbox belongs to.
             `category_to_id` (Dict[str, int]):
                 A dictionary that maps the category string to an id (integer).
+            `precision` (int):
+                The number of decimal places to round yolo output to.
+                Defaults to 8 decimal places. If more precision is needed,
+                increase this value.
 
         Returns:
             A string that encodes this `BoundingBox`'s data for a single line in a yolo label file.
@@ -262,7 +270,7 @@ class BoundingBox:
         y /= image_height
         w = (self.right - self.left) / image_width
         h = (self.bottom - self.top) / image_height
-        return f"{c} {x} {y} {w} {h}"
+        return f"{c} {x:.{precision}f} {y:.{precision}f} {w:.{precision}f} {h:.{precision}f}"
 
 
 @dataclass
@@ -421,7 +429,11 @@ class Keypoint:
         return Keypoint(Point(new_x, new_y), self.bounding_box)
 
     def to_yolo(
-        self, image_width: int, image_height: int, category_to_id: Dict[str, int]
+        self,
+        image_width: int,
+        image_height: int,
+        category_to_id: Dict[str, int],
+        precision: int = 8,
     ) -> str:
         """Writes the data from this `Keypoint` into a yolo formatted string.
 
@@ -432,6 +444,10 @@ class Keypoint:
                 The image's height that this `Keypoint` belongs to.
             `category_to_id` (Dict[str, int]):
                 A dictionary that maps the category string to an id (int).
+            `precision` (int):
+                The number of decimal places to round yolo output to.
+                Defaults to 8 decimal places. If more precision is needed,
+                increase this value.
 
         Returns:
             A string that encodes this `Keypoint`'s data for a single line in a yolo label file.
@@ -441,5 +457,5 @@ class Keypoint:
             self.keypoint.x / image_width,
             self.keypoint.y / image_height,
         )
-        yolo_line += f" {keypoint_x} {keypoint_y}"
+        yolo_line += f" {keypoint_x:.{precision}f} {keypoint_y:.{precision}f}"
         return yolo_line
