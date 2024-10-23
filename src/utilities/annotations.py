@@ -408,7 +408,7 @@ class Keypoint:
         Returns: A new Keypoint with a new bounding box.
         """
         return Keypoint(
-            point=self.keypoint,
+            keypoint=self.keypoint,
             bounding_box=self.bounding_box.set_box(
                 new_left, new_top, new_right, new_bottom
             ),
