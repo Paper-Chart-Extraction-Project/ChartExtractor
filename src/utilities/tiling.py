@@ -279,14 +279,19 @@ def correct_annotation_coords(
         raise ValueError("Invalid option. Choose 'image_to_tile' or 'tile_to_image'")
 
     operation = lambda x, y: x + y if direction == "tile_to_image" else x - y
-    new_annotation: Union[BoundingBox, Keypoint] = annotation.set_box(
-        operation(annotation.box[0], tile_left),
-        operation(annotation.box[1], tile_top),
-        operation(annotation.box[2], tile_left),
-        operation(annotation.box[3], tile_top),
-    )
+    if isinstance(annotation, BoundingBox):
+        new_annotation: BoundingBox = annotation.set_box(
+            operation(annotation.box[0], tile_left),
+            operation(annotation.box[1], tile_top),
+            operation(annotation.box[2], tile_left),
+            operation(annotation.box[3], tile_top),
+        )
     if isinstance(annotation, Keypoint):
-        new_annotation: Union[BoundingBox, Keypoint] = annotation.set_keypoint(
+        new_annotation: Keypoint = annotation.set_box_and_keypoint(
+            operation(annotation.box[0], tile_left),
+            operation(annotation.box[1], tile_top),
+            operation(annotation.box[2], tile_left),
+            operation(annotation.box[3], tile_top),
             operation(annotation.keypoint.x, tile_left),
             operation(annotation.keypoint.y, tile_top),
         )

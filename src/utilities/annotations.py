@@ -390,6 +390,47 @@ class Keypoint:
         """This keypoints boundingbox's [left, top, right, bottom]."""
         return self.bounding_box.box
 
+    def set_box_and_keypoint(
+        self,
+        new_left: int,
+        new_top: int,
+        new_right: int,
+        new_bottom: int,
+        new_kp_x: int,
+        new_kp_y: int,
+    ) -> "Keypoint":
+        """Sets this keypoint's box and keypoint to new values.
+
+        This exists because setting the box to a new location will cause an exception
+        when the new box would not contain the old keypoint.
+
+        Args:
+            new_left (int):
+                The new left side for the box.
+            new_top (int):
+                The new top side for the box.
+            new_right (int):
+                The new right side for the box.
+            new_bottom (int):
+                The new bottom side for the box.
+            new_kp_x (int):
+                The new x value for the Keypoint.
+            new_kp_y (int):
+                The new y value for the Keypoint.
+
+        Returns: A new Keypoint with a new bounding box and keypoint.
+        """
+        self.validate_keypoint(
+            BoundingBox(self.category, new_left, new_top, new_right, new_bottom),
+            Point(new_kp_x, new_kp_y),
+        )
+        return Keypoint(
+            keypoint=Point(new_kp_x, new_kp_y),
+            bounding_box=BoundingBox(
+                self.category, new_left, new_top, new_right, new_bottom
+            ),
+        )
+
     def set_box(
         self, new_left: int, new_top: int, new_right: int, new_bottom: int
     ) -> BoundingBox:
