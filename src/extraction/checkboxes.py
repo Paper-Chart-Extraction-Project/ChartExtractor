@@ -9,7 +9,7 @@ import json
 import numpy as np
 from pathlib import Path
 from PIL import Image
-from typing import Dict, List, Tuple
+from typing import Dict, List, Literal, Tuple
 
 DATA_FILEPATH: Path = Path("..") / ".." / "data"
 FILEPATH_TO_INTRAOP_CENTROIDS: Path = (
@@ -29,6 +29,7 @@ PREOP_POSTOP_CENTROIDS: Dict[str, Tuple[float, float]] = json.load(
 def extract_checkboxes(
     image: Image.Image,
     detection_model: ObjectDetectionModel,
+    side: Literal["intraoperative", "preoperative"],
     slice_width: int,
     slice_height: int,
     horizontal_overlap_ratio: float,
@@ -41,11 +42,37 @@ def extract_checkboxes(
             The image to extract checkboxes from.
         `detection_model` (ObjectDetectionModel):
             An object that implements the ObjectDetectionModel interface.
+        `slice_height` (int):
+            The height of each slice.
+        `slice_width` (int):
+            The width of each slice.
+        `horizontal_overlap_ratio` (float):
+            The amount of left-right overlap between slices.
+        `vertical_overlap_ratio` (float):
+            The amount of top-bottom overlap between slices.
 
     Returns:
         A dictionary mapping the name of checkboxes to "checked" or "unchecked".
     """
-    pass
+    if side.lower() == "intraoperative":
+        centroids = INTRAOP_CENTROIDS
+    elif side.lower() == "preoperative":
+        centroids = PREOP_POSTOP_CENTROIDS
+    else:
+        raise ValueError(
+            f'Invalid selection for side. Must be one of ["intraoperative", "preoperative"], value supplied was {side}'
+        )
+
+    checkbox_bboxes: List[Detection] = detect_checkboxes(
+        image,
+        detection_model,
+        slice_width,
+        slice_height,
+        horizontal_overlap_ratio,
+        vertical_overlap_ratio,
+    )
+    names: Dict[str, str] = find_checkbox_names(checkbox_bboxes, centroids)
+    return names
 
 
 def detect_checkboxes(
@@ -92,7 +119,7 @@ def detect_checkboxes(
         horizontal_overlap_ratio,
         vertical_overlap_ratio,
     )
-    return detections
+    return [det.annotation for det in detections]
 
 
 def find_checkbox_names(
