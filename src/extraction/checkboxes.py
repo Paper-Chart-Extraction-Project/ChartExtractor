@@ -23,12 +23,28 @@ PREOP_POSTOP_CENTROIDS: Dict[str, Tuple[float, float]] = json.load(
 
 
 def extract_checkboxes(image: Image.Image) -> Dict[str, str]:
-    """ """
+    """Extracts checkbox data from an image of a chart.
+
+    Args:
+        image (Image.Image):
+            The image to extract checkboxes from.
+
+    Returns:
+        A dictionary mapping the name of checkboxes to "checked" or "unchecked".
+    """
     pass
 
 
 def detect_checkboxes(image: Image.Image) -> List[BoundingBox]:
-    """ """
+    """Uses an object detector to detect checkboxes and their state on an image.
+
+    Args:
+        image (Image.Image):
+            The image to extract checkboxes from.
+
+    Returns:
+        A list of BoundingBox objects encoding the location and state of checkboxes.
+    """
     pass
 
 
