@@ -4,6 +4,7 @@ from utilities.annotations import BoundingBox
 import json
 import numpy as np
 from pathlib import Path
+from PIL import Image
 from typing import Dict, List, Tuple
 
 DATA_FILEPATH: Path = Path("..") / ".." / "data"
@@ -19,6 +20,16 @@ INTRAOP_CENTROIDS: Dict[str, Tuple[float, float]] = json.load(
 PREOP_POSTOP_CENTROIDS: Dict[str, Tuple[float, float]] = json.load(
     open(FILEPATH_TO_PREOP_POSTOP_CENTROIDS, "r")
 )
+
+
+def extract_checkboxes(image: Image.Image) -> Dict[str, str]:
+    """ """
+    pass
+
+
+def detect_checkboxes(image: Image.Image) -> List[BoundingBox]:
+    """ """
+    pass
 
 
 def find_checkbox_names(
