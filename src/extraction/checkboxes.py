@@ -1,6 +1,9 @@
 """Provides functions for extracting and determining the meaning of checkboxes."""
 
 from utilities.annotations import BoundingBox
+from utilities.detections import Detection
+from utilities.detection_reassembly import untile_detections
+from utilities.tiling import tile_image
 from object_detection_models.object_detection_model import ObjectDetectionModel
 import json
 import numpy as np
@@ -24,14 +27,19 @@ PREOP_POSTOP_CENTROIDS: Dict[str, Tuple[float, float]] = json.load(
 
 
 def extract_checkboxes(
-    image: Image.Image, detection_model: ObjectDetectionModel
+    image: Image.Image,
+    detection_model: ObjectDetectionModel,
+    slice_width: int,
+    slice_height: int,
+    horizontal_overlap_ratio: float,
+    vertical_overlap_ratio: float,
 ) -> Dict[str, str]:
     """Extracts checkbox data from an image of a chart.
 
     Args:
-        image (Image.Image):
+        `image` (Image.Image):
             The image to extract checkboxes from.
-        detection_model (ObjectDetectionModel):
+        `detection_model` (ObjectDetectionModel):
             An object that implements the ObjectDetectionModel interface.
 
     Returns:
@@ -40,17 +48,51 @@ def extract_checkboxes(
     pass
 
 
-def detect_checkboxes(image: Image.Image) -> List[BoundingBox]:
+def detect_checkboxes(
+    image: Image.Image,
+    detection_model: ObjectDetectionModel,
+    slice_width: int,
+    slice_height: int,
+    horizontal_overlap_ratio: float,
+    vertical_overlap_ratio: float,
+) -> List[BoundingBox]:
     """Uses an object detector to detect checkboxes and their state on an image.
 
     Args:
-        image (Image.Image):
+        `image` (Image.Image):
             The image to extract checkboxes from.
+        `detection_model` (ObjectDetectionModel):
+            An object that implements the ObjectDetectionModel interface.
+        `slice_height` (int):
+            The height of each slice.
+        `slice_width` (int):
+            The width of each slice.
+        `horizontal_overlap_ratio` (float):
+            The amount of left-right overlap between slices.
+        `vertical_overlap_ratio` (float):
+            The amount of top-bottom overlap between slices.
 
     Returns:
         A list of BoundingBox objects encoding the location and state of checkboxes.
     """
-    pass
+    image_tiles: List[List[Image.Image]] = tile_image(
+        image,
+        slice_width,
+        slice_height,
+        horizontal_overlap_ratio,
+        vertical_overlap_ratio,
+    )
+    detections: List[List[List[Detection]]] = [
+        [detection_model(tile) for tile in row] for row in image_tiles
+    ]
+    detections: List[Detection] = untile_detections(
+        detections,
+        slice_width,
+        slice_height,
+        horizontal_overlap_ratio,
+        vertical_overlap_ratio,
+    )
+    return detections
 
 
 def find_checkbox_names(
@@ -66,12 +108,12 @@ def find_checkbox_names(
     checkboxes.
 
     Args:
-        checkboxes (List[BoundingBox]):
+        `checkboxes` (List[BoundingBox]):
             The checkboxes to classify. The 'category' attribute should be 'checked'
             or 'unchecked'.
-        centroids (Dict[str, Tuple[float, float]]):
+        `centroids` (Dict[str, Tuple[float, float]]):
             The centroids of a sample of 10 checkboxes.
-        threshold (float):
+        `threshold` (float):
             The threshold that determines how far a centroid can be before it
             is totally ruled out. If all checkbox centroids are more than the
             threshold away, there is no associated name for that checkbox.
