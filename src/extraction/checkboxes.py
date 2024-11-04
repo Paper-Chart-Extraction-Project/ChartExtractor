@@ -1,6 +1,7 @@
 """Provides functions for extracting and determining the meaning of checkboxes."""
 
 from utilities.annotations import BoundingBox
+from object_detection_models.object_detection_model import ObjectDetectionModel
 import json
 import numpy as np
 from pathlib import Path
@@ -22,12 +23,16 @@ PREOP_POSTOP_CENTROIDS: Dict[str, Tuple[float, float]] = json.load(
 )
 
 
-def extract_checkboxes(image: Image.Image) -> Dict[str, str]:
+def extract_checkboxes(
+    image: Image.Image, detection_model: ObjectDetectionModel
+) -> Dict[str, str]:
     """Extracts checkbox data from an image of a chart.
 
     Args:
         image (Image.Image):
             The image to extract checkboxes from.
+        detection_model (ObjectDetectionModel):
+            An object that implements the ObjectDetectionModel interface.
 
     Returns:
         A dictionary mapping the name of checkboxes to "checked" or "unchecked".
