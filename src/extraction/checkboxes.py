@@ -33,8 +33,8 @@ def extract_checkboxes(
     side: Literal["intraoperative", "preoperative"],
     slice_width: int,
     slice_height: int,
-    horizontal_overlap_ratio: float,
-    vertical_overlap_ratio: float,
+    horizontal_overlap_ratio: float = 0.5,
+    vertical_overlap_ratio: float = 0.5,
 ) -> Dict[str, str]:
     """Extracts checkbox data from an image of a chart.
 
