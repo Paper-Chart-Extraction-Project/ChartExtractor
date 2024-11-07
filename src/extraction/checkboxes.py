@@ -2,7 +2,11 @@
 
 from utilities.annotations import BoundingBox
 from utilities.detections import Detection
-from utilities.detection_reassembly import untile_detections
+from utilities.detection_reassembly import (
+    untile_detections,
+    non_maximum_suppression,
+    intersection_over_minimum,
+)
 from utilities.tiling import tile_image
 from object_detection_models.object_detection_model import ObjectDetectionModel
 import json
@@ -64,7 +68,7 @@ def extract_checkboxes(
             f'Invalid selection for side. Must be one of ["intraoperative", "preoperative"], value supplied was {side}'
         )
 
-    checkbox_bboxes: List[Detection] = detect_checkboxes(
+    checkbox_bboxes: List[BoundingBox] = detect_checkboxes(
         image,
         detection_model,
         slice_width,
@@ -101,7 +105,7 @@ def detect_checkboxes(
             The amount of top-bottom overlap between slices.
 
     Returns:
-        A list of BoundingBox objects encoding the location and state of checkboxes.
+        A list of Detection objects encoding the location and state of checkboxes.
     """
     image_tiles: List[List[Image.Image]] = tile_image(
         image,
@@ -119,6 +123,11 @@ def detect_checkboxes(
         slice_height,
         horizontal_overlap_ratio,
         vertical_overlap_ratio,
+    )
+    detections: List[Detection] = non_maximum_suppression(
+        detections=detections,
+        threshold=0.8,
+        overlap_comparator=intersection_over_minimum,
     )
     return [det.annotation for det in detections]
 
@@ -166,6 +175,7 @@ def find_checkbox_names(
             [dist > threshold for dist in list(distance_to_all_centroids.values())]
         )
         if checkbox_too_far_from_any_centroid:
+            print("!!!")
             continue
 
         closest_checkbox_centroid: str = min(
