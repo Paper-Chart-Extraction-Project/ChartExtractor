@@ -11,7 +11,8 @@ from pathlib import Path
 from PIL import Image
 from typing import Dict, List, Literal, Tuple
 
-DATA_FILEPATH: Path = Path("..") / ".." / "data"
+
+DATA_FILEPATH: Path = Path(__file__).parents[2] / "data"
 FILEPATH_TO_INTRAOP_CENTROIDS: Path = (
     DATA_FILEPATH / "centroids" / "intraop_centroids.json"
 )
