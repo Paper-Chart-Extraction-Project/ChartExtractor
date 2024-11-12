@@ -76,7 +76,7 @@ def extract_checkboxes(
         horizontal_overlap_ratio,
         vertical_overlap_ratio,
     )
-    names: Dict[str, str] = find_checkbox_names(checkbox_bboxes, centroids)
+    names: Dict[str, str] = find_checkbox_names(checkbox_bboxes, centroids, image.size)
     return names
 
 
@@ -135,6 +135,7 @@ def detect_checkboxes(
 def find_checkbox_names(
     checkboxes: List[BoundingBox],
     centroids: Dict[str, Tuple[float, float]],
+    imsize: Tuple[int, int],
     threshold: float = 0.025,
 ) -> Dict[str, str]:
     """Finds the names of checkboxes.
@@ -166,18 +167,13 @@ def find_checkbox_names(
 
     checkbox_values: Dict[str, str] = dict()
     for ckbx in checkboxes:
+        center = ckbx.center[0] / imsize[0], ckbx.center[1] / imsize[1]
         distance_to_all_centroids: Dict[str, float] = {
-            name: distance(ckbx.center, centroid)
-            for (name, centroid) in centroids.items()
+            name: distance(center, centroid) for (name, centroid) in centroids.items()
         }
-
         checkbox_too_far_from_any_centroid: bool = all(
             [dist > threshold for dist in list(distance_to_all_centroids.values())]
         )
-        if checkbox_too_far_from_any_centroid:
-            print("!!!")
-            continue
-
         closest_checkbox_centroid: str = min(
             distance_to_all_centroids, key=distance_to_all_centroids.get
         )
