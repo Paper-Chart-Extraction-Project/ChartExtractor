@@ -71,9 +71,9 @@ class UltralyticsYOLOv8(ObjectDetectionModel):
         """
         return UltralyticsYOLOv8(model)
 
-    def __call__(self, image: Image.Image, verbose: bool = False) -> List[Detection]:
+    def __call__(self, image: Image.Image, **kwargs) -> List[Detection]:
         """ """
-        results = self.model(image, verbose=verbose)
+        results = self.model(image, **kwargs)
         detections: List[Detection] = self.yolov8_results_to_detections(results)
         return detections
 
