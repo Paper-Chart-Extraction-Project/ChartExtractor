@@ -15,7 +15,7 @@ from PIL import Image
 from scipy.stats import gaussian_kde
 
 # Internal imports
-from ..utilities.annotations import BoundingBox
+from utilities.annotations import BoundingBox
 
 
 def __find_density_max(values: List[int], search_area: int) -> int:
@@ -81,8 +81,6 @@ def __remove_bb_outliers(boxes: List[BoundingBox]) -> List[BoundingBox]:
 
 def extract_relevant_bounding_boxes(
     sheet_data: List[str],
-    path_to_image: Path,
-    show_images: bool = False,
     desired_img_width: int = 800,
     desired_img_height: int = 600,
 ) -> Tuple[List[str], List[str]]:
@@ -104,16 +102,19 @@ def extract_relevant_bounding_boxes(
         The second list contains bounding boxes in the bottom-left region -- representing numerical values for mmHg and bpm.
             (bounding_boxes_time, bounding_boxes_numbers)
     """
-
-    # Load the image
-    image = cv2.imread(path_to_image)
-
-    # Display the image and allow the user to select a ROI
-    resized_image = cv2.resize(image, (desired_img_width, desired_img_height))
+    # Make category to id mapping
+    category_to_id = {i: bb.split()[0] for i, bb in enumerate(sheet_data)}
+    # Go through bounding boxes and change class to an integer while creating a mapping
+    sheet_data = [
+        f"{list(category_to_id.keys())[list(category_to_id.values()).index(bb.split()[0])]} {' '.join(bb.split()[1:])}"
+        for bb in sheet_data
+    ]
 
     # convert the YOLO data to Bounding Boxes
     bboxes: List[BoundingBox] = [
-        BoundingBox.from_yolo(yolo_bb, desired_img_width, desired_img_height)
+        BoundingBox.from_yolo(
+            yolo_bb, desired_img_width, desired_img_height, category_to_id
+        )
         for yolo_bb in sheet_data
     ]
 
@@ -154,35 +155,6 @@ def extract_relevant_bounding_boxes(
 
     bounding_boxes_numbers = __remove_bb_outliers(bounding_boxes_numbers)
     bounding_boxes_time = __remove_bb_outliers(bounding_boxes_time)
-
-    for bounding_box in bounding_boxes_numbers:
-        x_min = int(bounding_box.left)
-        x_max = int(bounding_box.right)
-        y_min = int(bounding_box.top)
-        y_max = int(bounding_box.bottom)
-
-        # Bounding box is in the top-right region
-        cv2.rectangle(resized_image, (x_min, y_min), (x_max, y_max), (255, 255, 0), 1)
-
-    for bounding_box in bounding_boxes_time:
-        x_min = int(bounding_box.left)
-        x_max = int(bounding_box.right)
-        y_min = int(bounding_box.top)
-        y_max = int(bounding_box.bottom)
-
-        cv2.rectangle(resized_image, (x_min, y_min), (x_max, y_max), (255, 0, 255), 1)
-
-    # Close all OpenCV windows, always do this or it will annoyingly not go away
-    # You can also manually quit out with ESC key.
-    cv2.destroyAllWindows()
-
-    # If we are showing the images, display the image with the selected region and bounding boxes
-    # Bounding boxes in the top-right region (time) are in one color while those in the bottom left (numerical) are in another
-    if show_images:
-        # Display the image with the selected region and bounding boxes
-        resized_image = cv2.cvtColor(resized_image, cv2.COLOR_BGR2RGB)
-        resized_image = Image.fromarray(resized_image)
-        resized_image.show()
 
     # Return a tuple of bounding boxes in the top-right and bottom-left regions
     return (bounding_boxes_time, bounding_boxes_numbers)
