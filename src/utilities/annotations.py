@@ -1,4 +1,4 @@
-"""This module defines classes for representing bounding boxes and keypoints associated with objects in images. 
+"""This module defines classes for representing bounding boxes and keypoints associated with objects in images.
 
 It also provides helper functions for constructing these objects from YOLO formatted labels.
 """
@@ -10,7 +10,7 @@ import warnings
 
 class Point:
     """The `Point` class is a struct which contains an x and y value for a point.
-    
+
     Attributes :
         `x` (float):
             The x coordinate for the point.
@@ -18,7 +18,7 @@ class Point:
             The y coordinate for the point.
     """
 
-    def __init__(self, x:float, y:float):
+    def __init__(self, x: float, y: float):
         """inits this point."""
         self.x = x
         self.y = y
@@ -127,7 +127,7 @@ class BoundingBox:
             y + (1 / 2) * h,
         )
         category = id_to_category.get(int(data[0]))
-        if category == None:
+        if category is None:
             raise ValueError(
                 f"Category {int(data[0])} not found in the id_to_category dictionary."
             )
