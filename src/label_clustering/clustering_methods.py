@@ -4,7 +4,10 @@ This module contains functions for clustering labels based on their bounding box
 """
 
 # Built-in imports
-from typing import List, Dict, Literal
+import re
+from typing import List, Literal
+from functools import reduce
+
 
 # External imports
 import numpy as np
@@ -169,6 +172,48 @@ def __cluster_agglomerative(
     return cluster_performance_map[best_n_clusters]["labels"]
 
 
+def __time_correction(clusters: List[Cluster]) -> List[Cluster]:
+    """
+    Takes a list of time clusters and turns them from including repeats to not including repeats.
+    There will be multiple 0, 5, 10, and so on. But the first (furthest to the left) is the true one.
+    The rest are repeats and will be changed to 60, 65, 70, and so on.
+
+    Args:
+        clusters: List of Cluster objects.
+
+    Returns:
+        List of Cluster objects with corrected time labels.
+    """
+    # See if any repeats and identify them
+    count_dict = {}
+    for cluster in clusters:
+        label = cluster.get_label()
+        if label in count_dict:
+            count_dict[label].append(cluster)
+        else:
+            count_dict[label] = [cluster]
+
+    # Now iterate over the dictionary and find the labels with many bounding boxes. Lets change the labels of these.
+    for label, clusters in count_dict.items():
+        if len(clusters) > 1:
+            # Sort by x
+            sorted_clusters = sorted(
+                clusters, key=lambda x: float(x.get_bounding_box().center[0])
+            )
+            # The one furthest to the left is the true one for the label.
+            # For the rest add 60 to them depending on their index.
+            for i, cluster in enumerate(sorted_clusters):
+                correct_label = (
+                    f"{str(int(re.findall(r'\d+', label)[0]) + (i * 60))}_mins"
+                )
+
+                cluster.update_label(correct_label)
+
+    clusters = reduce(lambda x, y: x + y, count_dict.values())
+
+    return clusters
+
+
 def cluster_boxes(
     bounding_boxes: List[BoundingBox],
     method: Literal["kmeans", "dbscan", "agglomerative"],
@@ -220,5 +265,8 @@ def cluster_boxes(
             bounding_boxes[i] for i in range(len(labels)) if labels[i] == label
         ]
         clusters.append(Cluster(cluster_bounding_boxes, unit))
+
+    if unit == "mins":
+        clusters = __time_correction(clusters)
 
     return clusters
