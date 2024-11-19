@@ -5,13 +5,10 @@ It includes a public function for external use and several worker functions that
 """
 
 # Built-in imports
-from pathlib import Path
 from typing import List, Tuple
 
 # External imports
-import cv2
 import numpy as np
-from PIL import Image
 from scipy.stats import gaussian_kde
 
 # Internal imports
@@ -83,7 +80,7 @@ def extract_relevant_bounding_boxes(
     sheet_data: List[str],
     desired_img_width: int = 800,
     desired_img_height: int = 600,
-) -> Tuple[List[str], List[str]]:
+) -> Tuple[List[BoundingBox], List[BoundingBox]]:
     """
     Given sheet data for bounding boxes in YOLO format, find the bounding boxes corresponding to the number and time on the BP chart.
     Return the bounding boxes that are within the selected region split into two lists: time labels and numerical values.
