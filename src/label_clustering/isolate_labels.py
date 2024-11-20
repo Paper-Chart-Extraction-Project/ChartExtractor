@@ -28,11 +28,8 @@ def __find_density_max(values: List[int], search_area: int) -> int:
         The axis value that has the highest density of bounding boxes.
     """
     kde = gaussian_kde(values, bw_method=0.2)
-
     x_values = np.linspace(0, search_area, 10000)
-
     kde_vals = kde(x_values)
-
     max_index = np.argmax(kde_vals)
     return x_values[max_index]
 
@@ -47,32 +44,22 @@ def __remove_bb_outliers(boxes: List[BoundingBox]) -> List[BoundingBox]:
     Returns:
         Filtered list of Bounding Boxes
     """
-    x_vals = [bb.left for bb in boxes]
-    # find the 25th percentile
-    x_Q1 = np.percentile(x_vals, 25)
-    # find the 75th percentile
-    x_Q3 = np.percentile(x_vals, 75)
-    # find the IQR
-    x_IQR = x_Q3 - x_Q1
-    # determine lower and upper bounds
-    x_lower = x_Q1 - 1.5 * x_IQR
-    x_upper = x_Q3 + 1.5 * x_IQR
-    # remove outliers via the x axis
-    x_filtered = [bb for bb in boxes if x_lower <= bb.left <= x_upper]
 
-    y_vals = [bb.top for bb in x_filtered]
-    # find the 25th percentile
-    y_Q1 = np.percentile(y_vals, 25)
-    # find the 75th percentile
-    y_Q3 = np.percentile(y_vals, 75)
-    # find the IQR
-    y_IQR = y_Q3 - y_Q1
-    # determine the lower and upper bounds
-    y_lower = y_Q1 - 1.5 * y_IQR
-    y_upper = y_Q3 + 1.5 * y_IQR
-    # remove outliers via the y axis
-    filtered = [bb for bb in x_filtered if y_lower <= bb.top <= y_upper]
+    def filter_outlier_values(values: List[float]) -> List[float]:
+        """Filters values more than 1.5 IQRs away from the 25th and 75th percentiles.
 
+        Does this for both x and y.
+        """
+        first_quartile, third_quartile = np.percentile(values, [25, 75])
+        interquartile_range: float = third_quartile - first_quartile
+        bounds: Tuple[float, float] = (
+            first_quartile - 1.5 * interquartile_range,
+            third_quartile + 1.5 * interquartile_range,
+        )
+        return list(filter(lambda val: bounds[0] <= val <= bounds[1], values))
+
+    filtered = filter_outlier_values([bb.left for bb in boxes])
+    filtered = filter_outlier_values([bb.top for bb in filtered])
     return filtered
 
 
