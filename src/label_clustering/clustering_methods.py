@@ -8,7 +8,6 @@ import re
 from typing import List, Literal
 from functools import reduce
 
-
 # External imports
 import numpy as np
 from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
@@ -59,10 +58,6 @@ def __cluster_kmeans(
         # Get cluster labels
         labels = kmeans.predict(data)
         silhouette_avg = silhouette_score(data, labels)
-
-        # print(
-        #     f"Number of clusters: {number_of_clusters}, Silhouette score: {silhouette_avg}"
-        # )
 
         cluster_performance_map[number_of_clusters] = {
             "score": silhouette_avg,
