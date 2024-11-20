@@ -39,31 +39,6 @@ class Cluster:
         # Get the bounding box that encompasses all the bounding boxes in the cluster
         self.bounding_box = self.__create_bounding_box()
 
-    def get_bounding_box(self) -> BoundingBox:
-        """
-        Get the bounding box that encompasses all the bounding boxes in the cluster.
-
-        Args:
-            None
-
-        Returns:
-            A bounding box in YOLO format.
-        """
-        # This should return a bounding box that encompasses all the bounding boxes in the cluster.
-        return self.bounding_box
-
-    def get_label(self) -> str:
-        """
-        Get the label of the cluster.
-
-        Args:
-            None
-
-        Returns:
-            The label of the cluster.
-        """
-        return self.label
-
     def update_label(self, new_label: str) -> None:
         """
         Update the label of the cluster.
