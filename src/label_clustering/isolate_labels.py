@@ -65,8 +65,8 @@ def __remove_bb_outliers(boxes: List[BoundingBox]) -> List[BoundingBox]:
 
 def extract_relevant_bounding_boxes(
     sheet_data: List[str],
-    desired_img_width: int = 800,
-    desired_img_height: int = 600,
+    im_width: int = 800,
+    im_height: int = 600,
 ) -> Tuple[List[BoundingBox], List[BoundingBox]]:
     """
     Given sheet data for bounding boxes in YOLO format, find the bounding boxes corresponding to the number and time on the BP chart.
@@ -76,8 +76,8 @@ def extract_relevant_bounding_boxes(
         sheet_data: List of bounding boxes in YOLO format.
         path_to_image: Path to the image file.
         show_images: Boolean flag to show the image with the selected region and bounding boxes. Default is False.
-        desired_img_width: Desired width of the image to display. Default is 800.
-        desired_img_height: Desired height of the image to display. Default is 600.
+        im_width: Width of the image. Default is 800.
+        im_height: Height of the image. Default is 600.
 
 
     Returns:
@@ -96,49 +96,24 @@ def extract_relevant_bounding_boxes(
 
     # convert the YOLO data to Bounding Boxes
     bboxes: List[BoundingBox] = [
-        BoundingBox.from_yolo(
-            yolo_bb, desired_img_width, desired_img_height, category_to_id
-        )
+        BoundingBox.from_yolo(yolo_bb, im_width, im_height, category_to_id)
         for yolo_bb in sheet_data
     ]
 
-    # generate a list of the digit categories
-    digit_categories: List[str] = [str(i) for i in range(10)]
-
-    # filter out non bounding boxes and those whose category is not a digit
+    # filter out bounding boxes whose category is not a digit
     bboxes: List[BoundingBox] = list(
-        filter(
-            lambda bb: isinstance(bb, BoundingBox) and bb.category in digit_categories,
-            bboxes,
-        )
+        filter(lambda bb: bb.category in [str(i) for i in range(10)], bboxes)
     )
 
-    # find the point with the maximum density of bounding boxes
-    bboxes_right: List[int] = [bb.right for bb in bboxes]
-    # x_loc is the vertical line to the left of the time axis and right of the numbers axis
-    x_loc: int = __find_density_max(bboxes_right, desired_img_width)
+    # x_loc and y_loc form the point at the top left corner of the bp and hr section.
+    x_loc: int = __find_density_max([bb.right for bb in bboxes], im_width)
+    y_loc: int = __find_density_max([bb.bottom for bb in bboxes], im_height)
 
-    bboxes_bottom: List[int] = [bb.bottom for bb in bboxes]
-    # y_loc is the horizontal line undert the time axis and above the number axis
-    y_loc: int = __find_density_max(bboxes_bottom, desired_img_height)
+    is_time_box = lambda box: box.center[1] > y_loc - 10 and box.center[1] < y_loc + 2
+    is_mmhg_box = lambda box: box.center[0] > x_loc - 15 and box.center[0] < x_loc + 2
 
-    bounding_boxes_time = []
-    bounding_boxes_numbers = []
-
-    # Process the bounding boxes
-    for bounding_box in bboxes:
-        # get the center point of the bounding box for comparison
-        x_center_bb, y_center_bb = bounding_box.center
-
-        # check if the bounding box is a number on the BP chart by comparing to the KDE index + a threshold
-        if x_center_bb > x_loc - 15 and x_center_bb < x_loc + 2:
-            bounding_boxes_numbers.append(bounding_box)
-        # check if the bounding box is a time on the BP chart by comparing to the KDE index + a threshold
-        elif y_center_bb > y_loc - 10 and y_center_bb < y_loc + 2:
-            bounding_boxes_time.append(bounding_box)
-
-    bounding_boxes_numbers = __remove_bb_outliers(bounding_boxes_numbers)
-    bounding_boxes_time = __remove_bb_outliers(bounding_boxes_time)
+    bounding_boxes_time = __remove_bb_outliers(list(filter(is_time_box, bboxes)))
+    bounding_boxes_numbers = __remove_bb_outliers(list(filter(is_mmhg_box, bboxes)))
 
     # Return a tuple of bounding boxes in the top-right and bottom-left regions
-    return (bounding_boxes_time, bounding_boxes_numbers)
+    return bounding_boxes_time, bounding_boxes_numbers
