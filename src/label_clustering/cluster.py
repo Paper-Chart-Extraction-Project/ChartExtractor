@@ -35,7 +35,6 @@ class Cluster:
             None
         """
         self.bounding_boxes = bounding_boxes
-        # Get the label of the cluster
         self.label = self.__create_cluster_label(expected_unit)
 
     @cached_property
@@ -49,15 +48,15 @@ class Cluster:
         Returns:
             A bounding box in YOLO format.
         """
-        x_left = min([bb.left for bb in self.bounding_boxes])
-        x_right = max([bb.right for bb in self.bounding_boxes])
-        y_top = min([bb.top for bb in self.bounding_boxes])
-        y_bottom = max([bb.bottom for bb in self.bounding_boxes])
+        left = min([bb.left for bb in self.bounding_boxes])
+        right = max([bb.right for bb in self.bounding_boxes])
+        top = min([bb.top for bb in self.bounding_boxes])
+        bottom = max([bb.bottom for bb in self.bounding_boxes])
         return BoundingBox(
-            left=x_left,
-            right=x_right,
-            top=y_top,
-            bottom=y_bottom,
+            left=left,
+            right=right,
+            top=top,
+            bottom=bottom,
             category=self.label,
         )
 
