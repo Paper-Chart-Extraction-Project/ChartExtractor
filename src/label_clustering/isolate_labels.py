@@ -64,21 +64,23 @@ def __remove_bb_outliers(boxes: List[BoundingBox]) -> List[BoundingBox]:
 
 
 def extract_relevant_bounding_boxes(
-    sheet_data: List[str],
+    document_landmark_boxes: List[BoundingBox],
     im_width: int = 800,
     im_height: int = 600,
 ) -> Tuple[List[BoundingBox], List[BoundingBox]]:
     """
-    Given sheet data for bounding boxes in YOLO format, find the bounding boxes corresponding to the number and time on the BP chart.
-    Return the bounding boxes that are within the selected region split into two lists: time labels and numerical values.
+    Given bounding boxes of document landmarks that include printed digits, find the
+    bounding boxes corresponding to the number and time on the BP chart.
+    Returns the bounding boxes that are within the selected region split into two
+    lists: time labels and numerical values.
 
     Args:
-        sheet_data: List of bounding boxes in YOLO format.
-        path_to_image: Path to the image file.
-        show_images: Boolean flag to show the image with the selected region and bounding boxes. Default is False.
-        im_width: Width of the image. Default is 800.
-        im_height: Height of the image. Default is 600.
-
+        `document_landmark_boxes`:
+            List of bounding boxes encoding the location of document landmarks.
+        `im_width` (int):
+            Width of the image. Default is 800.
+        `im_height` (int):
+            Height of the image. Default is 600.
 
     Returns:
         Tuple of Lists of string representations of bounding boxes that are within the selected region, in YOLO format.
@@ -86,20 +88,6 @@ def extract_relevant_bounding_boxes(
         The second list contains bounding boxes in the bottom-left region -- representing numerical values for mmHg and bpm.
             (bounding_boxes_time, bounding_boxes_numbers)
     """
-    # Make category to id mapping
-    category_to_id = {i: bb.split()[0] for i, bb in enumerate(sheet_data)}
-    # Go through bounding boxes and change class to an integer while creating a mapping
-    sheet_data = [
-        f"{list(category_to_id.keys())[list(category_to_id.values()).index(bb.split()[0])]} {' '.join(bb.split()[1:])}"
-        for bb in sheet_data
-    ]
-
-    # convert the YOLO data to Bounding Boxes
-    bboxes: List[BoundingBox] = [
-        BoundingBox.from_yolo(yolo_bb, im_width, im_height, category_to_id)
-        for yolo_bb in sheet_data
-    ]
-
     # filter out bounding boxes whose category is not a digit
     bboxes: List[BoundingBox] = list(
         filter(lambda bb: bb.category in [str(i) for i in range(10)], bboxes)
@@ -109,11 +97,16 @@ def extract_relevant_bounding_boxes(
     x_loc: int = __find_density_max([bb.right for bb in bboxes], im_width)
     y_loc: int = __find_density_max([bb.bottom for bb in bboxes], im_height)
 
+    # heuristics to determine if the box is a time box or mmhg box.
     is_time_box = lambda box: box.center[1] > y_loc - 10 and box.center[1] < y_loc + 2
     is_mmhg_box = lambda box: box.center[0] > x_loc - 15 and box.center[0] < x_loc + 2
 
-    bounding_boxes_time = __remove_bb_outliers(list(filter(is_time_box, bboxes)))
-    bounding_boxes_numbers = __remove_bb_outliers(list(filter(is_mmhg_box, bboxes)))
+    time_bboxes: List[BoundingBox] = __remove_bb_outliers(
+        list(filter(is_time_box, bboxes))
+    )
+    mmhg_bboxes: List[BoundingBox] = __remove_bb_outliers(
+        list(filter(is_mmhg_box, bboxes))
+    )
 
     # Return a tuple of bounding boxes in the top-right and bottom-left regions
-    return bounding_boxes_time, bounding_boxes_numbers
+    return time_bboxes, mmhg_bboxes
