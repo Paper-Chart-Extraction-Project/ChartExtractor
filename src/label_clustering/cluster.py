@@ -6,6 +6,7 @@ It additionally creates a new bounding box that encompasses all the bounding box
 """
 
 # Built-in imports
+from functools import cached_property
 from typing import List, Literal
 
 # External imports
@@ -36,59 +37,9 @@ class Cluster:
         self.bounding_boxes = bounding_boxes
         # Get the label of the cluster
         self.label = self.__create_cluster_label(expected_unit)
-        # Get the bounding box that encompasses all the bounding boxes in the cluster
-        self.bounding_box = self.__create_bounding_box()
 
-    def update_label(self, new_label: str) -> None:
-        """
-        Update the label of the cluster.
-        This should be used in these situiation:
-            - If the ground truth label is determined to be different from the given label based on the spacing between clusters.
-            - To update the time labels to increase by 60 seconds.
-
-        Args:
-            new_label: The new label of the cluster.
-
-        Returns:
-            None
-        """
-        self.label = new_label
-
-    def get_bounding_boxes(self) -> List[BoundingBox]:
-        """
-        Get the bounding boxes that belong to this cluster.
-
-        Args:
-            None
-
-        Returns:
-            List of bounding boxes in YOLO format.
-        """
-        return (
-            self.bounding_boxes
-        )  # This should return the bounding boxes that belong to this cluster.
-
-    def __create_cluster_label(
-        self,
-        unit: Literal["mmhg", "mins"],
-    ) -> str:
-        """
-        Create a label for the cluster based on the bounding boxes.
-
-        Args:
-            bounding_boxes: List of bounding boxes in as instances of the BoundingBox class.
-            unit: The unit of the bounding boxes. Can be either "mmhg" or "mins".
-
-        Returns:
-            The label of the cluster as a string.
-        """
-        sorted_bbs = sorted(self.bounding_boxes, key=lambda x: float(x.left))
-        categories = [element.category for element in sorted_bbs]
-        # Turn list of strings into a string
-        label = f"{''.join(categories)}_{unit}"
-        return label
-
-    def __create_bounding_box(self) -> BoundingBox:
+    @cached_property
+    def bounding_box(self) -> BoundingBox:
         """
         Create a bounding box that encompasses all the bounding boxes in the cluster.
 
@@ -109,3 +60,38 @@ class Cluster:
             bottom=y_bottom,
             category=self.label,
         )
+
+    def update_label(self, new_label: str) -> None:
+        """
+        Update the label of the cluster.
+        This should be used in these situiation:
+            - If the ground truth label is determined to be different from the given label based on the spacing between clusters.
+            - To update the time labels to increase by 60 seconds.
+
+        Args:
+            new_label: The new label of the cluster.
+
+        Returns:
+            None
+        """
+        self.label = new_label
+
+    def __create_cluster_label(
+        self,
+        unit: Literal["mmhg", "mins"],
+    ) -> str:
+        """
+        Create a label for the cluster based on the bounding boxes.
+
+        Args:
+            bounding_boxes: List of bounding boxes in as instances of the BoundingBox class.
+            unit: The unit of the bounding boxes. Can be either "mmhg" or "mins".
+
+        Returns:
+            The label of the cluster as a string.
+        """
+        sorted_bbs = sorted(self.bounding_boxes, key=lambda x: float(x.left))
+        categories = [element.category for element in sorted_bbs]
+        # Turn list of strings into a string
+        label = f"{''.join(categories)}_{unit}"
+        return label
