@@ -90,7 +90,10 @@ def extract_relevant_bounding_boxes(
     """
     # filter out bounding boxes whose category is not a digit
     bboxes: List[BoundingBox] = list(
-        filter(lambda bb: bb.category in [str(i) for i in range(10)], bboxes)
+        filter(
+            lambda bb: bb.category in [str(i) for i in range(10)],
+            document_landmark_boxes,
+        )
     )
 
     # x_loc and y_loc form the point at the top left corner of the bp and hr section.

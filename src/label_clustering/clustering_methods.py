@@ -180,9 +180,9 @@ def __time_correction(clusters: List[Cluster]) -> List[Cluster]:
         List of Cluster objects with corrected time labels.
     """
     # See if any repeats and identify them
-    count_dict = {}
+    count_dict = dict()
     for cluster in clusters:
-        label = cluster.get_label()
+        label = cluster.label
         if label in count_dict:
             count_dict[label].append(cluster)
         else:
@@ -193,15 +193,14 @@ def __time_correction(clusters: List[Cluster]) -> List[Cluster]:
         if len(clusters) > 1:
             # Sort by x
             sorted_clusters = sorted(
-                clusters, key=lambda x: float(x.get_bounding_box().center[0])
+                clusters, key=lambda x: float(x.bounding_box.center[0])
             )
             # The one furthest to the left is the true one for the label.
             # For the rest add 60 to them depending on their index.
-            for i, cluster in enumerate(sorted_clusters):
+            for ix, cluster in enumerate(sorted_clusters):
                 correct_label = (
-                    f"{str(int(re.findall(r'\d+', label)[0]) + (i * 60))}_mins"
+                    f"{str(int(re.findall(r'\d+', label)[0]) + (ix * 60))}_mins"
                 )
-
                 cluster.update_label(correct_label)
 
     clusters = reduce(lambda x, y: x + y, count_dict.values())

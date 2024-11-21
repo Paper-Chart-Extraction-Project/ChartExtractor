@@ -35,8 +35,7 @@ class Cluster:
     def from_boxes_and_unit(
         cls, bounding_boxes: List[BoundingBox], expected_unit: Literal["mmhg", "mins"]
     ) -> "Cluster":
-        """
-        Initialize the Cluster class with a list of bounding boxes.
+        """Initialize the Cluster class with a list of bounding boxes.
 
         Args:
             `bounding_boxes` (List[BoundingBox]):
@@ -52,8 +51,7 @@ class Cluster:
 
     @cached_property
     def bounding_box(self) -> BoundingBox:
-        """
-        Create a bounding box that encompasses all the bounding boxes in the cluster.
+        """Create a bounding box that encompasses all the bounding boxes in the cluster.
 
         Returns:
             A bounding box in YOLO format.
