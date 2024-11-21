@@ -63,7 +63,7 @@ def __remove_bb_outliers(boxes: List[BoundingBox]) -> List[BoundingBox]:
     return filtered
 
 
-def extract_relevant_bounding_boxes(
+def isolate_blood_pressure_legend_bounding_boxes(
     document_landmark_boxes: List[BoundingBox],
     im_width: int = 800,
     im_height: int = 600,
@@ -72,21 +72,23 @@ def extract_relevant_bounding_boxes(
     Given bounding boxes of document landmarks that include printed digits, find the
     bounding boxes corresponding to the number and time on the BP chart.
     Returns the bounding boxes that are within the selected region split into two
-    lists: time labels and numerical values.
+    lists: time labels and mmhg/bpm labels.
 
     Args:
         `document_landmark_boxes`:
-            List of bounding boxes encoding the location of document landmarks.
+            List of bounding boxes encoding the location of all document landmarks.
         `im_width` (int):
             Width of the image. Default is 800.
         `im_height` (int):
             Height of the image. Default is 600.
 
     Returns:
-        Tuple of Lists of string representations of bounding boxes that are within the selected region, in YOLO format.
-        The first list contains bounding boxes in the top-right region -- representing time labels.
-        The second list contains bounding boxes in the bottom-left region -- representing numerical values for mmHg and bpm.
-            (bounding_boxes_time, bounding_boxes_numbers)
+        Tuple of Lists of bounding boxes that are within the blood pressure and heart rate
+        region.
+        The first list contains bounding boxes in the top-right representing time labels.
+        The second list contains bounding boxes in the bottom-left representing numerical
+        values for mmHg and bpm.
+        (time_bboxes, mmhg_bboxes)
     """
     # filter out bounding boxes whose category is not a digit
     bboxes: List[BoundingBox] = list(
