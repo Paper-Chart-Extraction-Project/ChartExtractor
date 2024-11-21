@@ -5,6 +5,7 @@ It includes a public function for external use and several worker functions that
 """
 
 # Built-in imports
+from operator import attrgetter
 from typing import List, Tuple
 
 # External imports
@@ -16,13 +17,16 @@ from utilities.annotations import BoundingBox
 
 
 def __find_density_max(values: List[int], search_area: int) -> int:
-    """
-    Given a list of values and a search area, find the index of where the highest density is.
-    The list of values correspond to identifying points for the bounding boxes and the search area corresponds to the images height or width.
+    """Given a list of values and a search area, find the index of where the highest density is.
+
+    The list of values correspond to identifying points for the bounding boxes and the search
+    area corresponds to the images height or width.
 
     Args:
-        values: List of identifying points for the bounding boxes
-        search_area: height/width of the image dependent on whether x or y axis is being search.
+        `values` (List[int]):
+            List of identifying points for the bounding boxes
+        `search_area` (int):
+            height/width of the image dependent on whether x or y axis is being searched.
 
     Returns:
         The axis value that has the highest density of bounding boxes.
@@ -35,31 +39,39 @@ def __find_density_max(values: List[int], search_area: int) -> int:
 
 
 def __remove_bb_outliers(boxes: List[BoundingBox]) -> List[BoundingBox]:
-    """
-    Given a list of bounding boxes, remove the outliers from the x axis, then remove the outliers from the y axis
+    """Given a list of bounding boxes, remove the outliers.
+
+    Removes outliers from the x axis, then remove the outliers from the y axis.
 
     Args:
-        boxes: List of Bounding Boxes to filter
+        `boxes` (List[BoundingBox]):
+            List of Bounding Boxes to filter
 
     Returns:
         Filtered list of Bounding Boxes
     """
 
-    def filter_outlier_values(values: List[float]) -> List[float]:
+    def filter_outlier_values(
+        boxes: List[BoundingBox], box_side: str
+    ) -> List[BoundingBox]:
         """Filters values more than 1.5 IQRs away from the 25th and 75th percentiles.
 
         Does this for both x and y.
         """
+        get_box_side = attrgetter(box_side)
+        values: List[float] = list(map(get_box_side, boxes))
         first_quartile, third_quartile = np.percentile(values, [25, 75])
         interquartile_range: float = third_quartile - first_quartile
         bounds: Tuple[float, float] = (
             first_quartile - 1.5 * interquartile_range,
             third_quartile + 1.5 * interquartile_range,
         )
-        return list(filter(lambda val: bounds[0] <= val <= bounds[1], values))
+        return list(
+            filter(lambda box: bounds[0] <= get_box_side(box) <= bounds[1], boxes)
+        )
 
-    filtered = filter_outlier_values([bb.left for bb in boxes])
-    filtered = filter_outlier_values([bb.top for bb in filtered])
+    filtered = filter_outlier_values(boxes, "left")
+    filtered = filter_outlier_values(boxes, "top")
     return filtered
 
 
@@ -90,6 +102,10 @@ def isolate_blood_pressure_legend_bounding_boxes(
         values for mmHg and bpm.
         (time_bboxes, mmhg_bboxes)
     """
+
+    def squared_dist(a: float, b: float) -> float:
+        return (a - b) ** 2
+
     # filter out bounding boxes whose category is not a digit
     bboxes: List[BoundingBox] = list(
         filter(
@@ -103,8 +119,12 @@ def isolate_blood_pressure_legend_bounding_boxes(
     y_loc: int = __find_density_max([bb.bottom for bb in bboxes], im_height)
 
     # heuristics to determine if the box is a time box or mmhg box.
-    is_time_box = lambda box: box.center[1] > y_loc - 10 and box.center[1] < y_loc + 2
-    is_mmhg_box = lambda box: box.center[0] > x_loc - 15 and box.center[0] < x_loc + 2
+    is_time_box = lambda box: (
+        squared_dist(box.center[0], x_loc) > squared_dist(box.center[1], y_loc)
+    )
+    is_mmhg_box = lambda box: (
+        squared_dist(box.center[0], x_loc) < squared_dist(box.center[1], y_loc)
+    )
 
     time_bboxes: List[BoundingBox] = __remove_bb_outliers(
         list(filter(is_time_box, bboxes))
