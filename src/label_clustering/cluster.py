@@ -19,8 +19,21 @@ from utilities.annotations import BoundingBox
 class Cluster:
     """Class for clustered bounding boxes."""
 
-    def __init__(
-        self, bounding_boxes: List[BoundingBox], expected_unit: Literal["mmhg", "mins"]
+    def __init__(self, bounding_boxes: List[BoundingBox], label: str) -> "Cluster":
+        """Initialize the Cluster directly from its arguments.
+
+        Args:
+            `bounding_boxes` (List[BoundingBox]):
+                List of bounding boxes in YOLO format.
+            `label` (str):
+                The exact label to use.
+        """
+        self.bounding_boxes = bounding_boxes
+        self.label = label
+
+    @classmethod
+    def from_boxes_and_unit(
+        cls, bounding_boxes: List[BoundingBox], expected_unit: Literal["mmhg", "mins"]
     ) -> "Cluster":
         """
         Initialize the Cluster class with a list of bounding boxes.
@@ -34,8 +47,8 @@ class Cluster:
         Returns:
             A new Cluster object.
         """
-        self.bounding_boxes = bounding_boxes
-        self.label = self.__create_cluster_label(expected_unit)
+        label = cls.__create_cluster_label(bounding_boxes, expected_unit)
+        return cls(bounding_boxes, label)
 
     @cached_property
     def bounding_box(self) -> BoundingBox:
@@ -57,31 +70,23 @@ class Cluster:
             category=self.label,
         )
 
-    def update_label(self, new_label: str):
-        """
-        Update the label of the cluster.
-        This should be used in these situation:
-            - If the ground truth label is determined to be different from the given label based on the spacing between clusters.
-            - To update the time labels to increase by 60 seconds.
-
-        Args:
-            `new_label` (str):
-                The new label of the cluster.
-        """
-        self.label = new_label
-
-    def __create_cluster_label(self, unit: Literal["mmhg", "mins"]) -> str:
+    @staticmethod
+    def __create_cluster_label(
+        bounding_boxes: List[BoundingBox], unit: Literal["mmhg", "mins"]
+    ) -> str:
         """
         Create a label for the cluster based on the bounding boxes.
 
         Args:
+            `bounding_boxes` (List[BoundingBox]):
+                List of bounding boxes in YOLO format.
             `unit` (Literal["mmhg", "mins"]):
                 The unit of the bounding boxes. Can be either "mmhg" or "mins".
 
         Returns:
             The label of the cluster as a string.
         """
-        sorted_bbs = sorted(self.bounding_boxes, key=lambda x: float(x.left))
+        sorted_bbs = sorted(bounding_boxes, key=lambda x: float(x.left))
         categories = [element.category for element in sorted_bbs]
         label = f"{''.join(categories)}_{unit}"
         return label
