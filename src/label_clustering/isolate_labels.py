@@ -119,8 +119,8 @@ def isolate_blood_pressure_legend_bounding_boxes(
     y_loc: int = __find_density_max([bb.top for bb in bboxes], im_height)
 
     # heuristics to determine if the box is a time box or mmhg box.
-    is_time_box = lambda box: abs(box.center[0] - x_loc) > abs(box.center[1] - y_loc)
-    is_mmhg_box = lambda box: abs(box.center[0] - x_loc) < abs(box.center[1] - y_loc)
+    is_time_box = lambda box: abs(box.center[0] - x_loc) < abs(box.center[1] - y_loc)
+    is_mmhg_box = lambda box: abs(box.center[0] - x_loc) > abs(box.center[1] - y_loc)
 
     time_bboxes: List[BoundingBox] = list(filter(is_time_box, bboxes))
     mmhg_bboxes: List[BoundingBox] = list(filter(is_mmhg_box, bboxes))

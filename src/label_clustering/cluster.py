@@ -31,6 +31,10 @@ class Cluster:
         self.bounding_boxes = bounding_boxes
         self.label = label
 
+    def __repr__(self) -> str:
+        """A string representation of this object."""
+        return f"Cluster(bounding_boxes={self.bounding_boxes}, label={self.label})"
+
     @classmethod
     def from_boxes_and_unit(
         cls, bounding_boxes: List[BoundingBox], expected_unit: Literal["mmhg", "mins"]
