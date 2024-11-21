@@ -201,7 +201,7 @@ def __time_correction(clusters: List[Cluster]) -> List[Cluster]:
                 correct_label = (
                     f"{str(int(re.findall(r'\d+', label)[0]) + (ix * 60))}_mins"
                 )
-                cluster.update_label(correct_label)
+                sorted_clusters[ix] = Cluster(cluster.bounding_boxes, correct_label)
 
     clusters = reduce(lambda x, y: x + y, count_dict.values())
 
@@ -258,7 +258,7 @@ def cluster_boxes(
         cluster_bounding_boxes = [
             bounding_boxes[i] for i in range(len(labels)) if labels[i] == label
         ]
-        clusters.append(Cluster(cluster_bounding_boxes, unit))
+        clusters.append(Cluster.from_boxes_and_unit(cluster_bounding_boxes, unit))
 
     if unit == "mins":
         clusters = __time_correction(clusters)

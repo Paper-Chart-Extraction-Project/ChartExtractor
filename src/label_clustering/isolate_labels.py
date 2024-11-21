@@ -80,11 +80,10 @@ def isolate_blood_pressure_legend_bounding_boxes(
     im_width: int = 800,
     im_height: int = 600,
 ) -> Tuple[List[BoundingBox], List[BoundingBox]]:
-    """
-    Given bounding boxes of document landmarks that include printed digits, find the
-    bounding boxes corresponding to the number and time on the BP chart.
-    Returns the bounding boxes that are within the selected region split into two
-    lists: time labels and mmhg/bpm labels.
+    """Isolates the bounding boxes that form the blood pressure legend.
+
+    Given bounding boxes of document landmarks that include printed digits, finds the
+    bounding boxes corresponding to the mmhg/bpm and time legend.
 
     Args:
         `document_landmark_boxes`:
@@ -95,43 +94,36 @@ def isolate_blood_pressure_legend_bounding_boxes(
             Height of the image. Default is 600.
 
     Returns:
-        Tuple of Lists of bounding boxes that are within the blood pressure and heart rate
-        region.
+        Two lists of bounding boxes.
         The first list contains bounding boxes in the top-right representing time labels.
-        The second list contains bounding boxes in the bottom-left representing numerical
-        values for mmHg and bpm.
+        The second list contains bounding boxes in the bottom-left representing values
+        for mmHg and bpm.
         (time_bboxes, mmhg_bboxes)
     """
-
-    def squared_dist(a: float, b: float) -> float:
-        return (a - b) ** 2
-
-    # filter out bounding boxes whose category is not a digit
+    # filter out bounding boxes whose category is not a digit, and which are certainly not
+    # in the region of interest.
     bboxes: List[BoundingBox] = list(
         filter(
-            lambda bb: bb.category in [str(i) for i in range(10)],
+            lambda bb: all(
+                [
+                    bb.category in [str(i) for i in range(10)],
+                    0.2 * im_height < bb.center[1] < 0.8 * im_height,
+                ]
+            ),
             document_landmark_boxes,
         )
     )
 
     # x_loc and y_loc form the point at the top left corner of the bp and hr section.
-    x_loc: int = __find_density_max([bb.right for bb in bboxes], im_width)
-    y_loc: int = __find_density_max([bb.bottom for bb in bboxes], im_height)
+    x_loc: int = __find_density_max([bb.left for bb in bboxes], im_width)
+    y_loc: int = __find_density_max([bb.top for bb in bboxes], im_height)
 
     # heuristics to determine if the box is a time box or mmhg box.
-    is_time_box = lambda box: (
-        squared_dist(box.center[0], x_loc) > squared_dist(box.center[1], y_loc)
-    )
-    is_mmhg_box = lambda box: (
-        squared_dist(box.center[0], x_loc) < squared_dist(box.center[1], y_loc)
-    )
+    is_time_box = lambda box: abs(box.center[0] - x_loc) > abs(box.center[1] - y_loc)
+    is_mmhg_box = lambda box: abs(box.center[0] - x_loc) < abs(box.center[1] - y_loc)
 
-    time_bboxes: List[BoundingBox] = __remove_bb_outliers(
-        list(filter(is_time_box, bboxes))
-    )
-    mmhg_bboxes: List[BoundingBox] = __remove_bb_outliers(
-        list(filter(is_mmhg_box, bboxes))
-    )
+    time_bboxes: List[BoundingBox] = list(filter(is_time_box, bboxes))
+    mmhg_bboxes: List[BoundingBox] = list(filter(is_mmhg_box, bboxes))
 
     # Return a tuple of bounding boxes in the top-right and bottom-left regions
     return time_bboxes, mmhg_bboxes
