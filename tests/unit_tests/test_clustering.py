@@ -32,12 +32,12 @@ class TestClustering(unittest.TestCase):
     # 30_mmhg, 40_mmhg, 50_mmhg, ..., 210_mmhg, 220_mmhg.
     expected_number_values: List[str] = [f"{m*10}_mmhg" for m in range(3, 230 // 10)]
 
-    def test_1_extract_relevant_bounding_boxes(self):
+    def test_extract_relevant_bounding_boxes(self):
         """Tests the extract_relevant_bounding_boxes function."""
         bounding_boxes = extract_relevant_bounding_boxes(self.test_data)
         assert len(bounding_boxes[0]) == 76 and len(bounding_boxes[1]) == 53
 
-    def test_2_cluster_kmeans(self):
+    def test_cluster_kmeans(self):
         """Tests the cluster_kmeans function."""
         bounding_boxes = extract_relevant_bounding_boxes(self.test_data)
         time_clusters = cluster_boxes(
@@ -63,7 +63,7 @@ class TestClustering(unittest.TestCase):
             == set(self.expected_number_values)
         )
 
-    def test_3_cluster_dbscan(self):
+    def test_cluster_dbscan(self):
         """Tests the cluster_dbscan function."""
         bounding_boxes = extract_relevant_bounding_boxes(self.test_data)
         time_clusters = cluster_boxes(
@@ -91,7 +91,7 @@ class TestClustering(unittest.TestCase):
             == set(self.expected_number_values)
         )
 
-    def test_4_cluster_agglomerative(self):
+    def test_cluster_agglomerative(self):
         """Tests the cluster_agglomerative function."""
         bounding_boxes = extract_relevant_bounding_boxes(self.test_data)
         time_clusters = cluster_boxes(
