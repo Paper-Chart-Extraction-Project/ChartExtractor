@@ -27,8 +27,10 @@ def __cluster_kmeans(
     mAP on time clusters: 0.608, mAP on number clusters: 0.879 with error.
 
     Args:
-        bounding_boxes: List of bounding boxes in YOLO format.
-        possible_nclusters: List of possible number of clusters to try.
+        `bounding_boxes` (List[BoundingBox]): 
+            List of bounding boxes in YOLO format.
+        `possible_nclusters` (List[int]): 
+            List of possible number of clusters to try.
 
     Returns:
         List of cluster labels.
@@ -92,9 +94,13 @@ def __cluster_dbscan(
     mAP on time clusters: 0.615, mAP on number clusters: 0.877 with error.
 
     Args:
-        bounding_boxes: List of bounding boxes.
-        defined_eps: Maximum distance between two samples to be in the neighborhood of one another (center of BB).
-        min_samples: The number of samples (or total weight) for a point to be considered as core
+        `bounding_boxes` (List[BoundingBox]): 
+            List of bounding boxes.
+        `defined_eps` (float): 
+            Maximum distance between two samples to be in the neighborhood of one 
+            another (center of BB).
+        `min_samples` (int): 
+            The number of samples (or total weight) for a point to be considered as core
 
     Returns:
         List of cluster labels.
@@ -118,8 +124,10 @@ def __cluster_agglomerative(
     mAP on time clusters: 0.588, mAP on number clusters: 0.875 with error.
 
     Args:
-        bounding_boxes: List of bounding boxes in YOLO format.
-        possible_nclusters: List of possible number of clusters to try.
+        `bounding_boxes` (List[BoundingBox]): 
+            List of bounding boxes in YOLO format.
+        `possible_nclusters` (List[int]): 
+            List of possible number of clusters to try.
 
     Returns:
         List of cluster labels.
@@ -170,11 +178,12 @@ def __cluster_agglomerative(
 def __time_correction(clusters: List[Cluster]) -> List[Cluster]:
     """
     Takes a list of time clusters and turns them from including repeats to not including repeats.
-    There will be multiple 0, 5, 10, and so on. But the first (furthest to the left) is the true one.
-    The rest are repeats and will be changed to 60, 65, 70, and so on.
+    There will be multiple 0, 5, 10, and so on. But the first (furthest to the left) is the true 
+    one. The rest are repeats and will be changed to 60, 65, 70, and so on.
 
     Args:
-        clusters: List of Cluster objects.
+        `clusters` (List[Cluster]): 
+            List of Cluster objects.
 
     Returns:
         List of Cluster objects with corrected time labels.
@@ -188,7 +197,8 @@ def __time_correction(clusters: List[Cluster]) -> List[Cluster]:
         else:
             count_dict[label] = [cluster]
 
-    # Now iterate over the dictionary and find the labels with many bounding boxes. Lets change the labels of these.
+    # Now iterate over the dictionary and find the labels with many bounding boxes. 
+    # Lets change the labels of these.
     for label, clusters in count_dict.items():
         if len(clusters) > 1:
             # Sort by x
@@ -220,12 +230,20 @@ def cluster_boxes(
     Cluster bounding boxes using the specified method.
 
     Args:
-        bounding_boxes: List of BoundingBox objects to cluster based on location.
-        method: The clustering method to use. Can be "kmeans", "dbscan", or "agglomerative".
-        unit: The unit of the bounding boxes. Can be "mins" or "mmhg".
-        possible_nclusters: A list of possible number of clusters to try. This is only used for KMeans and Agglomerative.
-        defined_eps: Maximum distance between two samples to be in the neighborhood of one another. This is only used for DBSCAN.
-        min_samples: The number of samples (or total weight) for a point to be considered as core. This is only used for DBSCAN.
+        `bounding_boxes` (List[BoundingBox]): 
+            List of BoundingBox objects to cluster based on location.
+        `method` (Literal): 
+            The clustering method to use. Can be "kmeans", "dbscan", or "agglomerative".
+        `unit`: 
+            The unit of the bounding boxes. Can be "mins" or "mmhg".
+        `possible_nclusters` (List[int]): 
+            A list of possible number of clusters to try. This is only used for KMeans and Agglomerative.
+        `defined_eps` (float): 
+            Maximum distance between two samples to be in the neighborhood of one another. 
+            This is only used for DBSCAN.
+        `min_samples` (int): 
+            The number of samples (or total weight) for a point to be considered as core. 
+            This is only used for DBSCAN.
 
     Returns:
         A list of Cluster objects based on the clustering results.

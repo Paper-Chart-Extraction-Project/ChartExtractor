@@ -86,7 +86,7 @@ def isolate_blood_pressure_legend_bounding_boxes(
     bounding boxes corresponding to the mmhg/bpm and time legend.
 
     Args:
-        `document_landmark_boxes`:
+        `document_landmark_boxes` (List[BoundingBox]):
             List of bounding boxes encoding the location of all document landmarks.
         `im_width` (int):
             Width of the image. Default is 800.
