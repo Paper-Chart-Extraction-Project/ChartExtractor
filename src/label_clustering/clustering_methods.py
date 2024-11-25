@@ -252,7 +252,7 @@ def cluster_boxes(
     if unit not in ["mins", "mmhg"]:
         raise ValueError(f"Invalid unit: {unit}")
 
-    labels = method(bounding_boxes, **kwargs)
+    labels = method(bounding_boxes=bounding_boxes, **kwargs)
     
     # Return a list Cluster objects based on the clustering results
     clusters = []

@@ -5,9 +5,10 @@
 # The main purpose is for demonstrating how to use the clustering methods.
 
 # Built-in Libraries
+from functools import partial
 import os
 import sys
-from typing import Dict, List
+from typing import Callable, Dict, List
 import json
 
 # External Libraries
@@ -16,8 +17,14 @@ import pytest
 # Internal Libraries
 sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
 from label_clustering.cluster import Cluster  # Needs to be tested.
-from label_clustering.clustering_methods import cluster_boxes
+from label_clustering.clustering_methods import (
+    cluster_boxes,
+    __cluster_agglomerative,
+    __cluster_dbscan,
+    __cluster_kmeans,
+)
 from label_clustering.isolate_labels import extract_relevant_bounding_boxes
+from utilities.annotations import BoundingBox
 
 
 # 0_mins, 5_mins, 10_mins, ..., 200_mins, 205_mins.
@@ -44,21 +51,25 @@ class TestClustering:
 
     def test_cluster_kmeans(self, test_data):
         """Tests the cluster_kmeans function."""
-        bounding_boxes = extract_relevant_bounding_boxes(test_data)
+        bounding_boxes: List[BoundingBox] = extract_relevant_bounding_boxes(test_data)
+        time_clustering_func: Callable[[List[BoundingBox]], List[Cluster]] = partial(
+            __cluster_kmeans, possible_nclusters=[40, 41, 42]
+        )
+        number_clustering_func: Callable[[List[BoundingBox]], List[Cluster]] = partial(
+            __cluster_kmeans, possible_nclusters=[18, 19, 20]
+        )
         time_clusters = cluster_boxes(
             bounding_boxes=bounding_boxes[0],
-            method="kmeans",
-            possible_nclusters=[40, 41, 42],
+            method=time_clustering_func,
             unit="mins",
         )
         number_clusters = cluster_boxes(
             bounding_boxes=bounding_boxes[1],
-            method="kmeans",
-            possible_nclusters=[18, 19, 20],
+            method=number_clustering_func
             unit="mmhg",
         )
 
-        assert (
+        assert(
             len(time_clusters + number_clusters) == 62
             and len(time_clusters) == 42
             and len(number_clusters) == 20
@@ -71,22 +82,24 @@ class TestClustering:
     def test_cluster_dbscan(self, test_data):
         """Tests the cluster_dbscan function."""
         bounding_boxes = extract_relevant_bounding_boxes(test_data)
+        time_clustering_func: Callable[[List[BoundingBox]], List[Cluster]] = partial(
+            __cluster_dbscan, defined_eps=5, min_samples=1
+        )
+        number_clustering_func: Callable[[List[BoundingBox]], List[Cluster]] = partial(
+            __cluster_dbscan, defined_eps=5, min_samples=2
+        )
         time_clusters = cluster_boxes(
             bounding_boxes=bounding_boxes[0],
-            method="dbscan",
-            defined_eps=5,
-            min_samples=1,
+            method=time_clustering_func,
             unit="mins",
         )
         number_clusters = cluster_boxes(
             bounding_boxes=bounding_boxes[1],
-            method="dbscan",
-            defined_eps=5,
-            min_samples=2,
+            method=number_clustering_func,
             unit="mmhg",
         )
 
-        assert (
+        assert(
             len(time_clusters + number_clusters) == 62
             and len(time_clusters) == 42
             and len(number_clusters) == 20
@@ -99,20 +112,24 @@ class TestClustering:
     def test_cluster_agglomerative(self, test_data):
         """Tests the cluster_agglomerative function."""
         bounding_boxes = extract_relevant_bounding_boxes(test_data)
+        time_clustering_func: Callable[[List[BoundingBox]], List[Cluster]] = partial(
+            __cluster_agglomerative, possible_nclusters=[40, 41, 42]
+        )
+        number_clustering_func: Callable[[List[BoundingBox]], List[Cluster]] = partial(
+            __cluster_agglomerative, possible_nclusters=[18, 19, 20]
+        )
         time_clusters = cluster_boxes(
             bounding_boxes=bounding_boxes[0],
-            method="agglomerative",
-            possible_nclusters=[40, 41, 42],
+            method=time_clustering_func,
             unit="mins",
         )
         number_clusters = cluster_boxes(
             bounding_boxes=bounding_boxes[1],
-            method="agglomerative",
-            possible_nclusters=[18, 19, 20],
+            method=number_clustering_func
             unit="mmhg",
         )
 
-        assert (
+        assert(
             len(time_clusters + number_clusters) == 62
             and len(time_clusters) == 42
             and len(number_clusters) == 20
