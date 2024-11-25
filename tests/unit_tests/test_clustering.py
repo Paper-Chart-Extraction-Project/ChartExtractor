@@ -7,11 +7,11 @@
 # Built-in Libraries
 import os
 import sys
-from typing import List
+from typing import Dict, List
 import json
 
 # External Libraries
-import unittest
+import pytest
 
 # Internal Libraries
 sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
@@ -20,26 +20,31 @@ from label_clustering.clustering_methods import cluster_boxes
 from label_clustering.isolate_labels import extract_relevant_bounding_boxes
 
 
-class TestClustering(unittest.TestCase):
+# 0_mins, 5_mins, 10_mins, ..., 200_mins, 205_mins.
+EXPECTED_TIME_VALUES: List[str] = [f"{t*5}_mins" for t in range(0, 210 // 5)]
+# 30_mmhg, 40_mmhg, 50_mmhg, ..., 210_mmhg, 220_mmhg.
+EXPECTED_NUMBER_VALUES: List[str] = [f"{m*10}_mmhg" for m in range(3, 230 // 10)]
+
+
+@pytest.fixture
+def test_data() -> Dict:
+    """Test data for TestClustering."""
+    with open(os.path.join("test_data", "yolo_data.json")) as json_file:
+        data: Dict = list(json.load(json_file).values())[0]
+    return data
+
+
+class TestClustering:
     """Tests the clustering methods."""
 
-    # Load yolo_data.json
-    with open(os.path.join("test_data", "yolo_data.json")) as json_file:
-        test_data = list(json.load(json_file).values())[0]
-
-    # 0_mins, 5_mins, 10_mins, ..., 200_mins, 205_mins.
-    expected_time_values: List[str] = [f"{t*5}_mins" for t in range(0, 210 // 5)]
-    # 30_mmhg, 40_mmhg, 50_mmhg, ..., 210_mmhg, 220_mmhg.
-    expected_number_values: List[str] = [f"{m*10}_mmhg" for m in range(3, 230 // 10)]
-
-    def test_extract_relevant_bounding_boxes(self):
+    def test_extract_relevant_bounding_boxes(self, test_data):
         """Tests the extract_relevant_bounding_boxes function."""
-        bounding_boxes = extract_relevant_bounding_boxes(self.test_data)
+        bounding_boxes = extract_relevant_bounding_boxes(test_data)
         assert len(bounding_boxes[0]) == 76 and len(bounding_boxes[1]) == 53
 
-    def test_cluster_kmeans(self):
+    def test_cluster_kmeans(self, test_data):
         """Tests the cluster_kmeans function."""
-        bounding_boxes = extract_relevant_bounding_boxes(self.test_data)
+        bounding_boxes = extract_relevant_bounding_boxes(test_data)
         time_clusters = cluster_boxes(
             bounding_boxes=bounding_boxes[0],
             method="kmeans",
@@ -58,14 +63,14 @@ class TestClustering(unittest.TestCase):
             and len(time_clusters) == 42
             and len(number_clusters) == 20
             and set([cluster.get_label() for cluster in time_clusters])
-            == set(self.expected_time_values)
+            == set(EXPECTED_TIME_VALUES)
             and set([cluster.get_label() for cluster in number_clusters])
-            == set(self.expected_number_values)
+            == set(EXPECTED_NUMBER_VALUES)
         )
 
-    def test_cluster_dbscan(self):
+    def test_cluster_dbscan(self, test_data):
         """Tests the cluster_dbscan function."""
-        bounding_boxes = extract_relevant_bounding_boxes(self.test_data)
+        bounding_boxes = extract_relevant_bounding_boxes(test_data)
         time_clusters = cluster_boxes(
             bounding_boxes=bounding_boxes[0],
             method="dbscan",
@@ -86,14 +91,14 @@ class TestClustering(unittest.TestCase):
             and len(time_clusters) == 42
             and len(number_clusters) == 20
             and set([cluster.get_label() for cluster in time_clusters])
-            == set(self.expected_time_values)
+            == set(EXPECTED_TIME_VALUES)
             and set([cluster.get_label() for cluster in number_clusters])
-            == set(self.expected_number_values)
+            == set(EXPECTED_NUMBER_VALUES)
         )
 
-    def test_cluster_agglomerative(self):
+    def test_cluster_agglomerative(self, test_data):
         """Tests the cluster_agglomerative function."""
-        bounding_boxes = extract_relevant_bounding_boxes(self.test_data)
+        bounding_boxes = extract_relevant_bounding_boxes(test_data)
         time_clusters = cluster_boxes(
             bounding_boxes=bounding_boxes[0],
             method="agglomerative",
@@ -112,11 +117,7 @@ class TestClustering(unittest.TestCase):
             and len(time_clusters) == 42
             and len(number_clusters) == 20
             and set([cluster.get_label() for cluster in time_clusters])
-            == set(self.expected_time_values)
+            == set(EXPECTED_TIME_VALUES)
             and set([cluster.get_label() for cluster in number_clusters])
-            == set(self.expected_number_values)
+            == set(EXPECTED_NUMBER_VALUES)
         )
-
-
-if __name__ == "__main__":
-    unittest.main(verbosity=4)
