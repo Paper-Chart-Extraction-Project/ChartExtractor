@@ -18,7 +18,7 @@ from utilities.annotations import BoundingBox
 from label_clustering.cluster import Cluster
 
 
-def __cluster_kmeans(
+def cluster_kmeans(
     bounding_boxes: List[BoundingBox], possible_nclusters: List[int]
 ) -> List[int]:
     """
@@ -27,9 +27,9 @@ def __cluster_kmeans(
     mAP on time clusters: 0.608, mAP on number clusters: 0.879 with error.
 
     Args:
-        `bounding_boxes` (List[BoundingBox]): 
+        `bounding_boxes` (List[BoundingBox]):
             List of bounding boxes in YOLO format.
-        `possible_nclusters` (List[int]): 
+        `possible_nclusters` (List[int]):
             List of possible number of clusters to try.
 
     Returns:
@@ -87,7 +87,7 @@ def __cluster_kmeans(
     return cluster_performance_map[best_n_clusters]["labels"]
 
 
-def __cluster_dbscan(
+def cluster_dbscan(
     bounding_boxes: List[BoundingBox], defined_eps: float, min_samples: int
 ) -> List[int]:
     """
@@ -96,12 +96,12 @@ def __cluster_dbscan(
     mAP on time clusters: 0.615, mAP on number clusters: 0.877 with error.
 
     Args:
-        `bounding_boxes` (List[BoundingBox]): 
+        `bounding_boxes` (List[BoundingBox]):
             List of bounding boxes.
-        `defined_eps` (float): 
-            Maximum distance between two samples to be in the neighborhood of one 
+        `defined_eps` (float):
+            Maximum distance between two samples to be in the neighborhood of one
             another (center of BB).
-        `min_samples` (int): 
+        `min_samples` (int):
             The number of samples (or total weight) for a point to be considered as core
 
     Returns:
@@ -121,7 +121,7 @@ def __cluster_dbscan(
     return labels
 
 
-def __cluster_agglomerative(
+def cluster_agglomerative(
     bounding_boxes: List[BoundingBox], possible_nclusters: List[int]
 ) -> List[int]:
     """
@@ -130,9 +130,9 @@ def __cluster_agglomerative(
     mAP on time clusters: 0.588, mAP on number clusters: 0.875 with error.
 
     Args:
-        `bounding_boxes` (List[BoundingBox]): 
+        `bounding_boxes` (List[BoundingBox]):
             List of bounding boxes in YOLO format.
-        `possible_nclusters` (List[int]): 
+        `possible_nclusters` (List[int]):
             List of possible number of clusters to try.
 
     Returns:
@@ -186,11 +186,11 @@ def __cluster_agglomerative(
 def __time_correction(clusters: List[Cluster]) -> List[Cluster]:
     """
     Takes a list of time clusters and turns them from including repeats to not including repeats.
-    There will be multiple 0, 5, 10, and so on. But the first (furthest to the left) is the true 
+    There will be multiple 0, 5, 10, and so on. But the first (furthest to the left) is the true
     one. The rest are repeats and will be changed to 60, 65, 70, and so on.
 
     Args:
-        `clusters` (List[Cluster]): 
+        `clusters` (List[Cluster]):
             List of Cluster objects.
 
     Returns:
@@ -205,7 +205,8 @@ def __time_correction(clusters: List[Cluster]) -> List[Cluster]:
         else:
             count_dict[label] = [cluster]
 
-    # Now iterate over the dictionary and find the labels with many bounding boxes. 
+    corrected_clusters = []
+    # Now iterate over the dictionary and find the labels with many bounding boxes.
     # Lets change the labels of these.
     for label, clusters in count_dict.items():
         if len(clusters) > 1:
@@ -221,28 +222,30 @@ def __time_correction(clusters: List[Cluster]) -> List[Cluster]:
                 )
                 sorted_clusters[ix] = Cluster(cluster.bounding_boxes, correct_label)
 
-    clusters = reduce(lambda x, y: x + y, count_dict.values())
+            corrected_clusters += sorted_clusters
+        else:
+            corrected_clusters.append(clusters[0])
 
-    return clusters
+    return corrected_clusters
 
 
 def cluster_boxes(
     bounding_boxes: List[BoundingBox],
     method: Callable[[List[BoundingBox]], List[Cluster]],
     unit: Literal["mins", "mmhg"],
-    **kwargs
+    **kwargs,
 ) -> List[Cluster]:
     """
     Cluster bounding boxes using the specified method.
 
     Args:
-        `bounding_boxes` (List[BoundingBox]): 
+        `bounding_boxes` (List[BoundingBox]):
             List of BoundingBox objects to cluster based on location.
-        `method` (Callable[[List[BoundingBox]], List[Cluster]]): 
+        `method` (Callable[[List[BoundingBox]], List[Cluster]]):
             The function to use for clustering. The key word arguments for this function need to
             be supplied as extra kwargs to this function. Alternatively, no kwargs can be passed
             if a partially applied function is passed.
-        `unit`: 
+        `unit`:
             The unit of the bounding boxes. Can be "mins" or "mmhg".
 
     Returns:
@@ -253,7 +256,7 @@ def cluster_boxes(
         raise ValueError(f"Invalid unit: {unit}")
 
     labels = method(bounding_boxes=bounding_boxes, **kwargs)
-    
+
     # Return a list Cluster objects based on the clustering results
     clusters = []
     for label in set(labels):
@@ -270,18 +273,20 @@ def cluster_boxes(
 
 def find_legend_locations(clusters: List[Cluster]) -> Dict[str, Tuple[float, float]]:
     """Finds the locations of clusters on the image.
-    
+
     Args:
         `clusters` (List[Cluster]):
             A single list with the clusters encoding the mmhg/bpm and timestamp locations.
-        
+
     Returns:
         A dictionary mapping the cluster name to its cluster center.
     """
+
     def find_cluster_centroid(cluster: Cluster):
-        """Finds the centroid (mean) of a cluster.""" 
+        """Finds the centroid (mean) of a cluster."""
         return (
             np.mean([bb.center[0] for bb in cluster.bounding_boxes]),
             np.mean([bb.center[1] for bb in cluster.bounding_boxes]),
         )
-    return {cluster.label:find_cluster_centroid(cluster) for cluster in clusters}
+
+    return {cluster.label: find_cluster_centroid(cluster) for cluster in clusters}
