@@ -32,10 +32,10 @@ def __find_density_max(values: List[int], search_area: int) -> int:
         The axis value that has the highest density of bounding boxes.
     """
     kde = gaussian_kde(values, bw_method=0.2)
-    x_values = np.linspace(0, search_area, 10000)
-    kde_vals = kde(x_values)
+    values = np.linspace(0, search_area, 10000)
+    kde_vals = kde(values)
     max_index = np.argmax(kde_vals)
-    return x_values[max_index]
+    return values[max_index]
 
 
 def __remove_bb_outliers(boxes: List[BoundingBox]) -> List[BoundingBox]:
@@ -119,8 +119,8 @@ def isolate_blood_pressure_legend_bounding_boxes(
     y_loc: int = __find_density_max([bb.top for bb in bboxes], im_height)
 
     # heuristics to determine if the box is a time box or mmhg box.
-    is_time_box = lambda box: abs(box.center[0] - x_loc) < abs(box.center[1] - y_loc)
-    is_mmhg_box = lambda box: abs(box.center[0] - x_loc) > abs(box.center[1] - y_loc)
+    is_time_box = lambda box: abs(box.center[0] - x_loc) > abs(box.center[1] - y_loc)
+    is_mmhg_box = lambda box: abs(box.center[0] - x_loc) < abs(box.center[1] - y_loc)
 
     time_bboxes: List[BoundingBox] = list(filter(is_time_box, bboxes))
     mmhg_bboxes: List[BoundingBox] = list(filter(is_mmhg_box, bboxes))

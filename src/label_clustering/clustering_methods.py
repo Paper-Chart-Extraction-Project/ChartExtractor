@@ -5,7 +5,7 @@ This module contains functions for clustering labels based on their bounding box
 
 # Built-in imports
 import re
-from typing import Callable, List, Literal
+from typing import Callable, Dict, List, Literal, Tuple
 from functools import reduce
 
 # External imports
@@ -266,3 +266,22 @@ def cluster_boxes(
         clusters = __time_correction(clusters)
 
     return clusters
+
+
+def find_legend_locations(clusters: List[Cluster]) -> Dict[str, Tuple[float, float]]:
+    """Finds the locations of clusters on the image.
+    
+    Args:
+        `clusters` (List[Cluster]):
+            A single list with the clusters encoding the mmhg/bpm and timestamp locations.
+        
+    Returns:
+        A dictionary mapping the cluster name to its cluster center.
+    """
+    def find_cluster_centroid(cluster: Cluster):
+        """Finds the centroid (mean) of a cluster.""" 
+        return (
+            np.mean([bb.center[0] for bb in cluster.bounding_boxes]),
+            np.mean([bb.center[1] for bb in cluster.bounding_boxes]),
+        )
+    return {cluster.label:find_cluster_centroid(cluster) for cluster in clusters}
