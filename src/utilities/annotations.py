@@ -127,7 +127,7 @@ class BoundingBox:
             y + (1 / 2) * h,
         )
         category = id_to_category.get(int(data[0]))
-        if category == None:
+        if category is None:
             raise ValueError(
                 f"Category {int(data[0])} not found in the id_to_category dictionary."
             )
