@@ -5,7 +5,7 @@ This module contains functions for clustering labels based on their bounding box
 
 # Built-in imports
 import re
-from typing import List, Literal
+from typing import Callable, List, Literal
 from functools import reduce
 
 # External imports
@@ -35,6 +35,8 @@ def __cluster_kmeans(
     Returns:
         List of cluster labels.
     """
+    if not possible_nclusters:
+        raise ValueError("possible_nclusters must be passed for KMeans.")
     # Convert to a NumPy array (using only x_center and y_center)
     data = np.array([box.center for box in bounding_boxes])
 
@@ -105,10 +107,14 @@ def __cluster_dbscan(
     Returns:
         List of cluster labels.
     """
+    if defined_eps is None or min_samples is None:
+        raise ValueError("defined_eps and min_samples must be passed for DBSCAN.")
+    if defined_eps <= 0 or min_samples <= 0:
+        raise ValueError(
+            f"Invalid DBSCAN parameters: defined_eps={defined_eps}, min_samples={min_samples}"
+        )
     # Convert to a NumPy array (using only x_center and y_center)
     data = np.array([box.center for box in bounding_boxes])
-
-    # DBSCAN
     scan = DBSCAN(eps=defined_eps, min_samples=min_samples)
     labels = scan.fit_predict(data)
 
@@ -132,6 +138,8 @@ def __cluster_agglomerative(
     Returns:
         List of cluster labels.
     """
+    if possible_nclusters is None:
+        raise ValueError("possible_nclusters must be passed for Agglomerative.")
     # make the bonding box data into a Numpy array
     data = np.array([box.center for box in bounding_boxes])
 
@@ -220,11 +228,9 @@ def __time_correction(clusters: List[Cluster]) -> List[Cluster]:
 
 def cluster_boxes(
     bounding_boxes: List[BoundingBox],
-    method: Literal["kmeans", "dbscan", "agglomerative"],
+    method: Callable[[List[BoundingBox]], List[Cluster]],
     unit: Literal["mins", "mmhg"],
-    possible_nclusters: List[int] = None,
-    defined_eps: float = None,
-    min_samples: int = None,
+    **kwargs
 ) -> List[Cluster]:
     """
     Cluster bounding boxes using the specified method.
@@ -232,44 +238,22 @@ def cluster_boxes(
     Args:
         `bounding_boxes` (List[BoundingBox]): 
             List of BoundingBox objects to cluster based on location.
-        `method` (Literal): 
-            The clustering method to use. Can be "kmeans", "dbscan", or "agglomerative".
+        `method` (Callable[[List[BoundingBox]], List[Cluster]]): 
+            The function to use for clustering. The key word arguments for this function need to
+            be supplied as extra kwargs to this function. Alternatively, no kwargs can be passed
+            if a partially applied function is passed.
         `unit`: 
             The unit of the bounding boxes. Can be "mins" or "mmhg".
-        `possible_nclusters` (List[int]): 
-            A list of possible number of clusters to try. This is only used for KMeans and Agglomerative.
-        `defined_eps` (float): 
-            Maximum distance between two samples to be in the neighborhood of one another. 
-            This is only used for DBSCAN.
-        `min_samples` (int): 
-            The number of samples (or total weight) for a point to be considered as core. 
-            This is only used for DBSCAN.
 
     Returns:
         A list of Cluster objects based on the clustering results.
     """
-    # See if the method is valid
-    if method not in ["kmeans", "dbscan", "agglomerative"]:
-        raise ValueError(f"Invalid method: {method}")
-    # Ensure that the tuning parameters are passed for the method
-    if method == "kmeans" and possible_nclusters is None:
-        raise ValueError("possible_nclusters must be passed for KMeans.")
-    if method == "dbscan" and (defined_eps is None or min_samples is None):
-        raise ValueError("defined_eps and min_samples must be passed for DBSCAN.")
-    if method == "agglomerative" and possible_nclusters is None:
-        raise ValueError("possible_nclusters must be passed for Agglomerative.")
     # Ensure unit is valid
     if unit not in ["mins", "mmhg"]:
         raise ValueError(f"Invalid unit: {unit}")
 
-    # Perform the clustering
-    if method == "kmeans":
-        labels = __cluster_kmeans(bounding_boxes, possible_nclusters)
-    elif method == "dbscan":
-        labels = __cluster_dbscan(bounding_boxes, defined_eps, min_samples)
-    else:
-        labels = __cluster_agglomerative(bounding_boxes, possible_nclusters)
-
+    labels = method(bounding_boxes, **kwargs)
+    
     # Return a list Cluster objects based on the clustering results
     clusters = []
     for label in set(labels):

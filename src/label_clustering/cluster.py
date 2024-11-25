@@ -2,7 +2,7 @@
 
 This module contains the class for clustered bounding boxes.
 Once sorted into clusters, these bounding boxes are used to initialize these class, which will 
-automatically give them a label. It additionally creates a new bounding box that encompasses all 
+automatically give them a label. It additionally creates a new bounding box that encompasses all
 the bounding boxes in the cluster.
 """
 
