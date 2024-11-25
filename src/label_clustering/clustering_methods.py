@@ -6,7 +6,6 @@ This module contains functions for clustering labels based on their bounding box
 # Built-in imports
 import re
 from typing import Callable, Dict, List, Literal, Tuple
-from functools import reduce
 
 # External imports
 import numpy as np
