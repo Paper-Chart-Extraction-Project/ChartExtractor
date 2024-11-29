@@ -13,6 +13,7 @@ from typing import Dict, List
 # External Libraries
 import cv2
 import pytest
+from PIL import Image
 
 # Internal Libraries
 # Add the directory containing the utilities module to the Python path
@@ -51,17 +52,18 @@ def image() -> cv2:
     image = cv2.imread(
         os.path.join("test_data", "registered_images", "RC_0001_intraoperative.JPG")
     )
-    return image
+    resized_img = cv2.resize(image, (800, 600))
+    return resized_img
 
 
 class TestTPS:
     """Tests the tps method."""
 
     def test_tps(self, image, test_data):
-        print(image)
-        print(test_data)
         # get path to current image
         transformed_img = transform_thin_plate_splines(image, test_data)
+        transformed_img = Image.fromarray(transformed_img)
+        transformed_img.show()
 
         # Not sure how to test this ...
 

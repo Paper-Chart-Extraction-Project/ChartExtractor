@@ -24,6 +24,7 @@ import cv2
 import numpy as np
 from collections import Counter
 from scipy.interpolate import Rbf
+import matplotlib.pyplot as plt
 
 # Function to create a list of BoundingBox objects from a landmarks
 # load introp_document_landmarks.json which will be used as dst_points
@@ -176,8 +177,6 @@ def transform_thin_plate_splines(
         "unified_intraoperative_preoperative_flowsheet_v1_1_front.png"
     ]
 
-    del landmark_location_data
-
     # Get the categories from dst_bbs
     landmark_cats = [bb.category for bb in dst_bbs]
     # remove all bbs in src that are not in those categories
@@ -188,7 +187,7 @@ def transform_thin_plate_splines(
     duplicate_count_dst = dict(Counter([bb.category for bb in dst_bbs]))
     duplicates.extend([k for k, v in duplicate_count_dst.items() if v > 1])
     duplicates = list(set(duplicates))
-    # print(duplicates)
+
     # remove duplicates
     src_bbs = [bb for bb in src_bbs if bb.category not in duplicates]
     dst_bbs = [bb for bb in dst_bbs if bb.category not in duplicates]
@@ -211,6 +210,7 @@ def transform_thin_plate_splines(
 
     # Alter the image according to the transformation
     h, w, _ = image.shape
+
     # create grid
     x = np.linspace(0, w - 1, w)
     y = np.linspace(0, h - 1, h)
