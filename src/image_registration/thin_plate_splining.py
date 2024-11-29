@@ -176,6 +176,8 @@ def transform_thin_plate_splines(
         "unified_intraoperative_preoperative_flowsheet_v1_1_front.png"
     ]
 
+    del landmark_location_data
+
     # Get the categories from dst_bbs
     landmark_cats = [bb.category for bb in dst_bbs]
     # remove all bbs in src that are not in those categories
