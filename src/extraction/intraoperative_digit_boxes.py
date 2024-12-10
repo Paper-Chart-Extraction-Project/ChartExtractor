@@ -1,9 +1,10 @@
 """Provides functions for extracting drug codes."""
 
 # Built-in imports
+from itertools import product
 import json
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 # Internal imports
 from handwritten_digit_utils import compute_digit_distances_to_centroids
@@ -72,6 +73,19 @@ def extract_surgical_timing(
     im_width: int,
     im_height: int,
 ) -> Dict[str, str]:
+    """Extracts the surgical timing data from the number detections.
+
+    Args:
+        `number_detections` (List[Detection]):
+            A list of Detection objects of handwritten digits.
+        `im_width` (int):
+            The width of the image the detections were made on.
+        `im_height` (int):
+            The height of the image the detections were made on.
+
+    Returns:
+        A dictionary containing anesthesia and surgical start and stop times.
+    """
     number_detections: List[BoundingBox] = [det.annotation for det in number_detections]
     surgical_timing_centroids: Dict[str, Tuple[float, float]] = {
         key: val
