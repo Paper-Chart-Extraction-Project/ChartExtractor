@@ -23,5 +23,18 @@ def extract_drug_codes(
     im_width: int,
     im_height: int,
 ) -> Dict[str, int]:
-    """ """
+    """Extracts the drug code data from the number detections.
+
+    Args:
+        number_detections (List[Detection]):
+            A list of Detection objects of handwritten digits.
+        im_width (int):
+            The width of the image the detections were made on.
+        im_height (int):
+            The height of the image the detections were made on.
+
+    Returns:
+        A dictionary mapping each line of the code section of the
+        intraoperative record to the digits written on that line.
+    """
     pass
