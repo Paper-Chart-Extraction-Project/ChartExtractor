@@ -64,3 +64,34 @@ def extract_drug_codes(
             )
 
     return drug_codes
+
+
+def extract_surgical_timing(
+    number_detections: List[Detection],
+    centroids: Dict[str, Tuple[float, float]],
+    im_width: int,
+    im_height: int,
+) -> Dict[str, str]:
+    number_detections: List[BoundingBox] = [det.annotation for det in number_detections]
+    surgical_timing_centroids: Dict[str, Tuple[float, float]] = {
+        key: val
+        for (key, val) in centroids.items()
+        if any(["anes" in key, "surg" in key])
+    }
+    surgical_timing_values: Dict[str, int] = compute_digit_distances_to_centroids(
+        number_detections, surgical_timing_centroids, im_width, im_height
+    )
+
+    surgical_timing: Dict[str, str] = dict()
+    prefixes: List[str] = [
+        f"{sa}_{se}_{hm}"
+        for (sa, se, hm) in product(["surg", "anes"], ["start", "end"], ["hr", "min"])
+    ]
+    for prefix in prefixes:
+        tens_place_val: Optional[int] = surgical_timing_values.get(prefix + "_tens")
+        ones_place_val: Optional[int] = surgical_timing_values.get(prefix + "_ones")
+        if None not in [tens_place_val, ones_place_val]:
+            surgical_timing[prefix] = str(tens_place_val.category) + str(
+                ones_place_val.category
+            )
+    return surgical_timing
