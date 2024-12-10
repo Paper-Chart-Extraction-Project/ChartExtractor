@@ -1,13 +1,22 @@
 """Utilities for detecting and associating meaning to handwritten digits."""
 
 # Built-in imports
+from PIL import Image
 from typing import Dict, List, Tuple
 
 # External imports
 import numpy as np
 
 # Internal imports
+from object_detection_models.object_detection_model import ObjectDetectionModel
 from utilities.annotations import BoundingBox
+from utilities.detections import Detection
+from utilities.detection_reassembly import (
+    intersection_over_minimum,
+    non_maximum_suppression,
+    untile_detections,
+)
+from utilities.tiling import tile_image
 
 
 MAX_BOX_WIDTH, MAX_BOX_HEIGHT = (0.0174507, 0.0236938)
@@ -51,3 +60,38 @@ def compute_digit_distances_to_centroids(
                 min(distance_dict, key=distance_dict.get)
             ]
     return closest_boxes
+
+
+def detect_numbers(
+    image: Image.Image,
+    detection_model: ObjectDetectionModel,
+    slice_width: int,
+    slice_height: int,
+    horizontal_overlap_ratio: float,
+    vertical_overlap_ratio: float,
+    conf: float = 0.8,
+) -> List[BoundingBox]:
+    image_tiles: List[List[Image.Image]] = tile_image(
+        image,
+        slice_width,
+        slice_height,
+        horizontal_overlap_ratio,
+        vertical_overlap_ratio,
+    )
+    detections: List[List[List[Detection]]] = [
+        [detection_model(tile, verbose=False, conf=conf) for tile in row]
+        for row in image_tiles
+    ]
+    detections: List[Detection] = untile_detections(
+        detections,
+        slice_width,
+        slice_height,
+        horizontal_overlap_ratio,
+        vertical_overlap_ratio,
+    )
+    detections: List[Detection] = non_maximum_suppression(
+        detections=detections,
+        threshold=0.5,
+        overlap_comparator=intersection_over_minimum,
+    )
+    return [det.annotation for det in detections]
