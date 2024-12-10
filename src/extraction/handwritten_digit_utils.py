@@ -31,13 +31,13 @@ def compute_digit_distances_to_centroids(
     """Computes the distances between the digit detections and the number box centroids.
 
     Args:
-        number_detections (List[BoundingBox]):
+        `number_detections` (List[BoundingBox]):
             Handwritten digit bounding boxes.
-        centroids (Dict[str, Tuple[float, float]]):
+        `centroids` (Dict[str, Tuple[float, float]]):
             Tuples of floats that encode the centroid of a sample of single digit number boxes.
-        im_width (int):
+        `im_width` (int):
             The width of the image the detections were made on.
-        im_height (int):
+        `im_height` (int):
             The height of the image the detections were made on.
 
     Returns:
@@ -70,7 +70,26 @@ def detect_numbers(
     horizontal_overlap_ratio: float,
     vertical_overlap_ratio: float,
     conf: float = 0.8,
-) -> List[BoundingBox]:
+) -> List[Detection]:
+    """Detects handwritten digits on an image.
+
+    Args:
+        `image` (Image.Image):
+            The image to detect on.
+        `detection_model` (ObjectDetectionModel):
+            The digit detection model.
+        `slice_height` (int):
+            The height of each slice.
+        `slice_width` (int):
+            The width of each slice.
+        `horizontal_overlap_ratio` (float):
+            The amount of left-right overlap between slices.
+        `vertical_overlap_ratio` (float):
+            The amount of top-bottom overlap between slices.
+
+    Returns:
+        A list of handwritten digit detections on the image.
+    """
     image_tiles: List[List[Image.Image]] = tile_image(
         image,
         slice_width,

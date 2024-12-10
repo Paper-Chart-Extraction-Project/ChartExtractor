@@ -28,11 +28,11 @@ def extract_drug_codes(
     """Extracts the drug code data from the number detections.
 
     Args:
-        number_detections (List[Detection]):
+        `number_detections` (List[Detection]):
             A list of Detection objects of handwritten digits.
-        im_width (int):
+        `im_width` (int):
             The width of the image the detections were made on.
-        im_height (int):
+        `im_height` (int):
             The height of the image the detections were made on.
 
     Returns:
