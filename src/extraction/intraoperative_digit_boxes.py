@@ -67,6 +67,46 @@ def extract_drug_codes(
     return drug_codes
 
 
+def extract_ett_size(
+    number_detections: List[Detection],
+    centroids: Dict[str, Tuple[float, float]],
+    im_width: int,
+    im_height: int,
+) -> Dict[str, str]:
+    """Extracts the endotracheal tube size from the number detections.
+
+    Args:
+        `number_detections` (List[Detection]):
+            A list of Detection objects of handwritten digits.
+        `im_width` (int):
+            The width of the image the detections were made on.
+        `im_height` (int):
+            The height of the image the detections were made on.
+
+    Returns:
+        A dictionary containing one entry for the endotrachal tube size.
+    """
+    number_detections: List[BoundingBox] = [det.annotation for det in number_detections]
+    ett_centroids: Dict[str, Tuple[float, float]] = {
+        "ett_n_whole": centroids["ett_n_whole"],
+        "ett_n_frac": centroids["ett_n_frac"],
+    }
+    ett_box_values: Dict[str, int] = compute_digit_distances_to_centroids(
+        number_detections, ett_centroids, im_width, im_height
+    )
+
+    if all(
+        ["ett_n_whole" in ett_box_values.keys(), "ett_n_frac" in ett_box_values.keys()]
+    ):
+        whole: int = ett_box_values["ett_n_whole"].category
+        frac: int = ett_box_values["ett_n_frac"].category
+        ett_size = {"ett_size": f"{whole}.{frac}"}
+    else:
+        ett_size = dict()
+
+    return ett_size
+
+
 def extract_surgical_timing(
     number_detections: List[Detection],
     centroids: Dict[str, Tuple[float, float]],
