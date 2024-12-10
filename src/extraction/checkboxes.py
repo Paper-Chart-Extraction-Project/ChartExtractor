@@ -18,10 +18,10 @@ from typing import Dict, List, Literal, Tuple
 
 DATA_FILEPATH: Path = Path(__file__).parents[2] / "data"
 FILEPATH_TO_INTRAOP_CENTROIDS: Path = (
-    DATA_FILEPATH / "centroids" / "intraop_centroids.json"
+    DATA_FILEPATH / "centroids" / "intraop_checkbox_centroids.json"
 )
 FILEPATH_TO_PREOP_POSTOP_CENTROIDS: Path = (
-    DATA_FILEPATH / "centroids" / "preop_postop_centroids.json"
+    DATA_FILEPATH / "centroids" / "preop_postop_checkbox_centroids.json"
 )
 INTRAOP_CENTROIDS: Dict[str, Tuple[float, float]] = json.load(
     open(FILEPATH_TO_INTRAOP_CENTROIDS, "r")
