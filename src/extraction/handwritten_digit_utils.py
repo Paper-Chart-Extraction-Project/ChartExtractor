@@ -113,4 +113,4 @@ def detect_numbers(
         threshold=0.5,
         overlap_comparator=intersection_over_minimum,
     )
-    return [det.annotation for det in detections]
+    return detections
