@@ -127,7 +127,7 @@ class BoundingBox:
             y + (1 / 2) * h,
         )
         category = id_to_category.get(int(data[0]))
-        if category == None:
+        if category is None:
             raise ValueError(
                 f"Category {int(data[0])} not found in the id_to_category dictionary."
             )
@@ -241,7 +241,11 @@ class BoundingBox:
         )
 
     def to_yolo(
-        self, image_width: int, image_height: int, category_to_id: Dict[str, int]
+        self,
+        image_width: int,
+        image_height: int,
+        category_to_id: Dict[str, int],
+        precision: int = 8,
     ) -> str:
         """Writes the data from this `BoundingBox` into a yolo formatted string.
 
@@ -252,6 +256,10 @@ class BoundingBox:
                 The image's height that this boundingbox belongs to.
             `category_to_id` (Dict[str, int]):
                 A dictionary that maps the category string to an id (integer).
+            `precision` (int):
+                The number of decimal places to round yolo output to.
+                Defaults to 8 decimal places. If more precision is needed,
+                increase this value.
 
         Returns:
             A string that encodes this `BoundingBox`'s data for a single line in a yolo label file.
@@ -262,7 +270,7 @@ class BoundingBox:
         y /= image_height
         w = (self.right - self.left) / image_width
         h = (self.bottom - self.top) / image_height
-        return f"{c} {x} {y} {w} {h}"
+        return f"{c} {x:.{precision}f} {y:.{precision}f} {w:.{precision}f} {h:.{precision}f}"
 
 
 @dataclass
@@ -382,6 +390,47 @@ class Keypoint:
         """This keypoints boundingbox's [left, top, right, bottom]."""
         return self.bounding_box.box
 
+    def set_box_and_keypoint(
+        self,
+        new_left: int,
+        new_top: int,
+        new_right: int,
+        new_bottom: int,
+        new_kp_x: int,
+        new_kp_y: int,
+    ) -> "Keypoint":
+        """Sets this keypoint's box and keypoint to new values.
+
+        This exists because setting the box to a new location will cause an exception
+        when the new box would not contain the old keypoint.
+
+        Args:
+            new_left (int):
+                The new left side for the box.
+            new_top (int):
+                The new top side for the box.
+            new_right (int):
+                The new right side for the box.
+            new_bottom (int):
+                The new bottom side for the box.
+            new_kp_x (int):
+                The new x value for the Keypoint.
+            new_kp_y (int):
+                The new y value for the Keypoint.
+
+        Returns: A new Keypoint with a new bounding box and keypoint.
+        """
+        self.validate_keypoint(
+            BoundingBox(self.category, new_left, new_top, new_right, new_bottom),
+            Point(new_kp_x, new_kp_y),
+        )
+        return Keypoint(
+            keypoint=Point(new_kp_x, new_kp_y),
+            bounding_box=BoundingBox(
+                self.category, new_left, new_top, new_right, new_bottom
+            ),
+        )
+
     def set_box(
         self, new_left: int, new_top: int, new_right: int, new_bottom: int
     ) -> BoundingBox:
@@ -400,7 +449,7 @@ class Keypoint:
         Returns: A new Keypoint with a new bounding box.
         """
         return Keypoint(
-            point=self.point,
+            keypoint=self.keypoint,
             bounding_box=self.bounding_box.set_box(
                 new_left, new_top, new_right, new_bottom
             ),
@@ -421,7 +470,11 @@ class Keypoint:
         return Keypoint(Point(new_x, new_y), self.bounding_box)
 
     def to_yolo(
-        self, image_width: int, image_height: int, category_to_id: Dict[str, int]
+        self,
+        image_width: int,
+        image_height: int,
+        category_to_id: Dict[str, int],
+        precision: int = 8,
     ) -> str:
         """Writes the data from this `Keypoint` into a yolo formatted string.
 
@@ -432,14 +485,20 @@ class Keypoint:
                 The image's height that this `Keypoint` belongs to.
             `category_to_id` (Dict[str, int]):
                 A dictionary that maps the category string to an id (int).
+            `precision` (int):
+                The number of decimal places to round yolo output to.
+                Defaults to 8 decimal places. If more precision is needed,
+                increase this value.
 
         Returns:
             A string that encodes this `Keypoint`'s data for a single line in a yolo label file.
         """
-        yolo_line = self.bounding_box.to_yolo(image_width, image_height, category_to_id)
+        yolo_line = self.bounding_box.to_yolo(
+            image_width, image_height, category_to_id, precision
+        )
         keypoint_x, keypoint_y = (
             self.keypoint.x / image_width,
             self.keypoint.y / image_height,
         )
-        yolo_line += f" {keypoint_x} {keypoint_y}"
+        yolo_line += f" {keypoint_x:.{precision}f} {keypoint_y:.{precision}f}"
         return yolo_line

@@ -72,7 +72,17 @@ class UltralyticsYOLOv8(ObjectDetectionModel):
         return UltralyticsYOLOv8(model)
 
     def __call__(self, image: Image.Image, **kwargs) -> List[Detection]:
-        """ """
+        """Runs the model on a single image and returns a list of Detection objects.
+
+        Args:
+            `image` (Image.Image):
+                The image to detect on.
+            `kwargs`:
+                Any argument that Ultralytics Yolo model will take. Mostly
+                used for 'conf' and 'verbose'.
+        Returns:
+            A list of Detection objects.
+        """
         results = self.model(image, **kwargs)
         detections: List[Detection] = self.yolov8_results_to_detections(results)
         return detections
