@@ -115,7 +115,7 @@ def detect_checkboxes(
         vertical_overlap_ratio,
     )
     detections: List[List[List[Detection]]] = [
-        [detection_model(tile) for tile in row] for row in image_tiles
+        [detection_model(tile, verbose=False) for tile in row] for row in image_tiles
     ]
     detections: List[Detection] = untile_detections(
         detections,

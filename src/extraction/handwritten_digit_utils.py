@@ -49,9 +49,7 @@ def compute_digit_distances_to_centroids(
     closest_boxes: Dict[str, int] = dict()
     for centroid_name, centroid in centroids.items():
         distance_dict: Dict[int, float] = {
-            ix: euclidean_distance(
-                *centroid, *normalize_box_loc(box.center, im_width, im_height)
-            )
+            ix: euclidean_distance(*centroid, *normalize_box_loc(box.center))
             for (ix, box) in enumerate(number_detections)
         }
         minimum_distance: float = min(distance_dict.values())

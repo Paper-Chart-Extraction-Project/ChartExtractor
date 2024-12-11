@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 # Internal imports
-from handwritten_digit_utils import compute_digit_distances_to_centroids
+from extraction.handwritten_digit_utils import compute_digit_distances_to_centroids
 from utilities.annotations import BoundingBox
 from utilities.detections import Detection
 
@@ -69,7 +69,6 @@ def extract_drug_codes(
 
 def extract_ett_size(
     number_detections: List[Detection],
-    centroids: Dict[str, Tuple[float, float]],
     im_width: int,
     im_height: int,
 ) -> Dict[str, str]:
@@ -88,8 +87,8 @@ def extract_ett_size(
     """
     number_detections: List[BoundingBox] = [det.annotation for det in number_detections]
     ett_centroids: Dict[str, Tuple[float, float]] = {
-        "ett_n_whole": centroids["ett_n_whole"],
-        "ett_n_frac": centroids["ett_n_frac"],
+        "ett_n_whole": NUMBER_BOX_CENTROIDS["ett_n_whole"],
+        "ett_n_frac": NUMBER_BOX_CENTROIDS["ett_n_frac"],
     }
     ett_box_values: Dict[str, int] = compute_digit_distances_to_centroids(
         number_detections, ett_centroids, im_width, im_height
@@ -109,7 +108,6 @@ def extract_ett_size(
 
 def extract_surgical_timing(
     number_detections: List[Detection],
-    centroids: Dict[str, Tuple[float, float]],
     im_width: int,
     im_height: int,
 ) -> Dict[str, str]:
@@ -129,7 +127,7 @@ def extract_surgical_timing(
     number_detections: List[BoundingBox] = [det.annotation for det in number_detections]
     surgical_timing_centroids: Dict[str, Tuple[float, float]] = {
         key: val
-        for (key, val) in centroids.items()
+        for (key, val) in NUMBER_BOX_CENTROIDS.items()
         if any(["anes" in key, "surg" in key])
     }
     surgical_timing_values: Dict[str, int] = compute_digit_distances_to_centroids(
