@@ -90,3 +90,120 @@ def extract_time_of_assessment(
                 ones_place_val.category
             )
     return time_of_assessment
+
+
+def extract_age(
+    number_detections: List[Detection],
+    im_width: int,
+    im_height: int,
+) -> Dict[str, str]:
+    """Extracts the age data from the number detections.
+
+    Args:
+        `number_detections` (List[Detection]):
+            The handwritten numbers that have been detected.
+        `im_width` (int):
+            The width of the image the detections were made on.
+        `im_height` (int):
+            The height of the image the detections were made on.
+
+    Returns:
+        A dictionary with the patient's age.
+    """
+    age_values: Dict[str, int] = get_relevant_boxes(
+        number_detections, "age", im_width, im_height
+    )
+
+    if any(
+        [f"age_{place}" in age_values.keys() for place in ["hundreds", "tens", "ones"]]
+    ):
+        return {
+            "age": "".join(
+                [
+                    get_category_or_space(age_values.get(f"age_{place}"))
+                    for place in ["hundreds", "tens", "ones"]
+                ]
+            ).strip()
+        }
+    else:
+        return dict()
+
+
+def extract_height(
+    number_detections: List[Detection],
+    im_width: int,
+    im_height: int,
+) -> Dict[str, str]:
+    """Extracts the height data from the number detections.
+
+    Args:
+        `number_detections` (List[Detection]):
+            The handwritten numbers that have been detected.
+        `im_width` (int):
+            The width of the image the detections were made on.
+        `im_height` (int):
+            The height of the image the detections were made on.
+
+    Returns:
+        A dictionary with the patient's height.
+    """
+    height_values: Dict[str, int] = get_relevant_boxes(
+        number_detections, "height", im_width, im_height
+    )
+
+    if any(
+        [
+            f"height_{place}" in height_values.keys()
+            for place in ["hundreds", "tens", "ones"]
+        ]
+    ):
+        return {
+            "height": "".join(
+                [
+                    get_category_or_space(height_values.get(f"height_{place}"))
+                    for place in ["hundreds", "tens", "ones"]
+                ]
+            ).strip()
+        }
+    else:
+        return dict()
+
+
+def extract_weight(
+    number_detections: List[Detection],
+    im_width: int,
+    im_height: int,
+) -> Dict[str, str]:
+    """Extracts the weight data from the number detections.
+
+    Args:
+        `number_detections` (List[Detection]):
+            The handwritten numbers that have been detected.
+        `im_width` (int):
+            The width of the image the detections were made on.
+        `im_height` (int):
+            The height of the image the detections were made on.
+
+    Returns:
+        A dictionary with the patient's weight.
+    """
+    weight_values: Dict[str, int] = get_relevant_boxes(
+        number_detections, "weight", im_width, im_height
+    )
+
+    if any(
+        [
+            f"weight_{place}" in weight_values.keys()
+            for place in ["hundreds", "tens", "ones"]
+        ]
+    ):
+        return {
+            "weight": "".join(
+                [
+                    get_category_or_space(weight_values.get(f"weight_{place}"))
+                    for place in ["hundreds", "tens", "ones"]
+                ]
+            ).strip()
+        }
+    else:
+        return dict()
