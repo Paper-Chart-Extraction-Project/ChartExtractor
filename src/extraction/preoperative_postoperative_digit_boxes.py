@@ -52,5 +52,41 @@ def get_relevant_boxes(
     return values
 
 
-def get_category_or_space(bb):
+def get_category_or_space(bb: BoundingBox):
+    """Gets the category of the bounding box, or return a space character."""
     return bb.category if bb is not None else " "
+
+
+def extract_time_of_assessment(
+    number_detections: List[Detection],
+    im_width: int,
+    im_height: int,
+) -> Dict[str, str]:
+    """Extracts the time of assessment data from the number detections.
+
+    Args:
+        `number_detections` (List[Detection]):
+            The handwritten numbers that have been detected.
+        `im_width` (int):
+            The width of the image the detections were made on.
+        `im_height` (int):
+            The height of the image the detections were made on.
+
+    Returns:
+        A dictionary mapping the time of assessment to the hours and minutes they occured.
+    """
+    time_of_assessment_values = get_relevant_boxes(
+        number_detections, "time_of_assessment", im_width, im_height
+    )
+    time_of_assessment: Dict[str, str] = dict()
+    prefixes: List[str] = [
+        f"time_of_assessment_{x}" for x in ["year", "month", "day", "hour", "min"]
+    ]
+    for prefix in prefixes:
+        tens_place_val: Optional[int] = time_of_assessment_values.get(prefix + "_tens")
+        ones_place_val: Optional[int] = time_of_assessment_values.get(prefix + "_ones")
+        if None not in [tens_place_val, ones_place_val]:
+            time_of_assessment[prefix] = str(tens_place_val.category) + str(
+                ones_place_val.category
+            )
+    return time_of_assessment
