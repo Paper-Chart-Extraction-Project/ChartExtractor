@@ -381,3 +381,34 @@ def extract_aldrete_score(
     tens: str = get_category_or_space(aldrete_values.get("aldrete_tens"))
     ones: str = get_category_or_space(aldrete_values.get("aldrete_ones"))
     return {"aldrete_score": f"{tens}{ones}".strip()}
+
+
+def extract_preop_postop_digit_data(
+    number_detections: List[Detection],
+    im_width: int,
+    im_height: int,
+) -> Dict[str, str]:
+    """Extracts all of the preoperative and postoperative from the number detections.
+
+    Args:
+        `number_detections` (List[Detection]):
+            The handwritten numbers that have been detected.
+        `im_width` (int):
+            The width of the image the detections were made on.
+        `im_height` (int):
+            The height of the image the detections were made on.
+
+    Returns:
+        A dictionary with all the preoperative and postoperative data.
+    """
+    data: Dict[str, str] = dict()
+    data.update(extract_time_of_assessment(number_detections, im_width, im_height))
+    data.update(extract_age(number_detections, im_width, im_height))
+    data.update(extract_height(number_detections, im_width, im_height))
+    data.update(extract_weight(number_detections, im_width, im_height))
+    data.update(extract_vitals(number_detections, "preop", im_width, im_height))
+    data.update(extract_vitals(number_detections, "pacu", im_width, im_height))
+    data.update(extract_lab_results(number_detections, im_width, im_height))
+    data.update(extract_aldrete_score(number_detections, im_width, im_height))
+
+    return data
