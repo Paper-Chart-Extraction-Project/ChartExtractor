@@ -215,7 +215,7 @@ def extract_vitals(
     im_width: int,
     im_height: int,
 ) -> Dict[str, str]:
-    """Extracts the weight data from the number detections.
+    """Extracts the preoperative/postoperative vital data from the number detections.
 
     Args:
         `number_detections` (List[Detection]):
@@ -265,3 +265,93 @@ def extract_vitals(
     vital_dict.update(get_whole_value_from_vital_values("ox"))
 
     return vital_dict
+
+
+def extract_lab_results(
+    number_detections: List[Detection],
+    im_width: int,
+    im_height: int,
+) -> Dict[str, str]:
+    """Extracts the lab data from the number detections.
+
+    Args:
+        `number_detections` (List[Detection]):
+            The handwritten numbers that have been detected.
+        `im_width` (int):
+            The width of the image the detections were made on.
+        `im_height` (int):
+            The height of the image the detections were made on.
+
+    Returns:
+        A dictionary with the patient's lab results.
+    """
+    lab_values: Dict[str, int] = dict()
+    lab_test_names: List[str] = [
+        "hgb",
+        "hct",
+        "plt",
+        "na",
+        "k",
+        "cl",
+        "urea",
+        "creatinine",
+        "ca",
+        "mg",
+        "po4",
+        "albumin",
+    ]
+    for name in lab_test_names:
+        lab_values.update(
+            get_relevant_boxes(number_detections, name, im_width, im_height)
+        )
+
+    def get_whole_value_from_vital_values(
+        lab: str, digit_strs: List[str] = ["hundreds", "tens", "ones"]
+    ) -> Dict[str, int]:
+        if digit_strs == ["hundreds", "tens", "ones"]:
+            formatting = lambda vals: f"{vals[0]}{vals[1]}{vals[2]}".strip()
+        elif digit_strs == ["tens", "ones", "frac"]:
+            formatting = lambda vals: f"{vals[0]}{vals[1]}.{vals[2]}".strip()
+        elif digit_strs == ["ones", "tenths", "hundredths"]:
+            formatting = lambda vals: f"{vals[0]}.{vals[1]}{vals[2]}".strip()
+        else:
+            formatting = lambda vals: f"{vals[0]}.{vals[1]}".strip()
+
+        if any([f"{lab}_{place}" in lab_values.keys() for place in digit_strs]):
+            values = [
+                get_category_or_space(lab_values.get(f"{lab}_{place}"))
+                for place in digit_strs
+            ]
+            return {lab: formatting(values)}
+        else:
+            return dict()
+
+    lab_results_dict: Dict[str, int] = dict()
+    lab_results_dict.update(
+        get_whole_value_from_vital_values("hgb", ["tens", "ones", "frac"])
+    )
+    lab_results_dict.update(
+        get_whole_value_from_vital_values("hct", ["tens", "ones", "frac"])
+    )
+    lab_results_dict.update(get_whole_value_from_vital_values("plt"))
+    lab_results_dict.update(get_whole_value_from_vital_values("na"))
+    lab_results_dict.update(get_whole_value_from_vital_values("k", ["ones", "frac"]))
+    lab_results_dict.update(get_whole_value_from_vital_values("cl"))
+    lab_results_dict.update(
+        get_whole_value_from_vital_values("urea", ["tens", "ones", "frac"])
+    )
+    lab_results_dict.update(
+        get_whole_value_from_vital_values("creatinine", ["tens", "ones", "frac"])
+    )
+    lab_results_dict.update(get_whole_value_from_vital_values("ca", ["ones", "frac"]))
+    lab_results_dict.update(
+        get_whole_value_from_vital_values("mg", ["ones", "tenths", "hundredths"])
+    )
+    lab_results_dict.update(
+        get_whole_value_from_vital_values("po4", ["ones", "tenths", "hundredths"])
+    )
+    lab_results_dict.update(
+        get_whole_value_from_vital_values("albumin", ["ones", "tens"])
+    )
+
+    return lab_results_dict
