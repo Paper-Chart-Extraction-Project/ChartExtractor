@@ -355,3 +355,29 @@ def extract_lab_results(
     )
 
     return lab_results_dict
+
+
+def extract_aldrete_score(
+    number_detections: List[Detection],
+    im_width: int,
+    im_height: int,
+) -> Dict[str, int]:
+    """Extracts the aldrete score from the number detections.
+
+    Args:
+        `number_detections` (List[Detection]):
+            The handwritten numbers that have been detected.
+        `im_width` (int):
+            The width of the image the detections were made on.
+        `im_height` (int):
+            The height of the image the detections were made on.
+
+    Returns:
+        A dictionary with the aldrete score.
+    """
+    aldrete_values: Dict[str, int] = get_relevant_boxes(
+        number_detections, "aldrete", im_width, im_height
+    )
+    tens: str = get_category_or_space(aldrete_values.get("aldrete_tens"))
+    ones: str = get_category_or_space(aldrete_values.get("aldrete_ones"))
+    return {"aldrete_score": f"{tens}{ones}".strip()}
