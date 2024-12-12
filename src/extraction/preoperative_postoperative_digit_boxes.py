@@ -4,7 +4,7 @@
 from itertools import product
 import json
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Literal, Optional, Tuple
 
 # Internal imports
 from extraction.handwritten_digit_utils import compute_digit_distances_to_centroids
@@ -207,3 +207,61 @@ def extract_weight(
         }
     else:
         return dict()
+
+
+def extract_vitals(
+    number_detections: List[Detection],
+    preop_or_pacu: Literal["preop", "pacu"],
+    im_width: int,
+    im_height: int,
+) -> Dict[str, str]:
+    """Extracts the weight data from the number detections.
+
+    Args:
+        `number_detections` (List[Detection]):
+            The handwritten numbers that have been detected.
+        `preop_or_pacu` (Literal["preop", "pacu"]):
+            A string that determines whether the preoperative or
+            postoperative (pacu) vitals are extracted.
+        `im_width` (int):
+            The width of the image the detections were made on.
+        `im_height` (int):
+            The height of the image the detections were made on.
+
+    Returns:
+        A dictionary with the patient's preoperative or postoperative vitals.
+    """
+    vital_values: Dict[str, int] = get_relevant_boxes(
+        number_detections, preop_or_pacu, im_width, im_height
+    )
+    vital_dict: Dict[str, int] = dict()
+
+    def get_whole_value_from_vital_values(
+        vital: str, digit_strs: List[str] = ["hundreds", "tens", "ones"]
+    ) -> Dict[str, int]:
+        if any(
+            [
+                f"{preop_or_pacu}_{vital}_{place}" in vital_values.keys()
+                for place in digit_strs
+            ]
+        ):
+            return {
+                vital: "".join(
+                    [
+                        get_category_or_space(
+                            vital_values.get(f"{preop_or_pacu}_{vital}_{place}")
+                        )
+                        for place in digit_strs
+                    ]
+                ).strip()
+            }
+        else:
+            return dict()
+
+    vital_dict.update(get_whole_value_from_vital_values("sys"))
+    vital_dict.update(get_whole_value_from_vital_values("dia"))
+    vital_dict.update(get_whole_value_from_vital_values("hr"))
+    vital_dict.update(get_whole_value_from_vital_values("rr"))
+    vital_dict.update(get_whole_value_from_vital_values("ox"))
+
+    return vital_dict
