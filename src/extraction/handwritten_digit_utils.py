@@ -67,7 +67,7 @@ def detect_numbers(
     slice_height: int,
     horizontal_overlap_ratio: float,
     vertical_overlap_ratio: float,
-    conf: float = 0.8,
+    conf: float = 0.5,
 ) -> List[Detection]:
     """Detects handwritten digits on an image.
 
