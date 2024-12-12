@@ -1,4 +1,4 @@
-"""Provides functions for extracting drug codes."""
+"""Provides functions for extracting intraoperative handwritten digit data."""
 
 # Built-in imports
 from itertools import product
@@ -14,7 +14,7 @@ from utilities.detections import Detection
 
 DATA_FILEPATH: Path = Path(__file__).parents[2] / "data"
 FILEPATH_TO_NUMBER_BOX_CENTROIDS: Path = (
-    DATA_FILEPATH / "centroids" / "intraop_single_digit_box_centroids.json"
+    DATA_FILEPATH / "centroids" / "intraop_digit_box_centroids.json"
 )
 NUMBER_BOX_CENTROIDS: Dict[str, Tuple[float, float]] = json.load(
     open(FILEPATH_TO_NUMBER_BOX_CENTROIDS, "r")
