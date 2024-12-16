@@ -49,3 +49,22 @@ def extract_physiological_indicators(
         that maps timestamps to values.
     """
     pass
+
+
+def find_indicator_for_bbox(
+    bbox: BoundingBox, document_detections: List[Detection], im_width: int = 1
+) -> str:
+    """Determines which physiological indicator the bounding box belongs to.
+
+    Args:
+        `bbox` (BoundingBox):
+            The bounding box in question.
+        `document_detections` (List[Detection]):
+            All of the document landmark detections.
+        `im_width` (int):
+            The width of the image.
+
+    Returns:
+        A string showing which physiological indicator the box belongs to.
+    """
+    pass
