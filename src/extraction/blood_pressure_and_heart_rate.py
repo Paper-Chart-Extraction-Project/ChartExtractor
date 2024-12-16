@@ -22,7 +22,14 @@ def find_timestamp(time_legend: List[Cluster], keypoint_x: float) -> str:
     Returns:
         The label of the closest timestamp cluster.
     """
-    pass
+    time_legend_centers: Dict[str, float] = {
+        clust.label: clust.bounding_box.center[0] for clust in time_legend
+    }
+    distances: Dict[str, float] = {
+        name: abs(legend_loc - keypoint_x)
+        for (name, legend_loc) in time_legend_centers.items()
+    }
+    return min(distances, key=distances.get)
 
 
 def find_value(value_legend: List[Cluster], keypoint_y: float) -> int:
