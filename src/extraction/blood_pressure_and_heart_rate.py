@@ -35,6 +35,9 @@ def find_timestamp(time_legend: List[Cluster], keypoint_x: float) -> str:
 def find_value(value_legend: List[Cluster], keypoint_y: float) -> int:
     """Given a keypoint on a blood pressure or heart rate detection, finds the in mmhg/bpm value.
 
+    Finds the closest two legend values, then uses the distance between the detection and both
+    of the closest values to find an approximate value in between.
+
     Args:
         `value_legend` (List[Cluster]):
             The named clusters which form the mmhg/bpm legend that runs vertically on the left
@@ -45,7 +48,27 @@ def find_value(value_legend: List[Cluster], keypoint_y: float) -> int:
     Returns:
         The approximate value that the keypoint encodes in mmhg/bpm.
     """
-    pass
+    value_legend_centers: Dict[str, float] = {
+        clust.label: clust.bounding_box.center[1] for clust in value_legend
+    }
+    distances: Dict[str, float] = {
+        name: abs(legend_loc - keypoint_y)
+        for (name, legend_loc) in value_legend_centers.items()
+    }
+    first_closest: str = min(distances, key=distances.get)
+    first_distance: float = distances[first_closest]
+    distances.pop(first_closest)
+    second_closest: str = min(distances, key=distances.get)
+    second_distance: float = distances[second_closest]
+    total_dist: float = abs(
+        value_legend_centers[first_closest] - value_legend_centers[second_closest]
+    )
+    first_weight: float = abs(first_distance - total_dist) / total_dist
+    second_weight: float = abs(second_distance - total_dist) / total_dist
+    first_val: float = first_weight * int(first_closest.split("_")[0])
+    second_val: float = second_weight * int(second_closest.split("_")[0])
+    weighted_value: float = first_val + second_val
+    return int(weighted_value)
 
 
 def extract_heart_rate_and_blood_pressure(
