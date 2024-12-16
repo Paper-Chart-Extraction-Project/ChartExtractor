@@ -4,11 +4,7 @@
 from itertools import pairwise
 from typing import Dict, List, Tuple
 
-# External imports
-import numpy as np
-
 # Internal imports
-from label_clustering.cluster import Cluster
 from utilities.annotations import BoundingBox
 from utilities.detections import Detection
 
