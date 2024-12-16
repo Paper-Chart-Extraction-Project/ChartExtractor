@@ -67,4 +67,19 @@ def find_indicator_for_bbox(
     Returns:
         A string showing which physiological indicator the box belongs to.
     """
-    pass
+    physio_landmarks: List[Detection] = list(
+        filter(
+            lambda det: all(
+                [
+                    (det.annotation.category in PHYSIO_LANDMARK_NAMES),
+                    (det.annotation.center[0] < 0.5 * im_width),
+                ]
+            ),
+            document_detections,
+        )
+    )
+    physio_landmarks: List[BoundingBox] = [det.annotation for det in physio_landmarks]
+    distances: Dict[str, float] = {
+        pl.category: abs(pl.center[1] - bbox.center[1]) for pl in physio_landmarks
+    }
+    return min(distances, key=distances.get)
