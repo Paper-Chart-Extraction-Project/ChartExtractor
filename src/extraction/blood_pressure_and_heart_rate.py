@@ -91,7 +91,7 @@ def extract_heart_rate_and_blood_pressure(
         that was recorded at that time.
     """
     data = dict()
-    for det in dets:
+    for det in detections:
         point: Tuple[float, float] = det.annotation.keypoint
         category: str = det.annotation.category
         suffix: str = "bpm" if category == "heart_rate" else "mmhg"
