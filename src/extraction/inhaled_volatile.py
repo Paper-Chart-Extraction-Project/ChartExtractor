@@ -3,9 +3,11 @@
 # Built-in imports
 from operator import attrgetter
 from functools import reduce
+from itertools import pairwise
 from typing import Dict, List, Optional, Tuple
 
 # Internal imports
+from utilities.annotations import BoundingBox
 from utilities.detections import Detection
 
 
@@ -13,8 +15,6 @@ def extract_inhaled_volatile(
     digit_detections: List[Detection],
     legend_locations: Dict[str, Tuple[float, float]],
     document_detections: List[Detection],
-    im_width: int,
-    im_height: int,
 ) -> Dict[str, str]:
     """Extracts the inhaled volatile gas data from the number detections.
 
@@ -25,10 +25,6 @@ def extract_inhaled_volatile(
             The location of the timestamps and mmhg/bpm values on the legend.
         `document_detections` (List[Detection]):
             The location of document landmarks that have been detected.
-        `im_width` (int):
-            The width of the image the detections were made on.
-        `im_height` (int):
-            The height of the image the detections were made on.
 
     Returns:
         A dictionary mapping timestamps to inhaled volatile gas data.
@@ -37,6 +33,42 @@ def extract_inhaled_volatile(
         digit_detections,
         document_detections,
     )
+    inhaled_volatile_digits: List[BoundingBox] = list(
+        map(attrgetter("annotation"), inhaled_volatile_digits)
+    )
+    fifteen_minute_intervals: Dict[str, Tuple[float, float]] = {
+        k: v
+        for (k, v) in legend_locations.items()
+        if int(k.split("_")[0]) % 15 == 0 and "mins" in k
+    }
+    key_pairs: List[Tuple[str, str]] = list(
+        pairwise(
+            sorted(
+                list(fifteen_minute_intervals.keys()),
+                key=lambda s: int(s.split("_")[0]),
+            )
+        )
+    )
+    inhaled_volatile: Dict[str, str] = dict()
+    for pair in key_pairs:
+        left: float = fifteen_minute_intervals[pair[0]][0]
+        right: float = fifteen_minute_intervals[pair[1]][0]
+        boxes_in_range: List[BoundingBox] = sorted(
+            list(
+                filter(lambda bb: left < bb.center[0] < right, inhaled_volatile_digits)
+            ),
+            key=lambda bb: bb.center[0],
+        )
+        if len(boxes_in_range) == 1:
+            inhaled_volatile[pair] = f"0.{boxes_in_range[0].category}"
+        elif len(boxes_in_range) == 2:
+            inhaled_volatile[pair] = (
+                f"{boxes_in_range[0].category}.{boxes_in_range[1].category}"
+            )
+        else:
+            pass
+
+    return inhaled_volatile
 
 
 def get_inhaled_volatile_digits(
