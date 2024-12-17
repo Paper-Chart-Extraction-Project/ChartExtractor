@@ -2,6 +2,7 @@
 
 # Built-in imports
 from itertools import pairwise
+from operator import attrgetter
 from typing import Dict, List, Tuple
 
 # Internal imports
@@ -50,9 +51,9 @@ def extract_physiological_indicators(
             digit_detections,
         )
     )
-    physiological_digit_boxes: List[BoundingBox] = [
-        pd.annotation for pd in physiological_digit_detections
-    ]
+    physiological_digit_boxes: List[BoundingBox] = list(
+        map(attrgetter("annotation"), physiological_digit_detections)
+    )
     fifteen_minute_intervals: Dict[str, Tuple[float, float]] = {
         k: v
         for (k, v) in legend_locations.items()
