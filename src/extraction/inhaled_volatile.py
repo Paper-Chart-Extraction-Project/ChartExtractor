@@ -1,9 +1,9 @@
 """Extracts the inhaled volatile drug data."""
 
 # Built-in imports
-from operator import attrgetter
 from functools import reduce
 from itertools import pairwise
+from operator import attrgetter
 from typing import Dict, List, Optional, Tuple
 
 # Internal imports
