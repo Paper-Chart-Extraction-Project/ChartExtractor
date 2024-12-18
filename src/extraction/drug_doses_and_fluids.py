@@ -32,3 +32,39 @@ def extract_drug_dosages_and_fluids(
         A dictionary mapping the row to a dictionary that maps timestamps to dosages/fluid amounts.
     """
     pass
+
+
+def get_drug_dosage_digits(
+    digit_detections: List[Detection],
+    document_detections: List[Detection],
+) -> List[Detection]:
+    """Filters for the digit detections that are within the drug dosage section.
+
+    Args:
+        `digit_detections` (List[Detection]):
+            The handwritten numbers that have been detected.
+        `document_detections` (List[Detection]):
+            The location of document landmarks that have been detected.
+
+    Returns:
+        A filtered list of detections holding only those that are in the drug dosage section.
+    """
+    pass
+
+
+def get_fluid_digits(
+    digit_detections: List[Detection],
+    document_detections: List[Detection],
+) -> List[Detection]:
+    """Filters for the digit detections that are within the fluid section.
+
+    Args:
+        `digit_detections` (List[Detection]):
+            The handwritten numbers that have been detected.
+        `document_detections` (List[Detection]):
+            The location of document landmarks that have been detected.
+
+    Returns:
+        A filtered list of detections holding only those that are in the fluid section.
+    """
+    pass
