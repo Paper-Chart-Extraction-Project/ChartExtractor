@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 # Internal imports
-from extraction.extraction_utilities import get_detection_by_name
+from extraction.extraction_utilities import average_with_nones, get_detection_by_name
 from label_clustering.cluster import Cluster
 from utilities.detections import Detection
 

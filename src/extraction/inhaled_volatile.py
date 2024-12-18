@@ -86,12 +86,16 @@ def get_inhaled_volatile_digits(
         A filtered list of detections holding only those that are in the inhaled volatile section.
     """
 
-    inhaled_volatile: Optional[Detection] = get_detection_by_name("inhaled_volatile")
-    inhaled_exhaled: Optional[Detection] = get_detection_by_name("inhaled_exhaled")
-    fluid_blood_product: Optional[Detection] = get_detection_by_name(
-        "fluid_blood_product"
+    inhaled_volatile: Optional[Detection] = get_detection_by_name(
+        document_detections, "inhaled_volatile"
     )
-    total: Optional[Detection] = get_detection_by_name("total")
+    inhaled_exhaled: Optional[Detection] = get_detection_by_name(
+        document_detections, "inhaled_exhaled"
+    )
+    fluid_blood_product: Optional[Detection] = get_detection_by_name(
+        document_detections, "fluid_blood_product"
+    )
+    total: Optional[Detection] = get_detection_by_name(document_detections, "total")
 
     if any(
         [
