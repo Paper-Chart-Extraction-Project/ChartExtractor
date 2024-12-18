@@ -1,13 +1,12 @@
 """Extracts the inhaled volatile drug data."""
 
 # Built-in imports
-from functools import reduce
 from itertools import pairwise
 from operator import attrgetter
 from typing import Dict, List, Optional, Tuple
 
 # Internal imports
-from extraction.extraction_utilities import get_detection_by_name
+from extraction.extraction_utilities import average_with_nones, get_detection_by_name
 from utilities.annotations import BoundingBox
 from utilities.detections import Detection
 
@@ -86,11 +85,6 @@ def get_inhaled_volatile_digits(
     Returns:
         A filtered list of detections holding only those that are in the inhaled volatile section.
     """
-
-    def average_with_nones(list_with_nones: List[Optional[float]]) -> float:
-        add_with_none = lambda acc, x: acc + x if x is not None else acc
-        len_with_none = lambda l: len(list(filter(lambda x: x is not None, l)))
-        return reduce(add_with_none, list_with_nones) / len_with_none(list_with_nones)
 
     inhaled_volatile: Optional[Detection] = get_detection_by_name("inhaled_volatile")
     inhaled_exhaled: Optional[Detection] = get_detection_by_name("inhaled_exhaled")

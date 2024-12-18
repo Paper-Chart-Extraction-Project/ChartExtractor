@@ -1,7 +1,6 @@
 """Provides functions for extracting preoperative/postoperative handwritten digit data."""
 
 # Built-in imports
-from itertools import product
 import json
 from pathlib import Path
 from typing import Dict, List, Literal, Optional, Tuple
