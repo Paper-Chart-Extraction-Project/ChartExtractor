@@ -2,7 +2,7 @@
 
 # Built-in imports
 from PIL import Image
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 # External imports
 import numpy as np
@@ -112,3 +112,25 @@ def detect_numbers(
         overlap_comparator=intersection_over_minimum,
     )
     return detections
+
+
+def get_detection_by_name(
+    detections: List[Detection], name: str
+) -> Optional[Detection]:
+    """Gets a detection from a list of Detection objects, or returns None.
+
+    Will return the first detection that matches the name.
+
+    Args:
+        `detections` (List[Detection]):
+            The detections to check.
+        `name` (str):
+            The name of the detection to find.
+
+    Returns:
+        The first detection that matches the name, or None if it cannot be found.
+    """
+    try:
+        return list(filter(lambda d: d.annotation.category == name, detections))[0]
+    except:
+        return None

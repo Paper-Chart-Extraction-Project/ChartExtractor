@@ -7,6 +7,7 @@ from operator import attrgetter
 from typing import Dict, List, Optional, Tuple
 
 # Internal imports
+from extraction.extraction_utilities import get_detection_by_name
 from utilities.annotations import BoundingBox
 from utilities.detections import Detection
 
@@ -85,14 +86,6 @@ def get_inhaled_volatile_digits(
     Returns:
         A filtered list of detections holding only those that are in the inhaled volatile section.
     """
-
-    def get_detection_by_name(name: str) -> Optional[Detection]:
-        try:
-            return list(
-                filter(lambda d: d.annotation.category == name, document_detections)
-            )[0]
-        except:
-            return None
 
     def average_with_nones(list_with_nones: List[Optional[float]]) -> float:
         add_with_none = lambda acc, x: acc + x if x is not None else acc
