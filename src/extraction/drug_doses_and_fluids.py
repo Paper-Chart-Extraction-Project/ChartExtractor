@@ -4,6 +4,7 @@
 from typing import Dict, List, Tuple
 
 # Internal imports
+from label_clustering.cluster import Cluster
 from utilities.detections import Detection
 
 
@@ -66,5 +67,20 @@ def get_fluid_digits(
 
     Returns:
         A filtered list of detections holding only those that are in the fluid section.
+    """
+    pass
+
+
+def cluster_digits(
+    digit_detections: List[Detection],
+) -> List[Cluster]:
+    """Clusters the digits using KMeans.
+
+    Args:
+        `digit_detections` (List[Detection]):
+            The handwritten digits which have been detected on the sheet.
+
+    Returns:
+        A list of Cluster objects grouping the digits.
     """
     pass
