@@ -1,14 +1,19 @@
 """Extracts the non-boxed drug and fluid data."""
 
 # Built-in imports
+from functools import partial
 import json
+from operator import attrgetter
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 # Internal imports
 from extraction.extraction_utilities import average_with_nones, get_detection_by_name
 from label_clustering.cluster import Cluster
 from utilities.detections import Detection
+
+# External imports
+import numpy as np
 
 
 DATA_FILEPATH: Path = Path(__file__).parents[2] / "data"
@@ -61,8 +66,43 @@ def get_drug_dosage_digits(
 
     Returns:
         A filtered list of detections holding only those that are in the drug dosage section.
+
+    Raises:
+        ValueError:
+            If any of the necessary document detections cannot be found.
     """
-    pass
+    get_detection_by_name = partial(
+        get_detection_by_name, detections=document_detections
+    )
+    drug_name: Optional[Detection] = get_detection_by_name("drug_name")
+    units: Optional[Detection] = get_detection_by_name("units")
+    inhaled_volatile: Optional[Detection] = get_detection_by_name("inhaled_volatile")
+    inhaled_exhaled: Optional[Detection] = get_detection_by_name("inhaled_exhaled")
+
+    if any(
+        [
+            drug_name is None,
+            units is None,
+            inhaled_volatile is None,
+            inhaled_exhaled is None,
+        ]
+    ):
+        raise ValueError("Cannot find all necessary document detections.")
+
+    left: float = np.mean(
+        list(map([drug_name, inhaled_volatile], attrgetter("annotation")))
+    )
+    top: float = np.mean(list(map[drug_name, units]), attrgetter("annotation"))
+    right: float = np.mean(list(map[units, inhaled_exhaled]), attrgetter("annotation"))
+    bottom: float = np.mean(
+        list(map[inhaled_volatile, inhaled_exhaled]), attrgetter("annotation")
+    )
+
+    def detection_is_in_region(detection: Detection) -> bool:
+        center = attrgetter("annotation.center")
+        (left < center(detection)[0] < right) and (top < center(detection)[1] < bottom)
+
+    return list(filter(detection_is_in_region, digit_detections))
 
 
 def get_fluid_digits(
