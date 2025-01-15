@@ -245,7 +245,7 @@ def extract_vitals(
             ]
         ):
             return {
-                vital: "".join(
+                f"{preop_or_pacu}_{vital}": "".join(
                     [
                         get_category_or_space(
                             vital_values.get(f"{preop_or_pacu}_{vital}_{place}")
@@ -262,7 +262,6 @@ def extract_vitals(
     vital_dict.update(get_whole_value_from_vital_values("hr"))
     vital_dict.update(get_whole_value_from_vital_values("rr"))
     vital_dict.update(get_whole_value_from_vital_values("ox"))
-
     return vital_dict
 
 
