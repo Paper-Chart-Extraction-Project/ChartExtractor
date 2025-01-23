@@ -77,19 +77,22 @@ class UltralyticsYOLOv11Pose(ObjectDetectionModel):
         """
         return UltralyticsYOLOv11Pose(model)
 
-    def __call__(self, image: Image.Image) -> List[Detection]:
+    def __call__(self, image: Image.Image, **kwargs) -> List[Detection]:
         """Performs object detection and pose estimation on an image.
 
         Args:
             `image` (Image.Image):
                 The image to perform detection on.
+            `kwargs`:
+                Any argument that Ultralytics Yolo model will take. Mostly
+                used for 'conf' and 'verbose'.
 
         Returns:
             List[Detection]:
                 A list of `Detection` objects containing bounding boxes, keypoints,
                 and confidence scores.
         """
-        predictions = self.model(image, verbose=False)
+        predictions = self.model(image, verbose=False, **kwargs)
         detections: List[Keypoint] = self.predictions_to_detections(predictions)
         return detections
 

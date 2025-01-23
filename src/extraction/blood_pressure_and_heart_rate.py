@@ -56,19 +56,18 @@ def find_value(value_legend: List[Cluster], keypoint_y: float) -> int:
         for (name, legend_loc) in value_legend_centers.items()
     }
     first_closest: str = min(distances, key=distances.get)
-    first_distance: float = distances[first_closest]
     distances.pop(first_closest)
     second_closest: str = min(distances, key=distances.get)
-    second_distance: float = distances[second_closest]
     total_dist: float = abs(
         value_legend_centers[first_closest] - value_legend_centers[second_closest]
     )
-    first_weight: float = abs(first_distance - total_dist) / total_dist
-    second_weight: float = abs(second_distance - total_dist) / total_dist
-    first_val: float = first_weight * int(first_closest.split("_")[0])
-    second_val: float = second_weight * int(second_closest.split("_")[0])
-    weighted_value: float = first_val + second_val
-    return int(weighted_value)
+    smaller_of_two_values = min(
+        [first_closest, second_closest], key=lambda leg: int(leg.split("_")[0])
+    )
+    fractional_component = (
+        abs(value_legend_centers[smaller_of_two_values] - keypoint_y) / total_dist
+    ) * 10
+    return int(smaller_of_two_values.split("_")[0]) + int(fractional_component)
 
 
 def extract_heart_rate_and_blood_pressure(
@@ -90,7 +89,29 @@ def extract_heart_rate_and_blood_pressure(
         A dictionary mapping each timestamp to the systolic, diastolic, and heart rate reading
         that was recorded at that time.
     """
+
+    def filter_detections_outside_bp_and_hr_area(detections):
+        return list(
+            filter(
+                lambda d: all(
+                    [
+                        d.annotation.bottom
+                        > min(vc.bounding_box.top for vc in value_clusters),
+                        d.annotation.top
+                        < max(vc.bounding_box.bottom for vc in value_clusters),
+                        d.annotation.left
+                        > min(tc.bounding_box.left for tc in time_clusters),
+                        d.annotation.right
+                        < max(tc.bounding_box.right for tc in time_clusters),
+                    ]
+                ),
+                detections,
+            )
+        )
+
     data = dict()
+    # filter out any detection outside of the bp and hr area
+    detections = filter_detections_outside_bp_and_hr_area(detections)
     for det in detections:
         point: Tuple[float, float] = det.annotation.keypoint
         category: str = det.annotation.category

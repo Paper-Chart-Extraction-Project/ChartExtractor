@@ -390,6 +390,26 @@ class Keypoint:
         """This keypoints boundingbox's [left, top, right, bottom]."""
         return self.bounding_box.box
 
+    @property
+    def left(self) -> str:
+        """This `Keypoint`'s box's left side."""
+        return self.bounding_box.left
+
+    @property
+    def top(self) -> str:
+        """This `Keypoint`'s box's top side."""
+        return self.bounding_box.top
+
+    @property
+    def right(self) -> str:
+        """This `Keypoint`'s box's right side."""
+        return self.bounding_box.right
+
+    @property
+    def bottom(self) -> str:
+        """This `Keypoint`'s box's bottom side."""
+        return self.bounding_box.bottom
+
     def set_box_and_keypoint(
         self,
         new_left: int,
