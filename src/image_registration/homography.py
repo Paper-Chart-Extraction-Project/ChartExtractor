@@ -73,4 +73,5 @@ def homography_transform(
     src_image = pil_to_cv2(src_image)
     h, _ = cv2.findHomography(src_points, dest_points)
     dest_image = cv2.warpPerspective(src_image, h, original_image_size)
-    return cv2_to_pil(dest_image)
+    dest_image = cv2_to_pil(dest_image).resize(330, 225)
+    return dest_image
