@@ -93,7 +93,10 @@ def extract_physiological_indicators(
                 physiological_indicators[indicator_name][f"{pair[0]}-{pair[1]}"] = str(
                     int(number)
                 )
-
+    physiological_indicators = shift_decimal_in_temperature(physiological_indicators)
+    physiological_indicators = remove_values_to_plausible_ranges(
+        physiological_indicators
+    )
     return physiological_indicators
 
 
@@ -129,3 +132,43 @@ def find_indicator_for_bbox(
         pl.category: abs(pl.center[1] - bbox.center[1]) for pl in physio_landmarks
     }
     return min(distances, key=distances.get)
+
+
+def shift_decimal_in_temperature(physiological_indicators: Dict):
+    """Shifts the decimal point over by 1 for temperatures."""
+    if physiological_indicators.get("temperature") is not None:
+        for timestamp in physiological_indicators["temperature"]:
+            value = physiological_indicators["temperature"][timestamp]
+            physiological_indicators["temperature"][timestamp] = (
+                value[0:-1] + "." + value[-1]
+            )
+    return physiological_indicators
+
+
+def remove_values_to_plausible_ranges(physiological_indicators: Dict):
+    """If a value if beyond the plausible range, this function removes it."""
+    plausible_ranges: Dict[str, Tuple[int, int]] = {
+        "spo2": [40, 100],
+        "etco2": [5, 99],
+        "fio2": [18, 100],
+        "temperature": [32, 41],
+        "tidal_volume": [5, 1000],
+        "respiratory_rate": [5, 50],
+        "urine_output": [0, 999],
+        "blood_loss": [0, 999],
+    }
+    remove = []
+    for indicator in PHYSIO_LANDMARK_NAMES:
+        if physiological_indicators.get(indicator) is None:
+            continue
+
+        for timestamp in physiological_indicators[indicator]:
+            val = float(physiological_indicators[indicator][timestamp])
+            lowest_val, highest_val = plausible_ranges[indicator]
+            if val < lowest_val or val > highest_val:
+                remove.append([indicator, timestamp])
+
+    for i, t in remove:
+        del physiological_indicators[i][t]
+
+    return physiological_indicators
