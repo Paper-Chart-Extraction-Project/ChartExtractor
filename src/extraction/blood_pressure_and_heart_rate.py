@@ -115,11 +115,20 @@ def extract_heart_rate_and_blood_pressure(
     for det in detections:
         point: Tuple[float, float] = det.annotation.keypoint
         category: str = det.annotation.category
-        suffix: str = "bpm" if category == "heart_rate" else "mmhg"
         timestamp: str = find_timestamp(time_clusters, point.x)
-        value: int = find_value(value_clusters, point.y)
         if data.get(timestamp) is None:
-            data[timestamp] = {category: f"{value}_{suffix}"}
+            data[timestamp] = {category: det}
+        elif data[timestamp].get(category) is None:
+            data[timestamp].update({category: det})
+        elif data[timestamp][category].confidence < det.confidence:
+            data[timestamp][category] = det
         else:
-            data[timestamp].update({category: f"{value}_{suffix}"})
+            pass
+
+    for timestamp in data.keys():
+        for category in data[timestamp].keys():
+            point: Tuple[float, float] = data[timestamp][category].annotation.keypoint
+            suffix: str = "bpm" if category == "heart_rate" else "mmhg"
+            value: int = find_value(value_clusters, point.y)
+            data[timestamp][category] = f"{value}_{suffix}"
     return data

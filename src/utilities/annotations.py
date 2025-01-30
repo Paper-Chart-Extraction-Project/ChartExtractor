@@ -584,7 +584,7 @@ class Keypoint:
             )
             in_bounds: bool = in_bounds_x and in_bounds_y
             if not in_bounds:
-                yolo_line += "-1 -1 0"
+                yolo_line += " 0 0 0"
             else:
                 yolo_line += f" {keypoint_x:.{precision}f} {keypoint_y:.{precision}f} 2"
         else:

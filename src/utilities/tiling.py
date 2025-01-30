@@ -241,20 +241,15 @@ def get_annotations_in_tile(
         A list of `BoundingBox` objects that intersect with the specified tile.
     """
 
-    def boxes_overlap(
-        box_1: Tuple[int, int, int, int], box_2: Tuple[int, int, int, int]
-    ) -> bool:
-        return max(box_1[0], box_2[0]) < min(box_1[2], box_2[2]) and max(
-            box_1[1], box_2[1]
-        ) < min(box_1[3], box_2[3])
-
-    def keypoint_is_in_tile(ann, tile) -> bool:
-        if not isinstance(ann, Keypoint):
-            return True
-        return tile[0] < ann.keypoint.x < tile[2] and tile[1] < ann.keypoint.y < tile[3]
-
     def annotation_in_tile(ann, tile) -> bool:
-        return boxes_overlap(ann.box, tile) and keypoint_is_in_tile(ann, tile)
+        box_1 = ann.box
+        box_2 = tile
+        return all(
+            [
+                max(box_1[0], box_2[0]) < min(box_1[2], box_2[2]),
+                max(box_1[1], box_2[1]) < min(box_1[3], box_2[3]),
+            ]
+        )
 
     annotations_in_tile: List = list(
         filter(lambda ann: annotation_in_tile(ann, tile), annotations)
