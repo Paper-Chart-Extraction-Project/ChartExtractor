@@ -27,6 +27,10 @@ class Point:
         """Determines if two points are the same."""
         return self.x == other.x and self.y == other.y
 
+    def __repr__(self):
+        """Returns a string representation of this Point object."""
+        return f"Point({self.x}, {self.y})"
+
 
 @dataclass
 class BoundingBox:
@@ -530,6 +534,7 @@ class Keypoint:
         image_height: int,
         category_to_id: Dict[str, int],
         precision: int = 8,
+        encode_hidden: bool = False,
     ) -> str:
         """Writes the data from this `Keypoint` into a yolo formatted string.
 
@@ -544,6 +549,9 @@ class Keypoint:
                 The number of decimal places to round yolo output to.
                 Defaults to 8 decimal places. If more precision is needed,
                 increase this value.
+            `encode_hidden` (bool):
+                Whether or not to encode a keypoint as hidden if it is out
+                of the image frame.
 
         Returns:
             A string that encodes this `Keypoint`'s data for a single line in a yolo label file.
@@ -562,5 +570,23 @@ class Keypoint:
             adjusted_kp.keypoint.x / image_width,
             adjusted_kp.keypoint.y / image_height,
         )
-        yolo_line += f" {keypoint_x:.{precision}f} {keypoint_y:.{precision}f}"
+
+        if encode_hidden:
+            in_bounds_x: bool = (
+                adjusted_kp.bounding_box.left
+                <= adjusted_kp.keypoint.x
+                <= adjusted_kp.bounding_box.right
+            )
+            in_bounds_y: bool = (
+                adjusted_kp.bounding_box.top
+                <= adjusted_kp.keypoint.y
+                <= adjusted_kp.bounding_box.bottom
+            )
+            in_bounds: bool = in_bounds_x and in_bounds_y
+            if not in_bounds:
+                yolo_line += "-1 -1 0"
+            else:
+                yolo_line += f" {keypoint_x:.{precision}f} {keypoint_y:.{precision}f} 2"
+        else:
+            yolo_line += f" {keypoint_x:.{precision}f} {keypoint_y:.{precision}f}"
         return yolo_line
