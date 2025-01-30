@@ -449,6 +449,10 @@ class Keypoint:
                 The new x value for the Keypoint.
             new_kp_y (int):
                 The new y value for the Keypoint.
+            `do_keypoint_validation` (bool):
+                Whether or not to do validation on whether the keypoint is truly within
+                the bounding box. Used for image tiling when the keypoint is cut off
+                by the image.
 
         Returns: A new Keypoint with a new bounding box and keypoint.
         """
@@ -484,6 +488,10 @@ class Keypoint:
                 The new right side for the box.
             new_bottom (int):
                 The new bottom side for the box.
+            `do_keypoint_validation` (bool):
+                Whether or not to do validation on whether the keypoint is truly within
+                the bounding box. Used for image tiling when the keypoint is cut off
+                by the image.
 
         Returns: A new Keypoint with a new bounding box.
         """
@@ -505,6 +513,10 @@ class Keypoint:
                 The new x value for the Keypoint.
             new_y (int):
                 The new y value for the Keypoint.
+            `do_keypoint_validation` (bool):
+                Whether or not to do validation on whether the keypoint is truly within
+                the bounding box. Used for image tiling when the keypoint is cut off
+                by the image.
 
         Returns: A new Keypoint with a new Point as its keypoint.
         """
