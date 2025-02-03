@@ -93,10 +93,12 @@ class UltralyticsYOLOv11Pose(ObjectDetectionModel):
                 and confidence scores.
         """
         predictions = self.model(image, verbose=False, **kwargs)
-        detections: List[Keypoint] = self.predictions_to_detections(predictions)
+        detections: List[Keypoint] = self.predictions_to_detections(
+            predictions, **kwargs
+        )
         return detections
 
-    def predictions_to_detections(self, preds) -> List[Detection]:
+    def predictions_to_detections(self, preds, **kwargs) -> List[Detection]:
         """Converts model predictions to a list of `Detection` objects.
 
         Internal method used for processing model output.
@@ -121,8 +123,15 @@ class UltralyticsYOLOv11Pose(ObjectDetectionModel):
             for box in preds[0].boxes.data.tolist()
         ]
         confidences: List[float] = [box[4] for box in preds[0].boxes.data.tolist()]
-        detections: List[Detection] = [
-            Detection(Keypoint(p, bb), conf)
-            for (p, bb, conf) in list(zip(points, bboxes, confidences))
-        ]
+        # detections: List[Detection] = [
+        #    Detection(Keypoint(p, bb), conf)
+        #    for (p, bb, conf) in list(zip(points, bboxes, confidences))
+        # ]
+        detections: List[Detection] = list()
+        for p, bb, conf in list(zip(points, bboxes, confidences)):
+            try:
+                # throw out detections whose keypoint is not in the image tile.
+                detections.append(Detection(Keypoint(p, bb), conf))
+            except:
+                pass
         return detections

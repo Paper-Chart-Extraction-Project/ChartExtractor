@@ -167,7 +167,7 @@ def tile_annotations(
     This function takes a list of annotations (any annotation that implements the 'box' property)
     representing objects within an image, and divides the image into a grid of tiles
     with a specified size and overlap. It then assigns each annotation to the tile(s)
-    based on whether the annotation fully fits into the tile.
+    based on whether the annotation appears in the tile.
 
     Args:
         `annotations` (List[Union[BoundingBox, Keypoint]]):
@@ -187,7 +187,7 @@ def tile_annotations(
 
     Returns:
         A list of lists, where each sub-list represents a tile in the grid. Each tile's
-        sub-list contains the annotations that intersect fully with that specific tile.
+        sub-list contains the annotations that intersect any with that specific tile.
     """
     tile_coordinates: List[List[Tuple[int, int, int, int]]] = generate_tile_coordinates(
         image_width,
@@ -240,14 +240,17 @@ def get_annotations_in_tile(
     Returns:
         A list of `BoundingBox` objects that intersect with the specified tile.
     """
-    annotation_in_tile = lambda ann, tile: all(
-        [
-            ann.box[0] >= tile[0],
-            ann.box[1] >= tile[1],
-            ann.box[2] <= tile[2],
-            ann.box[3] <= tile[3],
-        ]
-    )
+
+    def annotation_in_tile(ann, tile) -> bool:
+        box_1 = ann.box
+        box_2 = tile
+        return all(
+            [
+                max(box_1[0], box_2[0]) < min(box_1[2], box_2[2]),
+                max(box_1[1], box_2[1]) < min(box_1[3], box_2[3]),
+            ]
+        )
+
     annotations_in_tile: List = list(
         filter(lambda ann: annotation_in_tile(ann, tile), annotations)
     )

@@ -27,6 +27,10 @@ class Point:
         """Determines if two points are the same."""
         return self.x == other.x and self.y == other.y
 
+    def __repr__(self):
+        """Returns a string representation of this Point object."""
+        return f"Point({self.x}, {self.y})"
+
 
 @dataclass
 class BoundingBox:
@@ -309,9 +313,15 @@ class Keypoint:
     keypoint: Point
     bounding_box: BoundingBox
 
-    def __init__(self, keypoint: Point, bounding_box: BoundingBox):
+    def __init__(
+        self,
+        keypoint: Point,
+        bounding_box: BoundingBox,
+        do_keypoint_validation: bool = True,
+    ):
         """Overrides the default constructor from dataclass to validate the parameters before constructing."""
-        Keypoint.validate_keypoint(bounding_box, keypoint)
+        if do_keypoint_validation:
+            Keypoint.validate_keypoint(bounding_box, keypoint)
         self.keypoint = keypoint
         self.bounding_box = bounding_box
 
@@ -321,6 +331,7 @@ class Keypoint:
         image_width: int,
         image_height: int,
         id_to_category: Dict[int, str],
+        do_keypoint_validation: bool = True,
     ):
         """Constructs a `Keypoint` from a line in a yolo formatted labels file.
 
@@ -337,6 +348,10 @@ class Keypoint:
                 The original image's height.
             `id_to_category` (Dict):
                 A dictionary that maps the id number in the label to the category.
+            `do_keypoint_validation` (bool):
+                Whether or not to do validation on whether the keypoint is truly within
+                the bounding box. Used for image tiling when the keypoint is cut off
+                by the image.
 
         Returns:
             A `BoundingBox` object containing the yolo_line's data.
@@ -347,7 +362,7 @@ class Keypoint:
         keypoint_x = float(yolo_line.split()[5])
         keypoint_y = float(yolo_line.split()[6])
         keypoint = Point(keypoint_x * image_width, keypoint_y * image_height)
-        return Keypoint(keypoint, bounding_box)
+        return Keypoint(keypoint, bounding_box, do_keypoint_validation)
 
     @classmethod
     def validate_keypoint(cls, bounding_box: BoundingBox, keypoint: Point) -> None:
@@ -418,6 +433,7 @@ class Keypoint:
         new_bottom: int,
         new_kp_x: int,
         new_kp_y: int,
+        do_keypoint_validation: bool = True,
     ) -> "Keypoint":
         """Sets this keypoint's box and keypoint to new values.
 
@@ -437,22 +453,33 @@ class Keypoint:
                 The new x value for the Keypoint.
             new_kp_y (int):
                 The new y value for the Keypoint.
+            `do_keypoint_validation` (bool):
+                Whether or not to do validation on whether the keypoint is truly within
+                the bounding box. Used for image tiling when the keypoint is cut off
+                by the image.
 
         Returns: A new Keypoint with a new bounding box and keypoint.
         """
-        self.validate_keypoint(
-            BoundingBox(self.category, new_left, new_top, new_right, new_bottom),
-            Point(new_kp_x, new_kp_y),
-        )
+        if do_keypoint_validation:
+            self.validate_keypoint(
+                BoundingBox(self.category, new_left, new_top, new_right, new_bottom),
+                Point(new_kp_x, new_kp_y),
+            )
         return Keypoint(
             keypoint=Point(new_kp_x, new_kp_y),
             bounding_box=BoundingBox(
                 self.category, new_left, new_top, new_right, new_bottom
             ),
+            do_keypoint_validation=do_keypoint_validation,
         )
 
     def set_box(
-        self, new_left: int, new_top: int, new_right: int, new_bottom: int
+        self,
+        new_left: int,
+        new_top: int,
+        new_right: int,
+        new_bottom: int,
+        do_keypoint_validation: bool = True,
     ) -> BoundingBox:
         """Sets this Keypoints's BoundingBox's values for left, top, right, bottom.
 
@@ -465,6 +492,10 @@ class Keypoint:
                 The new right side for the box.
             new_bottom (int):
                 The new bottom side for the box.
+            `do_keypoint_validation` (bool):
+                Whether or not to do validation on whether the keypoint is truly within
+                the bounding box. Used for image tiling when the keypoint is cut off
+                by the image.
 
         Returns: A new Keypoint with a new bounding box.
         """
@@ -473,9 +504,12 @@ class Keypoint:
             bounding_box=self.bounding_box.set_box(
                 new_left, new_top, new_right, new_bottom
             ),
+            do_keypoint_validation=do_keypoint_validation,
         )
 
-    def set_keypoint(self, new_x: int, new_y: int) -> "Keypoint":
+    def set_keypoint(
+        self, new_x: int, new_y: int, do_keypoint_validation: bool = True
+    ) -> "Keypoint":
         """Sets this Keypoint's Keypoint to a new point.
 
         Args:
@@ -483,10 +517,15 @@ class Keypoint:
                 The new x value for the Keypoint.
             new_y (int):
                 The new y value for the Keypoint.
+            `do_keypoint_validation` (bool):
+                Whether or not to do validation on whether the keypoint is truly within
+                the bounding box. Used for image tiling when the keypoint is cut off
+                by the image.
 
         Returns: A new Keypoint with a new Point as its keypoint.
         """
-        self.validate_keypoint(self.bounding_box, Point(new_x, new_y))
+        if do_keypoint_validation:
+            self.validate_keypoint(self.bounding_box, Point(new_x, new_y))
         return Keypoint(Point(new_x, new_y), self.bounding_box)
 
     def to_yolo(
@@ -495,6 +534,7 @@ class Keypoint:
         image_height: int,
         category_to_id: Dict[str, int],
         precision: int = 8,
+        encode_hidden: bool = False,
     ) -> str:
         """Writes the data from this `Keypoint` into a yolo formatted string.
 
@@ -509,16 +549,44 @@ class Keypoint:
                 The number of decimal places to round yolo output to.
                 Defaults to 8 decimal places. If more precision is needed,
                 increase this value.
+            `encode_hidden` (bool):
+                Whether or not to encode a keypoint as hidden if it is out
+                of the image frame.
 
         Returns:
             A string that encodes this `Keypoint`'s data for a single line in a yolo label file.
         """
-        yolo_line = self.bounding_box.to_yolo(
+        adjusted_kp: Keypoint = self.set_box(
+            max(0, self.bounding_box.box[0]),
+            max(0, self.bounding_box.box[1]),
+            min(image_width, self.bounding_box.box[2]),
+            min(image_height, self.bounding_box.box[3]),
+            do_keypoint_validation=False,
+        )
+        yolo_line = adjusted_kp.bounding_box.to_yolo(
             image_width, image_height, category_to_id, precision
         )
         keypoint_x, keypoint_y = (
-            self.keypoint.x / image_width,
-            self.keypoint.y / image_height,
+            adjusted_kp.keypoint.x / image_width,
+            adjusted_kp.keypoint.y / image_height,
         )
-        yolo_line += f" {keypoint_x:.{precision}f} {keypoint_y:.{precision}f}"
+
+        if encode_hidden:
+            in_bounds_x: bool = (
+                adjusted_kp.bounding_box.left
+                <= adjusted_kp.keypoint.x
+                <= adjusted_kp.bounding_box.right
+            )
+            in_bounds_y: bool = (
+                adjusted_kp.bounding_box.top
+                <= adjusted_kp.keypoint.y
+                <= adjusted_kp.bounding_box.bottom
+            )
+            in_bounds: bool = in_bounds_x and in_bounds_y
+            if not in_bounds:
+                yolo_line += " 0 0 0"
+            else:
+                yolo_line += f" {keypoint_x:.{precision}f} {keypoint_y:.{precision}f} 2"
+        else:
+            yolo_line += f" {keypoint_x:.{precision}f} {keypoint_y:.{precision}f}"
         return yolo_line

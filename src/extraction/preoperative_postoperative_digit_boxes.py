@@ -400,13 +400,25 @@ def extract_preop_postop_digit_data(
         A dictionary with all the preoperative and postoperative data.
     """
     data: Dict[str, str] = dict()
-    data.update(extract_time_of_assessment(number_detections, im_width, im_height))
-    data.update(extract_age(number_detections, im_width, im_height))
-    data.update(extract_height(number_detections, im_width, im_height))
-    data.update(extract_weight(number_detections, im_width, im_height))
-    data.update(extract_vitals(number_detections, "preop", im_width, im_height))
-    data.update(extract_vitals(number_detections, "pacu", im_width, im_height))
-    data.update(extract_lab_results(number_detections, im_width, im_height))
+    data.update(
+        {"timing": extract_time_of_assessment(number_detections, im_width, im_height)}
+    )
+    data.update({"demographics": extract_age(number_detections, im_width, im_height)})
+    data.update(
+        {"demographics": extract_height(number_detections, im_width, im_height)}
+    )
+    data.update(
+        {"demographics": extract_weight(number_detections, im_width, im_height)}
+    )
+    data.update(
+        {"vitals": extract_vitals(number_detections, "preop", im_width, im_height)}
+    )
+    data.update(
+        {"vitals": extract_vitals(number_detections, "pacu", im_width, im_height)}
+    )
+    data.update(
+        {"lab_values": extract_lab_results(number_detections, im_width, im_height)}
+    )
     data.update(extract_aldrete_score(number_detections, im_width, im_height))
 
     return data
