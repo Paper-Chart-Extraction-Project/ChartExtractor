@@ -1,0 +1,38 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: ChartExtractor
+message: 'To cite this work, please use the metadata in this file.'
+type: software
+authors:
+  - given-names: Ryan
+    email: vcz2aj@uvahealth.org
+    affiliation: University of Virginia School of Medicine
+    orcid: 'https://orcid.org/0009-0005-2993-6499'
+    family-names: Folks
+  - given-names: Charbel
+    family-names: Marche
+    email: qdy4zt@virginia.edu
+    affiliation: University of Virginia School of Data Science
+  - given-names: Hannah
+    family-names: Valenty
+    email: unc6kr@virginia.edu
+    affiliation: University of Virginia School of Data Science
+  - given-names: Matthew
+    family-names: Beck
+    affiliation: University of Virginia School of Data Science
+    email: mtb2tgk@virginia.edu
+repository-code: >-
+  https://github.com/Paper-Chart-Extraction-Project/ChartExtractor
+url: 'https://github.com/Paper-Chart-Extraction-Project'
+repository: >-
+  https://github.com/Paper-Chart-Extraction-Project/ChartExtractorSupplements
+abstract: >-
+  ChartExtractor is a piece of software used to digitize
+  smartphone photographs of paper anesthesia records.
+keywords:
+  - Computer Vision
+  - Artificial Intelligence
+  - Global Health
+license: GPL-3.0
