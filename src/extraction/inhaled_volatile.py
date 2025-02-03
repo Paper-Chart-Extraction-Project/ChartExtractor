@@ -60,9 +60,9 @@ def extract_inhaled_volatile(
             key=lambda bb: bb.center[0],
         )
         if len(boxes_in_range) == 1:
-            inhaled_volatile[pair] = f"0.{boxes_in_range[0].category}"
+            inhaled_volatile[f"{pair[0]}-{pair[1]}"] = f"0.{boxes_in_range[0].category}"
         elif len(boxes_in_range) == 2:
-            inhaled_volatile[pair] = (
+            inhaled_volatile[f"{pair[0]}-{pair[1]}"] = (
                 f"{boxes_in_range[0].category}.{boxes_in_range[1].category}"
             )
         else:
