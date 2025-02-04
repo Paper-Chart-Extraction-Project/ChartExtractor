@@ -1,13 +1,12 @@
 """Provides functions for extracting preoperative/postoperative handwritten digit data."""
 
 # Built-in imports
-from itertools import product
 import json
 from pathlib import Path
 from typing import Dict, List, Literal, Optional, Tuple
 
 # Internal imports
-from extraction.handwritten_digit_utils import compute_digit_distances_to_centroids
+from extraction.extraction_utilities import compute_digit_distances_to_centroids
 from utilities.annotations import BoundingBox
 from utilities.detections import Detection
 
@@ -246,7 +245,7 @@ def extract_vitals(
             ]
         ):
             return {
-                vital: "".join(
+                f"{preop_or_pacu}_{vital}": "".join(
                     [
                         get_category_or_space(
                             vital_values.get(f"{preop_or_pacu}_{vital}_{place}")
@@ -263,7 +262,6 @@ def extract_vitals(
     vital_dict.update(get_whole_value_from_vital_values("hr"))
     vital_dict.update(get_whole_value_from_vital_values("rr"))
     vital_dict.update(get_whole_value_from_vital_values("ox"))
-
     return vital_dict
 
 
@@ -402,13 +400,25 @@ def extract_preop_postop_digit_data(
         A dictionary with all the preoperative and postoperative data.
     """
     data: Dict[str, str] = dict()
-    data.update(extract_time_of_assessment(number_detections, im_width, im_height))
-    data.update(extract_age(number_detections, im_width, im_height))
-    data.update(extract_height(number_detections, im_width, im_height))
-    data.update(extract_weight(number_detections, im_width, im_height))
-    data.update(extract_vitals(number_detections, "preop", im_width, im_height))
-    data.update(extract_vitals(number_detections, "pacu", im_width, im_height))
-    data.update(extract_lab_results(number_detections, im_width, im_height))
+    data.update(
+        {"timing": extract_time_of_assessment(number_detections, im_width, im_height)}
+    )
+    data.update({"demographics": extract_age(number_detections, im_width, im_height)})
+    data.update(
+        {"demographics": extract_height(number_detections, im_width, im_height)}
+    )
+    data.update(
+        {"demographics": extract_weight(number_detections, im_width, im_height)}
+    )
+    data.update(
+        {"vitals": extract_vitals(number_detections, "preop", im_width, im_height)}
+    )
+    data.update(
+        {"vitals": extract_vitals(number_detections, "pacu", im_width, im_height)}
+    )
+    data.update(
+        {"lab_values": extract_lab_results(number_detections, im_width, im_height)}
+    )
     data.update(extract_aldrete_score(number_detections, im_width, im_height))
 
     return data

@@ -1,8 +1,9 @@
 """Utilities for detecting and associating meaning to handwritten digits."""
 
 # Built-in imports
+from functools import reduce
 from PIL import Image
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 # External imports
 import numpy as np
@@ -20,6 +21,24 @@ from utilities.tiling import tile_image
 
 
 MAX_BOX_WIDTH, MAX_BOX_HEIGHT = (0.0174507, 0.0236938)
+
+
+def average_with_nones(list_with_nones: List[Optional[float]]) -> float:
+    """Calculates the average of a list of floats that may contain None values.
+
+    Args:
+        `list_with_nones` (List[Optional[float]]):
+            A list of floats that may contain None values.
+
+    Returns:
+        The average of the non-None values in the list.
+
+    Raises:
+        ZeroDivisionError: If the input list contains only None values.
+    """
+    add_with_none = lambda acc, x: acc + x if x is not None else acc
+    len_with_none = lambda l: len(list(filter(lambda x: x is not None, l)))
+    return reduce(add_with_none, list_with_nones) / len_with_none(list_with_nones)
 
 
 def compute_digit_distances_to_centroids(
@@ -112,3 +131,25 @@ def detect_numbers(
         overlap_comparator=intersection_over_minimum,
     )
     return detections
+
+
+def get_detection_by_name(
+    detections: List[Detection], name: str
+) -> Optional[Detection]:
+    """Gets a detection from a list of Detection objects, or returns None.
+
+    Will return the first detection that matches the name.
+
+    Args:
+        `detections` (List[Detection]):
+            The detections to check.
+        `name` (str):
+            The name of the detection to find.
+
+    Returns:
+        The first detection that matches the name, or None if it cannot be found.
+    """
+    try:
+        return list(filter(lambda d: d.annotation.category == name, detections))[0]
+    except:
+        return None

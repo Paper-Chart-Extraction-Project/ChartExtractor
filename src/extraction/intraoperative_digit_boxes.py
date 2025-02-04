@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 # Internal imports
-from extraction.handwritten_digit_utils import compute_digit_distances_to_centroids
+from extraction.extraction_utilities import compute_digit_distances_to_centroids
 from utilities.annotations import BoundingBox
 from utilities.detections import Detection
 

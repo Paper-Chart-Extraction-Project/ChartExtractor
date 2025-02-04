@@ -1,12 +1,12 @@
 """Extracts the inhaled volatile drug data."""
 
 # Built-in imports
-from functools import reduce
 from itertools import pairwise
 from operator import attrgetter
 from typing import Dict, List, Optional, Tuple
 
 # Internal imports
+from extraction.extraction_utilities import average_with_nones, get_detection_by_name
 from utilities.annotations import BoundingBox
 from utilities.detections import Detection
 
@@ -60,9 +60,9 @@ def extract_inhaled_volatile(
             key=lambda bb: bb.center[0],
         )
         if len(boxes_in_range) == 1:
-            inhaled_volatile[pair] = f"0.{boxes_in_range[0].category}"
+            inhaled_volatile[f"{pair[0]}-{pair[1]}"] = f"0.{boxes_in_range[0].category}"
         elif len(boxes_in_range) == 2:
-            inhaled_volatile[pair] = (
+            inhaled_volatile[f"{pair[0]}-{pair[1]}"] = (
                 f"{boxes_in_range[0].category}.{boxes_in_range[1].category}"
             )
         else:
@@ -86,25 +86,16 @@ def get_inhaled_volatile_digits(
         A filtered list of detections holding only those that are in the inhaled volatile section.
     """
 
-    def get_detection_by_name(name: str) -> Optional[Detection]:
-        try:
-            return list(
-                filter(lambda d: d.annotation.category == name, document_detections)
-            )[0]
-        except:
-            return None
-
-    def average_with_nones(list_with_nones: List[Optional[float]]) -> float:
-        add_with_none = lambda acc, x: acc + x if x is not None else acc
-        len_with_none = lambda l: len(list(filter(lambda x: x is not None, l)))
-        return reduce(add_with_none, list_with_nones) / len_with_none(list_with_nones)
-
-    inhaled_volatile: Optional[Detection] = get_detection_by_name("inhaled_volatile")
-    inhaled_exhaled: Optional[Detection] = get_detection_by_name("inhaled_exhaled")
-    fluid_blood_product: Optional[Detection] = get_detection_by_name(
-        "fluid_blood_product"
+    inhaled_volatile: Optional[Detection] = get_detection_by_name(
+        document_detections, "inhaled_volatile"
     )
-    total: Optional[Detection] = get_detection_by_name("total")
+    inhaled_exhaled: Optional[Detection] = get_detection_by_name(
+        document_detections, "inhaled_exhaled"
+    )
+    fluid_blood_product: Optional[Detection] = get_detection_by_name(
+        document_detections, "fluid_blood_product"
+    )
+    total: Optional[Detection] = get_detection_by_name(document_detections, "total")
 
     if any(
         [
