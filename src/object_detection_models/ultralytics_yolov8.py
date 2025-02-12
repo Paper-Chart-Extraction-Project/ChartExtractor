@@ -19,7 +19,7 @@ modularity and reusability.
 """
 
 from pathlib import Path
-from typing import List
+from typing import List, Union
 from PIL import Image
 from ultralytics import YOLO
 from utilities.detections import Detection
@@ -71,18 +71,22 @@ class UltralyticsYOLOv8(ObjectDetectionModel):
         """
         return UltralyticsYOLOv8(model)
 
-    def __call__(self, image: Image.Image, **kwargs) -> List[Detection]:
-        """Runs the model on a single image and returns a list of Detection objects.
+    def __call__(
+        self, images: Union[Image.Image, List[Image.Image]], **kwargs
+    ) -> List[Detection]:
+        """Runs the model images and returns a list of Detection objects.
 
         Args:
-            `image` (Image.Image):
-                The image to detect on.
+            `images` (Union[Image.Image, List[Image.Image])):
+                The image(s) to detect on.
             `kwargs`:
                 Any argument that Ultralytics Yolo model will take. Mostly
                 used for 'conf' and 'verbose'.
         Returns:
             A list of Detection objects.
         """
+        if isinstance(images, Image.Image):
+            image: List[Image.Image] = [image]
         results = self.model(image, **kwargs)
         detections: List[Detection] = self.yolov8_results_to_detections(results)
         return detections
@@ -117,10 +121,10 @@ class UltralyticsYOLOv8(ObjectDetectionModel):
                 ),
                 confidence=box_conf_cls[4],
             )
-            for box_conf_cls in results[0].boxes.data.tolist()
+            for box_conf_cls in results.boxes.data.tolist()
         ]
         try:
-            keypoints = results[0].keypoints.data.tolist()
+            keypoints = results.keypoints.data.tolist()
             detections = [
                 Detection(
                     Keypoint(Point(*keypoints[ix][0]), d.annotation), d.confidence
