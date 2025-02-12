@@ -86,8 +86,8 @@ class UltralyticsYOLOv8(ObjectDetectionModel):
             A list of Detection objects.
         """
         if isinstance(images, Image.Image):
-            image: List[Image.Image] = [image]
-        results = self.model(image, **kwargs)
+            images: List[Image.Image] = [images]
+        results = self.model(images, **kwargs)
         detections: List[Detection] = self.yolov8_results_to_detections(results)
         return detections
 
