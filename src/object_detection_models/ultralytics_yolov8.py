@@ -88,7 +88,7 @@ class UltralyticsYOLOv8(ObjectDetectionModel):
         if isinstance(images, Image.Image):
             images: List[Image.Image] = [images]
         results = self.model(images, **kwargs)
-        detections: List[Detection] = self.yolov8_results_to_detections(results)
+        detections: List[Detection] = [self.yolov8_results_to_detections(r) for r in results]
         return detections
 
     def yolov8_results_to_detections(self, results) -> List[Detection]:
