@@ -180,7 +180,9 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
     }
 
     # extract checkboxes
-    checkboxes: Dict = {"intraoperative_checkboxes": make_intraop_checkbox_detections(image)}
+    checkboxes: Dict = {
+        "intraoperative_checkboxes": make_intraop_checkbox_detections(image)
+    }
 
     return combine_dictionaries(
         [
@@ -226,14 +228,17 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
 
 def homography_intraoperative_chart(
     image: Image.Image, intraop_document_detections: List[Detection]
-):
+) -> Image.Image:
     """Performs a homography transformation on the intraoperative side of the chart.
-    
+
     Args:
         `image` (Image.Image):
+            The intraoperative image to transform.
         `intraop_document_detections` (List[Detection]):
+            The locations of the document landmarks.
 
-
+    Returns:
+        An image that is warped to correct the locations of objects on the image.
     """
     corner_landmark_names: List[str] = [
         "anesthesia_start",
@@ -269,4 +274,55 @@ def homography_intraoperative_chart(
         dest_points=dest_points,
         src_points=src_points,
         original_image_size=(3300, 2550),  # img.size
+    )
+
+
+def homography_preoperative_chart(
+    image: Image.Image, preop_document_detections: List[Detection]
+) -> Image.Image:
+    """Performs a homography transformation on the preop/postop side of the chart.
+
+    Args:
+        `image` (Image.Image):
+            The preoperative/postoperative image to transform.
+        `preop_document_detections` (List[Detection]):
+            The locations of the document landmarks.
+
+    Returns:
+        An image that is warped to correct the locations of objects on the image.
+    """
+    corner_landmark_names: List[str] = [
+        "patient_profile",
+        "weight",
+        "signature",
+        "disposition",
+    ]
+    dst_landmarks = label_studio_to_bboxes("preoperative_document_landmarks.json")[
+        "unified_intraoperative_preoperative_flowsheet_v1_1_back.png"
+    ]
+
+    dest_points = [
+        bb.center
+        for bb in sorted(
+            list(filter(lambda x: x.category in corner_landmark_names, dst_landmarks)),
+            key=lambda bb: bb.category,
+        )
+    ]
+    src_points = [
+        bb.annotation.center
+        for bb in sorted(
+            list(
+                filter(
+                    lambda x: x.annotation.category in corner_landmark_names,
+                    preop_document_detections,
+                )
+            ),
+            key=lambda bb: bb.annotation.category,
+        )
+    ]
+    return homography_transform(
+        image,
+        dest_points=dest_points,
+        src_points=src_points,
+        original_image_size=(3300, 2550),
     )
