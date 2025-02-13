@@ -388,3 +388,97 @@ def make_document_landmark_detections(
     )
     del document_model
     return detections
+
+
+def make_bp_and_hr_detections(
+    image: Image.Image,
+    time_clusters: List[Cluster],
+    mmhg_clusters: List[Cluster],
+    sys_model_filepath: Path = Path("sys_yolov11m_pose_best_no_transfer.pt"),
+    dia_model_filepath: Path = Path("dia_yolov11m_pose_best_no_transfer.pt"),
+    hr_model_filepath: Path = Path("hr_yolov11m_pose_best_no_transfer.pt"),
+):
+    """Runs the blood pressure detection models to find blood pressure symbols.
+
+    Args:
+        `image` (Image.Image):
+            The image to detect on.
+        `time_clusters` (List[Cluster]):
+            A list of Cluster objects encoding the location of the time legend.
+        `mmhg_clusters` (List[Cluster]):
+            A list of Cluster objects encoding the location of the mmhg/bpm legend.
+        `sys_model_filepath` (Path):
+            The filepath to the systolic symbol detector.
+        `dia_model_filepath` (Path):
+            The filepath to the diastolic symbol detector.
+        `hr_model_filepath` (Path):
+            The filepath to the heart rate symbol detector.
+
+    Returns:
+        A list of detections containing the locations of handwritten digits.
+    """
+
+    def tile_predict(
+        model: ObjectDetectionModel,
+        image: Image.Image,
+        tile_width: int,
+        tile_height: int,
+        horizontal_overlap_ratio: float,
+        vertical_overlap_ratio: float,
+    ):
+        """Performs tiled prediction."""
+        tiles: List[List[Image.Image]] = tile_image(
+            image,
+            tile_width,
+            tile_height,
+            horizontal_overlap_ratio,
+            vertical_overlap_ratio,
+        )
+        tiled_detections: List[List[List[Detection]]] = [
+            [model(tile, conf=0.5) for tile in row] for row in tiles
+        ]
+        detections: List[Detection] = untile_detections(
+            tiled_detections,
+            tile_width,
+            tile_height,
+            horizontal_overlap_ratio,
+            vertical_overlap_ratio,
+        )
+        return detections
+
+    sys_model = UltralyticsYOLOv11Pose.from_weights_path(str(sys_model_filepath))
+    dia_model = UltralyticsYOLOv11Pose.from_weights_path(str(dia_model_filepath))
+    hr_model = UltralyticsYOLOv11Pose.from_weights_path(str(hr_model_filepath))
+
+    slice_size = min([int(image.size[0] / 5), int(image.size[1] / 5)])
+
+    sys_dets: List[Detection] = tile_predict(
+        sys_model, image.copy(), slice_size, slice_size, 0.5, 0.5
+    )
+    dia_dets: List[Detection] = tile_predict(
+        dia_model, image.copy(), slice_size, slice_size, 0.5, 0.5
+    )
+    hr_dets: List[Detection] = tile_predict(
+        hr_model, image.copy(), slice_size, slice_size, 0.5, 0.5
+    )
+
+    sys_dets: List[Detection] = non_maximum_suppression(
+        sys_dets, 0.5, intersection_over_minimum
+    )
+    dia_dets: List[Detection] = non_maximum_suppression(
+        dia_dets, 0.5, intersection_over_minimum
+    )
+    hr_dets: List[Detection] = non_maximum_suppression(
+        hr_dets, 0.5, intersection_over_minimum
+    )
+
+    dets: List[Detection] = sys_dets + dia_dets + hr_dets
+    bp_and_hr = extract_heart_rate_and_blood_pressure(
+        dets, time_clusters, mmhg_clusters
+    )
+
+    del sys_model
+    del dia_model
+    del hr_model
+
+    return bp_and_hr
