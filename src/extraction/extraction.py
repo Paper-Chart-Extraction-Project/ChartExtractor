@@ -488,7 +488,7 @@ def make_intraop_checkbox_detections(
     image: Image.Image,
     checkbox_model_filepath: Path = Path("yolov11s_checkboxes.pt"),
 ) -> Dict:
-    """Finds blood pressure symbols and associates a value and timestamp to them.
+    """Finds checkboxes on the intraoperative form, then associates a meaning to them.
 
     Args:
         `image` (Image.Image):
@@ -505,3 +505,26 @@ def make_intraop_checkbox_detections(
     )
     del checkbox_model
     return intraop_checkboxes
+
+
+def make_preop_postop_checkbox_detections(
+    image: Image.Image,
+    checkbox_model_filepath: Path = Path("yolov11s_checkboxes.pt"),
+):
+    """Finds checkboxes on the intraoperative form, then associates a meaning to them.
+
+    Args:
+        `image` (Image.Image):
+            The image to detect on.
+        `checkbox_model_filepath` (Path):
+            The filepath to the checkbox detector.
+
+    Returns:
+        A dictionary mapping names of checkboxes to a "checked" or "unchecked" state.
+    """
+    checkbox_model = UltralyticsYOLOv8.from_weights_path(checkbox_model_filepath)
+    preop_postop_checkboxes = extract_checkboxes(
+        image, checkbox_model, "preoperative", 800, 800
+    )
+    del checkbox_model
+    return preop_postop_checkboxes
