@@ -1,7 +1,6 @@
 """Consolidates all the functionality for extracting data from charts into one function."""
 
 # Built-in imports
-import json
 import os
 from pathlib import Path
 from PIL import Image
@@ -12,7 +11,11 @@ from extraction.blood_pressure_and_heart_rate import (
     extract_heart_rate_and_blood_pressure,
 )
 from extraction.checkboxes import extract_checkboxes
-from extraction.extraction_utilities import detect_numbers
+from extraction.extraction_utilities import (
+    combine_dictionaries,
+    detect_numbers,
+    label_studio_to_bboxes,
+)
 from extraction.inhaled_volatile import extract_inhaled_volatile
 from extraction.intraoperative_digit_boxes import (
     extract_drug_codes,
@@ -23,7 +26,6 @@ from extraction.physiological_indicators import extract_physiological_indicators
 from extraction.preoperative_postoperative_digit_boxes import (
     extract_preop_postop_digit_data,
 )
-from extraction_utilities import combine_dictionaries, label_studio_to_bboxes
 from image_registration.homography import homography_transform
 from label_clustering.cluster import Cluster
 from label_clustering.clustering_methods import (
@@ -50,7 +52,8 @@ CORNER_LANDMARK_NAMES: List[str] = [
     "lateral",
     "units",
 ]
-path_to_models: Path = Path(os.path.dirname(__file__)) / ".." / ".." / "data" / "models"
+path_to_data: Path = Path(os.path.dirname(__file__)) / ".." / ".." / "data"
+path_to_models: Path = path_to_data / "models"
 
 
 def digitize_sheet(intraop_image: Image.Image, preop_postop_image: Image.Image) -> Dict:
@@ -166,7 +169,7 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
     image: Image.Image = homography_preoperative_chart(
         image,
         make_document_landmark_detections(
-            image, "preop_postop_document_landmark_detector.pt"
+            image, path_to_models / "preop_postop_document_landmark_detector.pt"
         ),
     )
     digit_detections: List[Detection] = make_digit_detections(image)
@@ -197,9 +200,9 @@ def homography_intraoperative_chart(
         "lateral",
         "units",
     ]
-    dst_landmarks = label_studio_to_bboxes("intraop_document_landmarks.json")[
-        "unified_intraoperative_preoperative_flowsheet_v1_1_front.png"
-    ]
+    dst_landmarks = label_studio_to_bboxes(
+        str(path_to_data / "intraop_document_landmarks.json")
+    )["unified_intraoperative_preoperative_flowsheet_v1_1_front.png"]
 
     dest_points = [
         bb.center
@@ -248,9 +251,9 @@ def homography_preoperative_chart(
         "signature",
         "disposition",
     ]
-    dst_landmarks = label_studio_to_bboxes("preoperative_document_landmarks.json")[
-        "unified_intraoperative_preoperative_flowsheet_v1_1_back.png"
-    ]
+    dst_landmarks = label_studio_to_bboxes(
+        str(path_to_data / "preoperative_document_landmarks.json")
+    )["unified_intraoperative_preoperative_flowsheet_v1_1_back.png"]
 
     dest_points = [
         bb.center
@@ -302,7 +305,7 @@ def make_document_landmark_detections(
     detections = [
         [document_model(tile, verbose=False) for tile in row] for row in tiles
     ]
-    detections = untile_detections(detections, size, size, 0.5, 0.5)
+    detections = untile_detections(detections[0], size, size, 0.5, 0.5)
     detections = non_maximum_suppression(
         detections, overlap_comparator=intersection_over_minimum
     )
