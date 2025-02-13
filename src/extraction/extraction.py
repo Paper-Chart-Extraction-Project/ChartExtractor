@@ -23,7 +23,7 @@ from extraction.physiological_indicators import extract_physiological_indicators
 from extraction.preoperative_postoperative_digit_boxes import (
     extract_preop_postop_digit_data,
 )
-from extraction_utilities import label_studio_to_bboxes
+from extraction_utilities import combine_dictionaries, label_studio_to_bboxes
 from image_registration.homography import homography_transform
 from label_clustering.cluster import Cluster
 from label_clustering.clustering_methods import (
@@ -35,7 +35,6 @@ from label_clustering.isolate_labels import isolate_blood_pressure_legend_boundi
 from object_detection_models.ultralytics_yolov8 import UltralyticsYOLOv8
 from object_detection_models.ultralytics_yolov11_pose import UltralyticsYOLOv11Pose
 from object_detection_models.object_detection_model import ObjectDetectionModel
-from utilities.annotations import BoundingBox
 from utilities.detections import Detection
 from utilities.detection_reassembly import (
     untile_detections,
@@ -52,22 +51,6 @@ CORNER_LANDMARK_NAMES: List[str] = [
     "units",
 ]
 path_to_models: Path = Path(os.path.dirname(__file__)) / ".." / ".." / "data" / "models"
-
-
-def combine_dictionaries(dictionaries: List[Dict]):
-    """Combines a list of dictionaries into one.
-
-    Args:
-        `dictionaries` (List[Dict]):
-            A list of dictionaries to combine.
-
-    Returns:
-        A single dictionary with the contents of all the dictionaries.
-    """
-    combined_dictionary: Dict = dict()
-    for dictionary in dictionaries:
-        combined_dictionary.update(dictionary)
-    return combined_dictionary
 
 
 def digitize_sheet(intraop_image: Image.Image, preop_postop_image: Image.Image) -> Dict:

@@ -43,6 +43,22 @@ def average_with_nones(list_with_nones: List[Optional[float]]) -> float:
     return reduce(add_with_none, list_with_nones) / len_with_none(list_with_nones)
 
 
+def combine_dictionaries(dictionaries: List[Dict]):
+    """Combines a list of dictionaries into one.
+
+    Args:
+        `dictionaries` (List[Dict]):
+            A list of dictionaries to combine.
+
+    Returns:
+        A single dictionary with the contents of all the dictionaries.
+    """
+    combined_dictionary: Dict = dict()
+    for dictionary in dictionaries:
+        combined_dictionary.update(dictionary)
+    return combined_dictionary
+
+
 def compute_digit_distances_to_centroids(
     number_detections: List[BoundingBox],
     centroids: Dict[str, Tuple[float, float]],
