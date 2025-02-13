@@ -326,3 +326,34 @@ def homography_preoperative_chart(
         src_points=src_points,
         original_image_size=(3300, 2550),
     )
+
+
+def make_document_landmark_detections(
+    image: Image.Image,
+    document_model_filepath: Path = Path("document_landmark_detector.pt"),
+) -> List[Detection]:
+    """Runs the document landmark detection model to find document landmarks.
+
+    Args:
+        `image` (Image.Image):
+            The image to detect on.
+        `document_model_filepath` (Path):
+            The filepath to the document landmark model weights.
+
+    Returns:
+        A list of detections containing the locations of the document landmarks.
+    """
+    document_model: UltralyticsYOLOv8 = UltralyticsYOLOv8.from_weights_path(
+        str(document_model_filepath)
+    )
+    size: int = max([int((1 / 4) * image.size[0]), int((1 / 4) * image.size[1])])
+    tiles: List[List[Image.Image]] = tile_image(image, size, size, 0.5, 0.5)
+    detections = [
+        [document_model(tile, verbose=False) for tile in row] for row in tiles
+    ]
+    detections = untile_detections(detections, size, size, 0.5, 0.5)
+    detections = non_maximum_suppression(
+        detections, overlap_comparator=intersection_over_minimum
+    )
+    del document_model
+    return detections
