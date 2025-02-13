@@ -397,8 +397,8 @@ def make_bp_and_hr_detections(
     sys_model_filepath: Path = Path("sys_yolov11m_pose_best_no_transfer.pt"),
     dia_model_filepath: Path = Path("dia_yolov11m_pose_best_no_transfer.pt"),
     hr_model_filepath: Path = Path("hr_yolov11m_pose_best_no_transfer.pt"),
-):
-    """Runs the blood pressure detection models to find blood pressure symbols.
+) -> Dict:
+    """Finds blood pressure symbols and associates a value and timestamp to them.
 
     Args:
         `image` (Image.Image):
@@ -415,7 +415,7 @@ def make_bp_and_hr_detections(
             The filepath to the heart rate symbol detector.
 
     Returns:
-        A list of detections containing the locations of handwritten digits.
+        A dictionary mapping timestamps to values for systolic, diastolic, and heart rate.
     """
 
     def tile_predict(
@@ -482,3 +482,26 @@ def make_bp_and_hr_detections(
     del hr_model
 
     return bp_and_hr
+
+
+def make_intraop_checkbox_detections(
+    image: Image.Image,
+    checkbox_model_filepath: Path = Path("yolov11s_checkboxes.pt"),
+) -> Dict:
+    """Finds blood pressure symbols and associates a value and timestamp to them.
+
+    Args:
+        `image` (Image.Image):
+            The image to detect on.
+        `checkbox_model_filepath` (Path):
+            The filepath to the checkbox detector.
+
+    Returns:
+        A dictionary mapping names of checkboxes to a "checked" or "unchecked" state.
+    """
+    checkbox_model = UltralyticsYOLOv8.from_weights_path(checkbox_model_filepath)
+    intraop_checkboxes = extract_checkboxes(
+        image, checkbox_model, "intraoperative", 800, 800
+    )
+    del checkbox_model
+    return intraop_checkboxes
