@@ -2,6 +2,7 @@
 
 # Built-in imports
 import json
+import os
 from pathlib import Path
 from PIL import Image
 from typing import Dict, List, Tuple
@@ -49,6 +50,7 @@ CORNER_LANDMARK_NAMES: List[str] = [
     "lateral",
     "units",
 ]
+path_to_models: Path = Path(os.path.dirname(__file__)) / ".." / ".." / "data" / "models"
 
 
 def label_studio_to_bboxes(
@@ -215,9 +217,6 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
             image, "preop_postop_document_landmark_detector.pt"
         ),
     )
-    document_landmark_detections: List[Detection] = make_document_landmark_detections(
-        image
-    )
     digit_detections: List[Detection] = make_digit_detections(image)
     digit_data = extract_preop_postop_digit_data(digit_detections, *image.size)
     checkbox_data = {
@@ -330,7 +329,7 @@ def homography_preoperative_chart(
 
 def make_document_landmark_detections(
     image: Image.Image,
-    document_model_filepath: Path = Path("document_landmark_detector.pt"),
+    document_model_filepath: Path = path_to_models / "document_landmark_detector.pt",
 ) -> List[Detection]:
     """Runs the document landmark detection model to find document landmarks.
 
@@ -359,9 +358,9 @@ def make_document_landmark_detections(
     return detections
 
 
-def make_document_landmark_detections(
+def make_digit_detections(
     image: Image.Image,
-    document_model_filepath: Path = Path("document_landmark_detector.pt"),
+    digit_model_filepath: Path = path_to_models / "combined_digit_yolov11m.pt",
 ) -> List[Detection]:
     """Runs the digit detection detection model to find handwritten digits.
 
@@ -374,29 +373,24 @@ def make_document_landmark_detections(
     Returns:
         A list of detections containing the locations of handwritten digits.
     """
-    document_model: UltralyticsYOLOv8 = UltralyticsYOLOv8.from_weights_path(
-        str(document_model_filepath)
+    digit_model: UltralyticsYOLOv8 = UltralyticsYOLOv8.from_weights_path(
+        str(digit_model_filepath)
     )
-    size: int = max([int((1 / 4) * image.size[0]), int((1 / 4) * image.size[1])])
-    tiles: List[List[Image.Image]] = tile_image(image, size, size, 0.5, 0.5)
-    detections = [
-        [document_model(tile, verbose=False) for tile in row] for row in tiles
-    ]
-    detections = untile_detections(detections, size, size, 0.5, 0.5)
-    detections = non_maximum_suppression(
-        detections, overlap_comparator=intersection_over_minimum
+    slice_size = max(int(image.size[0] * (1 / 6)), int(image.size[1] * (1 / 6)))
+    number_detections: List[Detection] = detect_numbers(
+        image, digit_model, slice_size, slice_size, 0.5, 0.5
     )
-    del document_model
-    return detections
+    del digit_model
+    return number_detections
 
 
 def make_bp_and_hr_detections(
     image: Image.Image,
     time_clusters: List[Cluster],
     mmhg_clusters: List[Cluster],
-    sys_model_filepath: Path = Path("sys_yolov11m_pose_best_no_transfer.pt"),
-    dia_model_filepath: Path = Path("dia_yolov11m_pose_best_no_transfer.pt"),
-    hr_model_filepath: Path = Path("hr_yolov11m_pose_best_no_transfer.pt"),
+    sys_model_filepath: Path = path_to_models / "sys_yolov11m_pose_best_no_transfer.pt",
+    dia_model_filepath: Path = path_to_models / "dia_yolov11m_pose_best_no_transfer.pt",
+    hr_model_filepath: Path = path_to_models / "hr_yolov11m_pose_best_no_transfer.pt",
 ) -> Dict:
     """Finds blood pressure symbols and associates a value and timestamp to them.
 
@@ -486,7 +480,7 @@ def make_bp_and_hr_detections(
 
 def make_intraop_checkbox_detections(
     image: Image.Image,
-    checkbox_model_filepath: Path = Path("yolov11s_checkboxes.pt"),
+    checkbox_model_filepath: Path = path_to_models / "yolov11s_checkboxes.pt",
 ) -> Dict:
     """Finds checkboxes on the intraoperative form, then associates a meaning to them.
 
@@ -509,7 +503,7 @@ def make_intraop_checkbox_detections(
 
 def make_preop_postop_checkbox_detections(
     image: Image.Image,
-    checkbox_model_filepath: Path = Path("yolov11s_checkboxes.pt"),
+    checkbox_model_filepath: Path = path_to_models / "yolov11s_checkboxes.pt",
 ):
     """Finds checkboxes on the intraoperative form, then associates a meaning to them.
 
