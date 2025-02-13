@@ -23,6 +23,7 @@ from extraction.physiological_indicators import extract_physiological_indicators
 from extraction.preoperative_postoperative_digit_boxes import (
     extract_preop_postop_digit_data,
 )
+from extraction_utilities import label_studio_to_bboxes
 from image_registration.homography import homography_transform
 from label_clustering.cluster import Cluster
 from label_clustering.clustering_methods import (
@@ -51,38 +52,6 @@ CORNER_LANDMARK_NAMES: List[str] = [
     "units",
 ]
 path_to_models: Path = Path(os.path.dirname(__file__)) / ".." / ".." / "data" / "models"
-
-
-def label_studio_to_bboxes(
-    path_to_json_data: Path,
-    desired_im_width: int = 3300,
-    desired_im_height: int = 2550,
-) -> List[BoundingBox]:
-    """
-    Convert the json data from label studio to a list of BoundingBox objects
-    Args:
-        path_to_json_data (Path):
-            Path to the json data from label studio
-    Returns:
-        List[BoundingBox]:
-            List of BoundingBox objects
-    """
-    json_data: List[Dict] = json.loads(open(str(path_to_json_data)).read())
-    return {
-        sheet_data["data"]["image"].split("-")[-1]: [
-            BoundingBox(
-                category=label["value"]["rectanglelabels"][0],
-                left=label["value"]["x"] / 100 * desired_im_width,
-                top=label["value"]["y"] / 100 * desired_im_height,
-                right=(label["value"]["x"] / 100 + label["value"]["width"] / 100)
-                * desired_im_width,
-                bottom=(label["value"]["y"] / 100 + label["value"]["height"] / 100)
-                * desired_im_height,
-            )
-            for label in sheet_data["annotations"][0]["result"]
-        ]
-        for sheet_data in json_data
-    }
 
 
 def combine_dictionaries(dictionaries: List[Dict]):

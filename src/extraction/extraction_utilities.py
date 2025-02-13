@@ -2,6 +2,8 @@
 
 # Built-in imports
 from functools import reduce
+import json
+from pathlib import Path
 from PIL import Image
 from typing import Dict, List, Optional, Tuple
 
@@ -153,3 +155,35 @@ def get_detection_by_name(
         return list(filter(lambda d: d.annotation.category == name, detections))[0]
     except:
         return None
+
+
+def label_studio_to_bboxes(
+    path_to_json_data: Path,
+    desired_im_width: int = 3300,
+    desired_im_height: int = 2550,
+) -> List[BoundingBox]:
+    """
+    Convert the json data from label studio to a list of BoundingBox objects
+    Args:
+        path_to_json_data (Path):
+            Path to the json data from label studio
+    Returns:
+        List[BoundingBox]:
+            List of BoundingBox objects
+    """
+    json_data: List[Dict] = json.loads(open(str(path_to_json_data)).read())
+    return {
+        sheet_data["data"]["image"].split("-")[-1]: [
+            BoundingBox(
+                category=label["value"]["rectanglelabels"][0],
+                left=label["value"]["x"] / 100 * desired_im_width,
+                top=label["value"]["y"] / 100 * desired_im_height,
+                right=(label["value"]["x"] / 100 + label["value"]["width"] / 100)
+                * desired_im_width,
+                bottom=(label["value"]["y"] / 100 + label["value"]["height"] / 100)
+                * desired_im_height,
+            )
+            for label in sheet_data["annotations"][0]["result"]
+        ]
+        for sheet_data in json_data
+    }
