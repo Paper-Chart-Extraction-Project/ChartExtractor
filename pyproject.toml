@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "chart-extractor"
+name = "ChartExtractor"
 version = "0.1.0"
 description = "ChartExtractor uses computer vision to convert images of paper charts to digital data."
 authors = [
@@ -25,3 +25,4 @@ openpyxl = "^3.1.5"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+packages = [{ include = "ChartExtractor" }]
