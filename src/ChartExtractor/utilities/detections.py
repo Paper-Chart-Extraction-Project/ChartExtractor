@@ -6,9 +6,12 @@ This class is used to store the output of an object detection model, including:
 * The confidence score assigned by the model to this detection (a float between 0.0 and 1.0).
 """
 
+# Built-in Imports
 from dataclasses import dataclass
 from typing import Union
-from utilities.annotations import BoundingBox, Keypoint
+
+# Internal Imports
+from .utilities.annotations import BoundingBox, Keypoint
 
 
 @dataclass

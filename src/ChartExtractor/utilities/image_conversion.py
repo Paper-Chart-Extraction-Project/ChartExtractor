@@ -4,8 +4,11 @@ This module provides functions to convert between Python Imaging Library (PIL)
 image format and OpenCV image format.
 """
 
-import cv2
+# Built-in Imports
 from PIL import Image
+
+# External Imports
+import cv2
 import numpy as np
 
 
