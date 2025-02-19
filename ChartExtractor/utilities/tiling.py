@@ -14,7 +14,7 @@ from PIL import Image
 from typing import List, Literal, Tuple, Union
 
 # Internal Imports
-from .utilities.annotations import BoundingBox, Keypoint
+from ..utilities.annotations import BoundingBox, Keypoint
 
 
 def tile_image(

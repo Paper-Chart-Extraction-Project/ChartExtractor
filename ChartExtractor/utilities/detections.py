@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import Union
 
 # Internal Imports
-from .utilities.annotations import BoundingBox, Keypoint
+from ..utilities.annotations import BoundingBox, Keypoint
 
 
 @dataclass

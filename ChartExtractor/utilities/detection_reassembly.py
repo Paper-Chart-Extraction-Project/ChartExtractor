@@ -4,8 +4,8 @@
 from typing import Callable, List, Tuple
 
 # Internal Imports
-from .utilities.detections import Detection
-from .utilities.tiling import correct_annotation_coords
+from ..utilities.detections import Detection
+from ..utilities.tiling import correct_annotation_coords
 
 
 def compute_area(box: Tuple[float, float, float, float]):

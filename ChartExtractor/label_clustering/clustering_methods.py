@@ -14,7 +14,7 @@ from sklearn.metrics import silhouette_score
 
 # Internal imports
 from ..utilities.annotations import BoundingBox
-from .label_clustering.cluster import Cluster
+from ..label_clustering.cluster import Cluster
 
 
 def cluster_kmeans(
