@@ -6,9 +6,9 @@ from pathlib import Path
 from typing import Dict, List, Literal, Optional, Tuple
 
 # Internal imports
-from extraction.extraction_utilities import compute_digit_distances_to_centroids
-from utilities.annotations import BoundingBox
-from utilities.detections import Detection
+from .extraction.extraction_utilities import compute_digit_distances_to_centroids
+from .utilities.annotations import BoundingBox
+from .utilities.detections import Detection
 
 
 DATA_FILEPATH: Path = Path(__file__).parents[2] / "data"

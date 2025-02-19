@@ -6,9 +6,9 @@ from operator import attrgetter
 from typing import Dict, List, Optional, Tuple
 
 # Internal imports
-from extraction.extraction_utilities import average_with_nones, get_detection_by_name
-from utilities.annotations import BoundingBox
-from utilities.detections import Detection
+from .extraction.extraction_utilities import average_with_nones, get_detection_by_name
+from .utilities.annotations import BoundingBox
+from .utilities.detections import Detection
 
 
 def extract_inhaled_volatile(

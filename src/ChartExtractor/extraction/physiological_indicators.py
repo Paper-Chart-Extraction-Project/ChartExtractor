@@ -6,8 +6,8 @@ from operator import attrgetter
 from typing import Dict, List, Tuple
 
 # Internal imports
-from utilities.annotations import BoundingBox
-from utilities.detections import Detection
+from .utilities.annotations import BoundingBox
+from .utilities.detections import Detection
 
 
 PHYSIO_LANDMARK_NAMES: List[str] = [
