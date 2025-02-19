@@ -20,11 +20,16 @@ It then:
     6. Converts the resulting OpenCV image back to PIL format.
 """
 
+# Built-in Imports
+from PIL import Image
 from typing import List, Tuple
+
+# Internal Imports
+from ..utilities.image_conversion import pil_to_cv2, cv2_to_pil
+
+# External Imports
 import cv2
 import numpy as np
-from PIL import Image
-from utilities.image_conversion import pil_to_cv2, cv2_to_pil
 
 
 def homography_transform(

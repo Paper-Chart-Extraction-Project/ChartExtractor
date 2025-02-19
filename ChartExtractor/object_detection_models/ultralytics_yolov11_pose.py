@@ -12,13 +12,18 @@ model and the `utilities` module for data structures (`BoundingBox`, `Keypoint`,
 `Point`).
 """
 
+# Built-in Imports
 from pathlib import Path
-from typing import Dict, List
 from PIL import Image
+from typing import Dict, List
+
+# External Imports
 from ultralytics import YOLO
-from utilities.detections import Detection
-from utilities.annotations import BoundingBox, Keypoint, Point
-from object_detection_models.object_detection_model import ObjectDetectionModel
+
+# Internal Imports
+from ..utilities.detections import Detection
+from ..utilities.annotations import BoundingBox, Keypoint, Point
+from ..object_detection_models.object_detection_model import ObjectDetectionModel
 
 
 class UltralyticsYOLOv11Pose(ObjectDetectionModel):

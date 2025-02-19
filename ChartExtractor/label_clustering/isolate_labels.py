@@ -13,7 +13,7 @@ import numpy as np
 from scipy.stats import gaussian_kde
 
 # Internal imports
-from utilities.annotations import BoundingBox
+from ..utilities.annotations import BoundingBox
 
 
 def __find_density_max(values: List[int], search_area: int) -> int:

@@ -8,10 +8,13 @@ image using (nearly) the same parameters as `tile_image`. It assumes annotations
 their location within the image. Each annotation is assigned to the tile(s) that completely enclose its bounding box.
 """
 
+# Built-in Imports
+import math
 from PIL import Image
 from typing import List, Literal, Tuple, Union
-import math
-from utilities.annotations import BoundingBox, Keypoint
+
+# Internal Imports
+from ..utilities.annotations import BoundingBox, Keypoint
 
 
 def tile_image(

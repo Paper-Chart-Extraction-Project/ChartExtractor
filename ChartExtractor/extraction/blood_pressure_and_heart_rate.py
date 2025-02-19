@@ -4,9 +4,9 @@
 from typing import Dict, List, Tuple
 
 # Internal imports
-from label_clustering.cluster import Cluster
-from utilities.annotations import BoundingBox
-from utilities.detections import Detection
+from ..label_clustering.cluster import Cluster
+from ..utilities.annotations import BoundingBox
+from ..utilities.detections import Detection
 
 
 def find_timestamp(time_legend: List[Cluster], keypoint_x: float) -> str:

@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "chart-extractor"
+name = "ChartExtractor"
 version = "0.1.0"
 description = "ChartExtractor uses computer vision to convert images of paper charts to digital data."
 authors = [
@@ -10,6 +10,8 @@ authors = [
 ]
 license = "GPL-3.0-or-later"
 readme = "README.md"
+packages = [{include = "ChartExtractor"}]
+
 
 [tool.poetry.dependencies]
 python = "^3.12"

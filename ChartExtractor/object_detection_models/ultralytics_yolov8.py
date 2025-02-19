@@ -18,13 +18,18 @@ This approach simplifies the integration and usage of YOLOv8 within this program
 modularity and reusability.
 """
 
+# Built-in imports
 from pathlib import Path
-from typing import List, Union
 from PIL import Image
+from typing import List, Union
+
+# External Imports
 from ultralytics import YOLO
-from utilities.detections import Detection
-from utilities.annotations import BoundingBox, Keypoint, Point
-from object_detection_models.object_detection_model import ObjectDetectionModel
+
+# Internal Imports
+from ..utilities.detections import Detection
+from ..utilities.annotations import BoundingBox, Keypoint, Point
+from ..object_detection_models.object_detection_model import ObjectDetectionModel
 
 
 class UltralyticsYOLOv8(ObjectDetectionModel):

@@ -11,11 +11,14 @@ of `Detection` objects, existing code remains compatible.
 This approach promotes modularity, flexibility, and future-proofing of the program.
 """
 
+# Built-in Imports
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List
-from utilities.detections import Detection
 from PIL import Image
+from typing import List
+
+# Internal Imports
+from ..utilities.detections import Detection
 
 
 class ObjectDetectionModel(ABC):
