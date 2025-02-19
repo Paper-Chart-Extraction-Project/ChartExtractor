@@ -13,8 +13,8 @@ from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
 from sklearn.metrics import silhouette_score
 
 # Internal imports
-from utilities.annotations import BoundingBox
-from label_clustering.cluster import Cluster
+from .utilities.annotations import BoundingBox
+from .label_clustering.cluster import Cluster
 
 
 def cluster_kmeans(
