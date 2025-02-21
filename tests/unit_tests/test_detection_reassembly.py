@@ -1,16 +1,16 @@
 """Tests for the detection_reassembly module."""
 
-import sys
-import os
-
-sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
-
-import pytest
+# Built-in Imports
 from typing import List
-from utilities.annotations import BoundingBox
-from utilities.detections import Detection
-from utilities.tiling import tile_annotations
-from utilities import detection_reassembly
+
+# External Imports
+import pytest
+
+# Internal Imports
+from ChartExtractor.utilities.annotations import BoundingBox
+from ChartExtractor.utilities.detections import Detection
+from ChartExtractor.utilities.tiling import tile_annotations
+from ChartExtractor.utilities import detection_reassembly
 
 
 @pytest.fixture()
