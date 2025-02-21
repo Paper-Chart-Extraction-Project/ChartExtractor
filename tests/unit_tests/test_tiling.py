@@ -1,15 +1,15 @@
 """Tests the tiling module."""
 
-import sys
-import os
-
-sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
-
-import pytest
+# Built-in Imports
 from typing import List
+
+# External Imports
 from PIL import Image, ImageChops
-from utilities.annotations import BoundingBox
-from utilities import tiling
+import pytest
+
+# Internal Imports
+from ChartExtractor.utilities.annotations import BoundingBox
+from ChartExtractor.utilities import tiling
 
 
 @pytest.fixture()

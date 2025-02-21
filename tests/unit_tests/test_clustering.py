@@ -15,16 +15,17 @@ import json
 import pytest
 
 # Internal Libraries
-sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
-from label_clustering.cluster import Cluster  # Needs to be tested.
-from label_clustering.clustering_methods import (
+from ChartExtractor.label_clustering.cluster import Cluster  # Needs to be tested.
+from ChartExtractor.label_clustering.clustering_methods import (
     cluster_boxes,
     cluster_agglomerative,
     cluster_dbscan,
     cluster_kmeans,
 )
-from label_clustering.isolate_labels import isolate_blood_pressure_legend_bounding_boxes
-from utilities.annotations import BoundingBox
+from ChartExtractor.label_clustering.isolate_labels import (
+    isolate_blood_pressure_legend_bounding_boxes,
+)
+from ChartExtractor.utilities.annotations import BoundingBox
 
 
 # 0_mins, 5_mins, 10_mins, ..., 200_mins, 205_mins.

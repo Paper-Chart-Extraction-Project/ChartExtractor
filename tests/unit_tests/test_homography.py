@@ -1,13 +1,11 @@
 """Tests the homography module."""
 
-import sys
-import os
-
-sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
-
-import pytest
+# External Imports
 from PIL import Image
-from image_registration.homography import homography_transform
+import pytest
+
+# Internal Imports
+from ChartExtractor.image_registration.homography import homography_transform
 
 
 @pytest.fixture()
