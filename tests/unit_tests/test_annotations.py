@@ -1,12 +1,10 @@
 """Tests for the annotations module."""
 
-import sys
-import os
-
-sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
-
+# External Imports
 import pytest
-from utilities.annotations import BoundingBox, Keypoint, Point
+
+# Internal Imports
+from ChartExtractor.utilities.annotations import BoundingBox, Keypoint, Point
 
 
 class TestBoundingBox:
@@ -112,8 +110,8 @@ class TestBoundingBox:
         image_width = 2
         image_height = 2
         category_to_id = {"Test": 0}
-        yolo_str = bbox.to_yolo(image_width, image_height, category_to_id)
-        assert yolo_str == "0 0.25 0.25 0.5 0.5"
+        yolo_str = bbox.to_yolo(image_width, image_height, category_to_id, 3)
+        assert yolo_str == "0 0.250 0.250 0.500 0.500"
 
 
 class TestKeypoint:
@@ -165,5 +163,5 @@ class TestKeypoint:
         image_width = 2
         image_height = 2
         category_to_id = {"Test": 0}
-        yolo_str = kp.to_yolo(image_width, image_height, category_to_id)
-        assert yolo_str == "0 0.25 0.25 0.5 0.5 0.125 0.125"
+        yolo_str = kp.to_yolo(image_width, image_height, category_to_id, 3)
+        assert yolo_str == "0 0.250 0.250 0.500 0.500 0.125 0.125"

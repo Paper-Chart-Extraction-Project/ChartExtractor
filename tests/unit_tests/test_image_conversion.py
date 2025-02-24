@@ -1,14 +1,12 @@
 """Tests for the image_conversion module."""
 
-import sys
-import os
-
-sys.path.insert(0, os.path.abspath(os.path.join("..", "..", "src")))
-
-import pytest
-from PIL import Image, ImageChops
+# External Imports
 import numpy as np
-from utilities import image_conversion
+from PIL import Image, ImageChops
+import pytest
+
+# Internal Imports
+from ChartExtractor.utilities import image_conversion
 
 
 @pytest.fixture()

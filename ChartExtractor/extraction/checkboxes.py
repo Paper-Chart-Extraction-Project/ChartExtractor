@@ -1,19 +1,24 @@
 """Provides functions for extracting and determining the meaning of checkboxes."""
 
-from utilities.annotations import BoundingBox
-from utilities.detections import Detection
-from utilities.detection_reassembly import (
+# Built-in Imports
+import json
+from pathlib import Path
+from PIL import Image
+from typing import Dict, List, Literal, Tuple
+
+# Internal Imports
+from ..utilities.annotations import BoundingBox
+from ..utilities.detections import Detection
+from ..utilities.detection_reassembly import (
     untile_detections,
     non_maximum_suppression,
     intersection_over_minimum,
 )
-from utilities.tiling import tile_image
-from object_detection_models.object_detection_model import ObjectDetectionModel
-import json
+from ..utilities.tiling import tile_image
+from ..object_detection_models.object_detection_model import ObjectDetectionModel
+
+# External Imports
 import numpy as np
-from pathlib import Path
-from PIL import Image
-from typing import Dict, List, Literal, Tuple
 
 
 DATA_FILEPATH: Path = Path(__file__).parents[2] / "data"

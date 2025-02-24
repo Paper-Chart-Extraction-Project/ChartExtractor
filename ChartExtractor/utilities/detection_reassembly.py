@@ -1,8 +1,11 @@
 """This module defines functions for reassembling tiled detections."""
 
+# Built-in Imports
 from typing import Callable, List, Tuple
-from utilities.detections import Detection
-from utilities.tiling import correct_annotation_coords
+
+# Internal Imports
+from ..utilities.detections import Detection
+from ..utilities.tiling import correct_annotation_coords
 
 
 def compute_area(box: Tuple[float, float, float, float]):

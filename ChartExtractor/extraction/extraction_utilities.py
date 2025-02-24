@@ -11,15 +11,15 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 
 # Internal imports
-from object_detection_models.object_detection_model import ObjectDetectionModel
-from utilities.annotations import BoundingBox
-from utilities.detections import Detection
-from utilities.detection_reassembly import (
+from ..object_detection_models.object_detection_model import ObjectDetectionModel
+from ..utilities.annotations import BoundingBox
+from ..utilities.detections import Detection
+from ..utilities.detection_reassembly import (
     intersection_over_minimum,
     non_maximum_suppression,
     untile_detections,
 )
-from utilities.tiling import tile_image
+from ..utilities.tiling import tile_image
 
 
 MAX_BOX_WIDTH, MAX_BOX_HEIGHT = (0.0174507, 0.0236938)

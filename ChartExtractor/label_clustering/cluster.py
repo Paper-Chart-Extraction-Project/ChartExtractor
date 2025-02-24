@@ -10,11 +10,8 @@ the bounding boxes in the cluster.
 from functools import cached_property
 from typing import List, Literal
 
-# External imports
-# ...
-
 # Internal imports
-from utilities.annotations import BoundingBox
+from ..utilities.annotations import BoundingBox
 
 
 class Cluster:

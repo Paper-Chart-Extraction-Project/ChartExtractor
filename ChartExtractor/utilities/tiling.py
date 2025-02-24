@@ -8,10 +8,13 @@ image using (nearly) the same parameters as `tile_image`. It assumes annotations
 their location within the image. Each annotation is assigned to the tile(s) that completely enclose its bounding box.
 """
 
+# Built-in Imports
+import math
 from PIL import Image
 from typing import List, Literal, Tuple, Union
-import math
-from utilities.annotations import BoundingBox, Keypoint
+
+# Internal Imports
+from ..utilities.annotations import BoundingBox, Keypoint
 
 
 def tile_image(
@@ -87,7 +90,9 @@ def validate_tile_parameters(
 
     Raises:
         ValueError:
-            If slice_width is not within (0, image_width], slice_height not within (0, image_height), or horizontal/vertical overlap ratio not in (0, 1].
+            If slice_width is not within (0, image_width], slice_height 
+            not within (0, image_height), or horizontal/vertical overlap 
+            ratio not in (0, 1].
     """
     if not 0 < slice_width <= image.size[0]:
         raise ValueError(
@@ -98,13 +103,15 @@ def validate_tile_parameters(
             f"slice_height must be between 1 and the image's height (slice_height passed was {slice_height})."
         )
     if not 0 < horizontal_overlap_ratio <= 1:
-        raise ValueError(
-            f"horizontal_overlap_ratio must be greater than 0 and less than or equal to 1 (horizontal_overlap_ratio passed was {horizontal_overlap_ratio}."
-        )
+        err_msg: str = "horizontal_overlap_ratio must be greater than 0 and "
+        err_msg += "less than or equal to 1 (horizontal_overlap_ratio passed "
+        err_msg += f"was {horizontal_overlap_ratio}."
+        raise ValueError(err_msg)
     if not 0 < vertical_overlap_ratio <= 1:
-        raise ValueError(
-            f"vertical_overlap_ratio must be greater than 0 and less than or equal to 1 (vertical_overlap_ratio passed was {vertical_overlap_ratio}."
-        )
+        err_msg: str = "vertical_overlap_ratio must be greater than 0 and "
+        err_msg += "less than or equal to 1 (vertical_overlap_ratio passed "
+        err_msg += "was {vertical_overlap_ratio}."
+        raise ValueError(err_msg)
 
 
 def generate_tile_coordinates(
@@ -132,22 +139,23 @@ def generate_tile_coordinates(
             The amount of top-bottom overlap between slices.
 
     Returns:
-        A 2d list of four coordinate tuples encoding the left, top, right, and bottom of each tile.
+        A 2d list of four coordinate tuples encoding the left, top, right, and 
+        bottom of each tile.
     """
     tile_coords: List[List[Tuple[int, int, int, int]]] = [
         [
             (
-                x * round(slice_width * horizontal_overlap_ratio),
-                y * round(slice_width * vertical_overlap_ratio),
-                slice_width + x * round(slice_width * horizontal_overlap_ratio),
-                slice_height + y * round(slice_width * vertical_overlap_ratio),
+                x * round(slice_width * (1-horizontal_overlap_ratio)),
+                y * round(slice_width * (1-vertical_overlap_ratio)),
+                slice_width + x * round(slice_width * (1-horizontal_overlap_ratio)),
+                slice_height + y * round(slice_width * (1-vertical_overlap_ratio)),
             )
             for x in range(
-                math.floor(image_width / (slice_width * horizontal_overlap_ratio))
+                math.floor(image_width / (slice_width * (1-horizontal_overlap_ratio)))
             )
         ]
         for y in range(
-            math.floor(image_height / (slice_height * vertical_overlap_ratio))
+            math.floor(image_height / (slice_height * (1-vertical_overlap_ratio)))
         )
     ]
     return tile_coords
