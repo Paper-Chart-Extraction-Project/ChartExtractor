@@ -45,6 +45,7 @@ from ..utilities.detection_reassembly import (
     intersection_over_minimum,
     non_maximum_suppression,
 )
+from ..utilities.read_config import read_config
 from ..utilities.tiling import tile_image
 
 
@@ -54,8 +55,9 @@ CORNER_LANDMARK_NAMES: List[str] = [
     "lateral",
     "units",
 ]
-path_to_data: Path = Path(os.path.dirname(__file__)) / ".." / ".." / "data"
-path_to_models: Path = path_to_data / "models"
+PATH_TO_DATA: Path = (Path(os.path.dirname(__file__)) / ".." / ".." / "data").resolve()
+PATH_TO_MODELS: Path = PATH_TO_DATA / "models"
+MODEL_CONFIG: Dict = read_config()
 
 
 def digitize_sheet(intraop_image: Image.Image, preop_postop_image: Image.Image) -> Dict:
@@ -171,7 +173,7 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
     image: Image.Image = homography_preoperative_chart(
         image,
         make_document_landmark_detections(
-            image, path_to_models / "preop_postop_document_landmark_detector.pt"
+            image, PATH_TO_MODELS / "preop_postop_document_landmark_detector.pt"
         ),
     )
     digit_detections: List[Detection] = make_digit_detections(image)
@@ -203,7 +205,7 @@ def homography_intraoperative_chart(
         "units",
     ]
     dst_landmarks = label_studio_to_bboxes(
-        str(path_to_data / "intraop_document_landmarks.json")
+        str(PATH_TO_DATA / "intraop_document_landmarks.json")
     )["unified_intraoperative_preoperative_flowsheet_v1_1_front.png"]
 
     dest_points = [
@@ -254,7 +256,7 @@ def homography_preoperative_chart(
         "disposition",
     ]
     dst_landmarks = label_studio_to_bboxes(
-        str(path_to_data / "preoperative_document_landmarks.json")
+        str(PATH_TO_DATA / "preoperative_document_landmarks.json")
     )["unified_intraoperative_preoperative_flowsheet_v1_1_back.png"]
 
     dest_points = [
@@ -286,7 +288,7 @@ def homography_preoperative_chart(
 
 def make_document_landmark_detections(
     image: Image.Image,
-    document_model_filepath: Path = path_to_models / "document_landmark_detector.pt",
+    document_model_filepath: Path = PATH_TO_MODELS / model_config[],
 ) -> List[Detection]:
     """Runs the document landmark detection model to find document landmarks.
 
@@ -317,7 +319,7 @@ def make_document_landmark_detections(
 
 def make_digit_detections(
     image: Image.Image,
-    digit_model_filepath: Path = path_to_models / "combined_digit_yolov11m.pt",
+    digit_model_filepath: Path = PATH_TO_MODELS / "combined_digit_yolov11m.pt",
 ) -> List[Detection]:
     """Runs the digit detection detection model to find handwritten digits.
 
@@ -345,9 +347,9 @@ def make_bp_and_hr_detections(
     image: Image.Image,
     time_clusters: List[Cluster],
     mmhg_clusters: List[Cluster],
-    sys_model_filepath: Path = path_to_models / "sys_yolov11m_pose_best_no_transfer.pt",
-    dia_model_filepath: Path = path_to_models / "dia_yolov11m_pose_best_no_transfer.pt",
-    hr_model_filepath: Path = path_to_models / "hr_yolov11m_pose_best_no_transfer.pt",
+    sys_model_filepath: Path = PATH_TO_MODELS / "sys_yolov11m_pose_best_no_transfer.pt",
+    dia_model_filepath: Path = PATH_TO_MODELS / "dia_yolov11m_pose_best_no_transfer.pt",
+    hr_model_filepath: Path = PATH_TO_MODELS / "hr_yolov11m_pose_best_no_transfer.pt",
 ) -> Dict:
     """Finds blood pressure symbols and associates a value and timestamp to them.
 
@@ -437,7 +439,7 @@ def make_bp_and_hr_detections(
 
 def make_intraop_checkbox_detections(
     image: Image.Image,
-    checkbox_model_filepath: Path = path_to_models / "yolov11s_checkboxes.pt",
+    checkbox_model_filepath: Path = PATH_TO_MODELS / "yolov11s_checkboxes.pt",
 ) -> Dict:
     """Finds checkboxes on the intraoperative form, then associates a meaning to them.
 
@@ -460,7 +462,7 @@ def make_intraop_checkbox_detections(
 
 def make_preop_postop_checkbox_detections(
     image: Image.Image,
-    checkbox_model_filepath: Path = path_to_models / "yolov11s_checkboxes.pt",
+    checkbox_model_filepath: Path = PATH_TO_MODELS / "yolov11s_checkboxes.pt",
 ):
     """Finds checkboxes on the intraoperative form, then associates a meaning to them.
 
