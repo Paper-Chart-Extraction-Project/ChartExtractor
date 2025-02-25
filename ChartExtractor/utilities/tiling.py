@@ -90,8 +90,8 @@ def validate_tile_parameters(
 
     Raises:
         ValueError:
-            If slice_width is not within (0, image_width], slice_height 
-            not within (0, image_height), or horizontal/vertical overlap 
+            If slice_width is not within (0, image_width], slice_height
+            not within (0, image_height), or horizontal/vertical overlap
             ratio not in (0, 1].
     """
     if not 0 < slice_width <= image.size[0]:
@@ -139,23 +139,23 @@ def generate_tile_coordinates(
             The amount of top-bottom overlap between slices.
 
     Returns:
-        A 2d list of four coordinate tuples encoding the left, top, right, and 
+        A 2d list of four coordinate tuples encoding the left, top, right, and
         bottom of each tile.
     """
     tile_coords: List[List[Tuple[int, int, int, int]]] = [
         [
             (
-                x * round(slice_width * (1-horizontal_overlap_ratio)),
-                y * round(slice_width * (1-vertical_overlap_ratio)),
-                slice_width + x * round(slice_width * (1-horizontal_overlap_ratio)),
-                slice_height + y * round(slice_width * (1-vertical_overlap_ratio)),
+                x * round(slice_width * (1 - horizontal_overlap_ratio)),
+                y * round(slice_width * (1 - vertical_overlap_ratio)),
+                slice_width + x * round(slice_width * (1 - horizontal_overlap_ratio)),
+                slice_height + y * round(slice_width * (1 - vertical_overlap_ratio)),
             )
             for x in range(
-                math.floor(image_width / (slice_width * (1-horizontal_overlap_ratio)))
+                math.floor(image_width / (slice_width * (1 - horizontal_overlap_ratio)))
             )
         ]
         for y in range(
-            math.floor(image_height / (slice_height * (1-vertical_overlap_ratio)))
+            math.floor(image_height / (slice_height * (1 - vertical_overlap_ratio)))
         )
     ]
     return tile_coords
@@ -197,6 +197,17 @@ def tile_annotations(
         A list of lists, where each sub-list represents a tile in the grid. Each tile's
         sub-list contains the annotations that intersect any with that specific tile.
     """
+
+    def truncate_annotation_to_tile(annotation, tile) -> Union[BoundingBox, Keypoint]:
+        """Truncates the annotation to fit on the tile."""
+        new_box = [
+            max(annotation.box[0], tile[0]),
+            max(annotation.box[1], tile[1]),
+            min(annotation.box[2], tile[2]),
+            min(annotation.box[3], tile[3]),
+        ]
+        return annotation.set_box(*new_box)
+
     tile_coordinates: List[List[Tuple[int, int, int, int]]] = generate_tile_coordinates(
         image_width,
         image_height,
@@ -212,13 +223,14 @@ def tile_annotations(
     annotation_tiles = [
         [
             [
-                (
-                    correct_annotation_coords(
+                correct_annotation_coords(
+                    truncate_annotation_to_tile(
                         ann,
-                        tile_coordinates[iy][ix][0],
-                        tile_coordinates[iy][ix][1],
-                        "image_to_tile",
-                    )
+                        tile_coordinates[iy][ix],
+                    ),
+                    tile_coordinates[iy][ix][0],
+                    tile_coordinates[iy][ix][1],
+                    "image_to_tile",
                 )
                 for ann in tile_anns
             ]
@@ -252,12 +264,15 @@ def get_annotations_in_tile(
     def annotation_in_tile(ann, tile) -> bool:
         box_1 = ann.box
         box_2 = tile
-        return all(
-            [
-                max(box_1[0], box_2[0]) < min(box_1[2], box_2[2]),
-                max(box_1[1], box_2[1]) < min(box_1[3], box_2[3]),
-            ]
-        )
+        LEFT = 0
+        TOP = 1
+        RIGHT = 2
+        BOTTOM = 3
+        if box_1[RIGHT] < box_2[LEFT] or box_2[RIGHT] < box_1[LEFT]:
+            return False
+        if box_1[BOTTOM] < box_2[TOP] or box_2[BOTTOM] < box_1[TOP]:
+            return False
+        return True
 
     annotations_in_tile: List = list(
         filter(lambda ann: annotation_in_tile(ann, tile), annotations)
