@@ -7,43 +7,45 @@ from PIL import Image
 from typing import Dict, List, Tuple
 
 # Internal Imports
-from extraction.blood_pressure_and_heart_rate import (
+from ..extraction.blood_pressure_and_heart_rate import (
     extract_heart_rate_and_blood_pressure,
 )
-from extraction.checkboxes import extract_checkboxes
-from extraction.extraction_utilities import (
+from ..extraction.checkboxes import extract_checkboxes
+from ..extraction.extraction_utilities import (
     combine_dictionaries,
     detect_numbers,
     label_studio_to_bboxes,
 )
-from extraction.inhaled_volatile import extract_inhaled_volatile
-from extraction.intraoperative_digit_boxes import (
+from ..extraction.inhaled_volatile import extract_inhaled_volatile
+from ..extraction.intraoperative_digit_boxes import (
     extract_drug_codes,
     extract_ett_size,
     extract_surgical_timing,
 )
-from extraction.physiological_indicators import extract_physiological_indicators
-from extraction.preoperative_postoperative_digit_boxes import (
+from ..extraction.physiological_indicators import extract_physiological_indicators
+from ..extraction.preoperative_postoperative_digit_boxes import (
     extract_preop_postop_digit_data,
 )
-from image_registration.homography import homography_transform
-from label_clustering.cluster import Cluster
-from label_clustering.clustering_methods import (
+from ..image_registration.homography import homography_transform
+from ..label_clustering.cluster import Cluster
+from ..label_clustering.clustering_methods import (
     cluster_kmeans,
     cluster_boxes,
     find_legend_locations,
 )
-from label_clustering.isolate_labels import isolate_blood_pressure_legend_bounding_boxes
-from object_detection_models.ultralytics_yolov8 import UltralyticsYOLOv8
-from object_detection_models.ultralytics_yolov11_pose import UltralyticsYOLOv11Pose
-from object_detection_models.object_detection_model import ObjectDetectionModel
-from utilities.detections import Detection
-from utilities.detection_reassembly import (
+from ..label_clustering.isolate_labels import (
+    isolate_blood_pressure_legend_bounding_boxes,
+)
+from ..object_detection_models.ultralytics_yolov8 import UltralyticsYOLOv8
+from ..object_detection_models.ultralytics_yolov11_pose import UltralyticsYOLOv11Pose
+from ..object_detection_models.object_detection_model import ObjectDetectionModel
+from ..utilities.detections import Detection
+from ..utilities.detection_reassembly import (
     untile_detections,
     intersection_over_minimum,
     non_maximum_suppression,
 )
-from utilities.tiling import tile_image
+from ..utilities.tiling import tile_image
 
 
 CORNER_LANDMARK_NAMES: List[str] = [
