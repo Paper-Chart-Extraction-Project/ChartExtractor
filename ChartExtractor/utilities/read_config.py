@@ -22,8 +22,8 @@ def read_config() -> Dict:
         parsed_data: Dict = yaml.load(data, Loader=yaml.Loader)
         return parsed_data
     except Exception as e:
-        err_msg = "An exception has occured, ensure that config.yaml is"
-        err_msg += "correctly formatted and is at the root of the"
+        err_msg = "An exception has occured, ensure that config.yaml is "
+        err_msg += "correctly formatted and is at the root of the "
         err_msg += "ChartExtractor package."
         print(err_msg)
         print("Exact exception:")
