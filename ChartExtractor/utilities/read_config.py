@@ -17,8 +17,8 @@ def read_config() -> Dict:
         and the tile size proportion that the model was trained on.
     """
     try:
-        config_path: Path = Path(__file__) / ".." / ".." / "config.yaml"
-        data: str = open(config_path, "r").read()
+        config_path: Path = Path(__file__) / ".." / ".." / ".." / "config.yaml"
+        data: str = open(config_path.resolve(), "r").read()
         parsed_data: Dict = yaml.load(data, Loader=yaml.Loader)
         return parsed_data
     except Exception as e:
