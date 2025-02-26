@@ -306,12 +306,16 @@ def make_document_landmark_detections(
     document_model: UltralyticsYOLOv8 = UltralyticsYOLOv8.from_weights_path(
         str(document_model_filepath)
     )
-    size: int = max([int((1 / 4) * image.size[0]), int((1 / 4) * image.size[1])])
-    tiles: List[List[Image.Image]] = tile_image(image, size, size, 0.5, 0.5)
+    tile_size_proportion: float = MODEL_CONFIG["intraop_document_landmarks"]["tile_size_proportion"]
+    tile_size: int = min(
+        image.size[0]*tile_size_proportion,
+        image.size[1]*tile_size_proportion,
+    )
+    tiles: List[List[Image.Image]] = tile_image(image, tile_size, tile_size, 0.5, 0.5)
     detections = [
         [document_model(tile, verbose=False) for tile in row] for row in tiles
     ]
-    detections = untile_detections(detections[0], size, size, 0.5, 0.5)
+    detections = untile_detections(detections[0], tile_size, tile_size, 0.5, 0.5)
     detections = non_maximum_suppression(
         detections, overlap_comparator=intersection_over_minimum
     )
@@ -337,9 +341,13 @@ def make_digit_detections(
     digit_model: UltralyticsYOLOv8 = UltralyticsYOLOv8.from_weights_path(
         str(digit_model_filepath)
     )
-    slice_size = max(int(image.size[0] * (1 / 6)), int(image.size[1] * (1 / 6)))
+    tile_size_proportion: float = MODEL_CONFIG["numbers"]["tile_size_proportion"]
+    tile_size = min(
+        image.size[0]*tile_size_proportion,
+        image.size[1]*tile_size_proportion,
+    )
     number_detections: List[Detection] = detect_numbers(
-        image, digit_model, slice_size, slice_size, 0.5, 0.5
+        image, digit_model, tile_size, tile_size, 0.5, 0.5
     )
     del digit_model
     return number_detections
@@ -405,16 +413,28 @@ def make_bp_and_hr_detections(
     dia_model = UltralyticsYOLOv11Pose.from_weights_path(str(dia_model_filepath))
     hr_model = UltralyticsYOLOv11Pose.from_weights_path(str(hr_model_filepath))
 
-    slice_size = min([int(image.size[0] / 5), int(image.size[1] / 5)])
+    sys_tile_size = min(
+        image.size[0]*MODEL_CONFIG["systolic"]["tile_size_proportion"],
+        image.size[1]*MODEL_CONFIG["systolic"]["tile_size_proportion"],
+    )
+    dia_tile_size = min(
+        image.size[0]*MODEL_CONFIG["diastolic"]["tile_size_proportion"],
+        image.size[1]*MODEL_CONFIG["diastolic"]["tile_size_proportion"],
+    )
+    hr_tile_size = min(
+        image.size[0]*MODEL_CONFIG["heart_rate"]["tile_size_proportion"],
+        image.size[1]*MODEL_CONFIG["heart_rate"]["tile_size_proportion"],
+    )
+
 
     sys_dets: List[Detection] = tile_predict(
-        sys_model, image.copy(), slice_size, slice_size, 0.5, 0.5
+        sys_model, image.copy(), sys_tile_size, sys_tile_size, 0.5, 0.5
     )
     dia_dets: List[Detection] = tile_predict(
-        dia_model, image.copy(), slice_size, slice_size, 0.5, 0.5
+        dia_model, image.copy(), dia_tile_size, dia_tile_size, 0.5, 0.5
     )
     hr_dets: List[Detection] = tile_predict(
-        hr_model, image.copy(), slice_size, slice_size, 0.5, 0.5
+        hr_model, image.copy(), hr_tile_size, hr_tile_size, 0.5, 0.5
     )
 
     sys_dets: List[Detection] = non_maximum_suppression(
@@ -455,8 +475,12 @@ def make_intraop_checkbox_detections(
         A dictionary mapping names of checkboxes to a "checked" or "unchecked" state.
     """
     checkbox_model = UltralyticsYOLOv8.from_weights_path(checkbox_model_filepath)
+    tile_size: int = min(
+        image.size[0]*MODEL_CONFIG["checkboxes"]["tile_size_proportion"],
+        image.size[1]*MODEL_CONFIG["checkboxes"]["tile_size_proportion"],
+    )
     intraop_checkboxes = extract_checkboxes(
-        image, checkbox_model, "intraoperative", 800, 800
+        image, checkbox_model, "intraoperative", tile_size, tile_size
     )
     del checkbox_model
     return intraop_checkboxes
@@ -478,6 +502,10 @@ def make_preop_postop_checkbox_detections(
         A dictionary mapping names of checkboxes to a "checked" or "unchecked" state.
     """
     checkbox_model = UltralyticsYOLOv8.from_weights_path(checkbox_model_filepath)
+    tile_size: int = min(
+        image.size[0]*MODEL_CONFIG["checkboxes"]["tile_size_proportion"],
+        image.size[1]*MODEL_CONFIG["checkboxes"]["tile_size_proportion"],
+    )
     preop_postop_checkboxes = extract_checkboxes(
         image, checkbox_model, "preoperative", 800, 800
     )
