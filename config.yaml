@@ -5,7 +5,7 @@ preop_postop_document_landmarks:
   name: preop_postop_doc_landmark_detector.pt
   tile_size_proportion: 0.3
 numbers:
-  name: combined_digit_yolov11m.pt
+  name: digits.pt
   tile_size_proportion: 0.3
 systolic:
   name: sys_yolov11m_pose_best_no_transfer.pt
