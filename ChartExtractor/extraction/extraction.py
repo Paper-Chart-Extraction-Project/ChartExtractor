@@ -173,7 +173,8 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
     image: Image.Image = homography_preoperative_chart(
         image,
         make_document_landmark_detections(
-            image, PATH_TO_MODELS / "preop_postop_document_landmark_detector.pt"
+            image,
+            PATH_TO_MODELS / MODEL_CONFIG["preop_postop_document_landmarks"]["name"],
         ),
     )
     digit_detections: List[Detection] = make_digit_detections(image)
@@ -288,7 +289,8 @@ def homography_preoperative_chart(
 
 def make_document_landmark_detections(
     image: Image.Image,
-    document_model_filepath: Path = PATH_TO_MODELS / model_config[],
+    document_model_filepath: Path = PATH_TO_MODELS
+    / MODEL_CONFIG["intraop_document_landmarks"]["name"],
 ) -> List[Detection]:
     """Runs the document landmark detection model to find document landmarks.
 
@@ -319,7 +321,7 @@ def make_document_landmark_detections(
 
 def make_digit_detections(
     image: Image.Image,
-    digit_model_filepath: Path = PATH_TO_MODELS / "combined_digit_yolov11m.pt",
+    digit_model_filepath: Path = PATH_TO_MODELS / MODEL_CONFIG["numbers"]["name"],
 ) -> List[Detection]:
     """Runs the digit detection detection model to find handwritten digits.
 
@@ -347,9 +349,9 @@ def make_bp_and_hr_detections(
     image: Image.Image,
     time_clusters: List[Cluster],
     mmhg_clusters: List[Cluster],
-    sys_model_filepath: Path = PATH_TO_MODELS / "sys_yolov11m_pose_best_no_transfer.pt",
-    dia_model_filepath: Path = PATH_TO_MODELS / "dia_yolov11m_pose_best_no_transfer.pt",
-    hr_model_filepath: Path = PATH_TO_MODELS / "hr_yolov11m_pose_best_no_transfer.pt",
+    sys_model_filepath: Path = PATH_TO_MODELS / MODEL_CONFIG["systolic"]["name"],
+    dia_model_filepath: Path = PATH_TO_MODELS / MODEL_CONFIG["diastolic"]["name"],
+    hr_model_filepath: Path = PATH_TO_MODELS / MODEL_CONFIG["heart_rate"]["name"],
 ) -> Dict:
     """Finds blood pressure symbols and associates a value and timestamp to them.
 
@@ -439,7 +441,7 @@ def make_bp_and_hr_detections(
 
 def make_intraop_checkbox_detections(
     image: Image.Image,
-    checkbox_model_filepath: Path = PATH_TO_MODELS / "yolov11s_checkboxes.pt",
+    checkbox_model_filepath: Path = PATH_TO_MODELS / MODEL_CONFIG["checkboxes"]["name"],
 ) -> Dict:
     """Finds checkboxes on the intraoperative form, then associates a meaning to them.
 
@@ -462,7 +464,7 @@ def make_intraop_checkbox_detections(
 
 def make_preop_postop_checkbox_detections(
     image: Image.Image,
-    checkbox_model_filepath: Path = PATH_TO_MODELS / "yolov11s_checkboxes.pt",
+    checkbox_model_filepath: Path = PATH_TO_MODELS / MODEL_CONFIG["checkboxes"]["name"],
 ):
     """Finds checkboxes on the intraoperative form, then associates a meaning to them.
 
