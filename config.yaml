@@ -1,0 +1,35 @@
+intraoperative_document_landmarks:
+  name: intraop_doc_landmark_detector.pt
+  tile_size_proportion: 0.3
+  horz_overlap_proportion: 0.2
+  vert_overlap_proportion: 0.2
+preop_postop_document_landmarks:
+  name: preop_postop_doc_landmark_detector.pt
+  tile_size_proportion: 0.3
+  horz_overlap_proportion: 0.2
+  vert_overlap_proportion: 0.2
+numbers:
+  name: digits.pt
+  tile_size_proportion: 0.3
+  horz_overlap_proportion: 0.2
+  vert_overlap_proportion: 0.2
+systolic:
+  name: sys_yolov11m_pose_best_no_transfer.pt
+  tile_size_proportion: 0.2
+  horz_overlap_proportion: 0.2
+  vert_overlap_proportion: 0.2
+diastolic:
+  name: dia_yolov11m_pose_best_no_transfer.pt
+  tile_size_proportion: 0.2
+  horz_overlap_proportion: 0.2
+  vert_overlap_proportion: 0.2
+heart_rate:
+  name: hr_yolov11m_pose_best_no_transfer.pt
+  tile_size_proportion: 0.2
+  horz_overlap_proportion: 0.2
+  vert_overlap_proportion: 0.2
+checkboxes:
+  name: checkboxes.pt
+  tile_size_proportion: 0.2
+  horz_overlap_proportion: 0.2
+  vert_overlap_proportion: 0.2
