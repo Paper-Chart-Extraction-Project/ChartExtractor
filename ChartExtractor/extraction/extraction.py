@@ -322,9 +322,7 @@ def make_document_landmark_detections(
         MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
         MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
     )
-    detections = [
-        [document_model(tile, verbose=False)[0] for tile in row] for row in tiles
-    ]
+    detections = [document_model(row, verbose=False) for row in tiles]
     detections = untile_detections(
         detections,
         tile_size,
@@ -421,7 +419,7 @@ def make_bp_and_hr_detections(
             vertical_overlap_ratio,
         )
         tiled_detections: List[List[List[Detection]]] = [
-            [model(tile, conf=0.5)[0] for tile in row] for row in tiles
+            model(row, conf=0.5) for row in tiles
         ]
         detections: List[Detection] = untile_detections(
             tiled_detections,

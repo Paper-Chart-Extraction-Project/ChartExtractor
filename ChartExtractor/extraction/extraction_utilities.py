@@ -133,8 +133,7 @@ def detect_numbers(
         vertical_overlap_ratio,
     )
     detections: List[List[List[Detection]]] = [
-        [detection_model(tile, verbose=False, conf=conf)[0] for tile in row]
-        for row in image_tiles
+        detection_model(row, verbose=False, conf=conf) for row in image_tiles
     ]
     detections: List[Detection] = untile_detections(
         detections,
