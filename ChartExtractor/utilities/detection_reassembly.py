@@ -151,8 +151,12 @@ def untile_detections(
         `vertical_overlap_ratio` (float):
             The amount of top-bottom overlap between slices.
     """
-    generate_tile_left = lambda ix: int(ix * tile_width * horizontal_overlap_ratio)
-    generate_tile_top = lambda iy: int(iy * tile_height * vertical_overlap_ratio)
+    generate_tile_left = lambda index: int(
+        index * tile_width * (1 - horizontal_overlap_ratio)
+    )
+    generate_tile_top = lambda index: int(
+        index * tile_height * (1 - vertical_overlap_ratio)
+    )
     flatten_list = lambda l: [item for sublist in l for item in sublist]
 
     untiled_detections: List[List[List[Detection]]] = [

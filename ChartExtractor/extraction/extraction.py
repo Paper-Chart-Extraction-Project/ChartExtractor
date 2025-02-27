@@ -290,7 +290,7 @@ def homography_preoperative_chart(
 def make_document_landmark_detections(
     image: Image.Image,
     document_model_filepath: Path = PATH_TO_MODELS
-    / MODEL_CONFIG["intraop_document_landmarks"]["name"],
+    / MODEL_CONFIG["intraoperative_document_landmarks"]["name"],
 ) -> List[Detection]:
     """Runs the document landmark detection model to find document landmarks.
 
@@ -306,7 +306,7 @@ def make_document_landmark_detections(
     document_model: UltralyticsYOLOv8 = UltralyticsYOLOv8.from_weights_path(
         str(document_model_filepath)
     )
-    tile_size_proportion: float = MODEL_CONFIG["intraop_document_landmarks"][
+    tile_size_proportion: float = MODEL_CONFIG["intraoperative_document_landmarks"][
         "tile_size_proportion"
     ]
     tile_size: int = int(
@@ -323,9 +323,15 @@ def make_document_landmark_detections(
         MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
     )
     detections = [
-        [document_model(tile, verbose=False) for tile in row] for row in tiles
+        [document_model(tile, verbose=False)[0] for tile in row] for row in tiles
     ]
-    detections = untile_detections(detections[0], tile_size, tile_size, 0.5, 0.5)
+    detections = untile_detections(
+        detections,
+        tile_size,
+        tile_size,
+        MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
+        MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
+    )
     detections = non_maximum_suppression(
         detections, overlap_comparator=intersection_over_minimum
     )
@@ -415,7 +421,7 @@ def make_bp_and_hr_detections(
             vertical_overlap_ratio,
         )
         tiled_detections: List[List[List[Detection]]] = [
-            [model(tile, conf=0.5) for tile in row] for row in tiles
+            [model(tile, conf=0.5)[0] for tile in row] for row in tiles
         ]
         detections: List[Detection] = untile_detections(
             tiled_detections,
