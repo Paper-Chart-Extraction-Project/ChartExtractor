@@ -223,6 +223,11 @@ class BoundingBox:
         """A list containing this `BoundingBox`'s [left, top, right, bottom]."""
         return [self.left, self.top, self.right, self.bottom]
 
+    @property
+    def area(self) -> float:
+        """The area of the box."""
+        return (self.right - self.left) * (self.bottom - self.top)
+
     def set_box(self, new_left: int, new_top: int, new_right: int, new_bottom: int):
         """Sets this BoundingBox's values for left, top, right, bottom.
 

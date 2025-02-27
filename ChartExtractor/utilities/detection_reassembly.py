@@ -95,6 +95,7 @@ def non_maximum_suppression(
     overlap_comparator: Callable[
         [Detection, Detection], float
     ] = intersection_over_union,
+    sorting_fn: Callable[[Detection], bool] = lambda d: d.confidence,
 ) -> List[Detection]:
     """Applies Non-Maximum Suppression (NMS) to a list of detections.
 
@@ -117,7 +118,7 @@ def non_maximum_suppression(
     Returns:
         A list of `Detection` objects containing the filtered detections after applying NMS.
     """
-    detections = sorted(detections, key=lambda d: d.confidence, reverse=True)
+    detections = sorted(detections, key=sorting_fn, reverse=True)
     ix = 0
     while ix < len(detections):
         jx = ix + 1
