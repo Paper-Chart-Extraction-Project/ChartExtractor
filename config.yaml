@@ -29,7 +29,7 @@ heart_rate:
   horz_overlap_proportion: 0.2
   vert_overlap_proportion: 0.2
 checkboxes:
-  name: yolov11s_checkboxes.pt
+  name: checkboxes.pt
   tile_size_proportion: 0.3
   horz_overlap_proportion: 0.2
   vert_overlap_proportion: 0.2
