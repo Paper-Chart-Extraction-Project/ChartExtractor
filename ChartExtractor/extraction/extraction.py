@@ -331,7 +331,9 @@ def make_document_landmark_detections(
         MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
     )
     detections = non_maximum_suppression(
-        detections, overlap_comparator=intersection_over_minimum
+        detections,
+        overlap_comparator=intersection_over_minimum,
+        sorting_fn=lambda det: det.annotation.area * det.confidence,
     )
     del document_model
     return detections
@@ -479,13 +481,22 @@ def make_bp_and_hr_detections(
     )
 
     sys_dets: List[Detection] = non_maximum_suppression(
-        sys_dets, 0.5, intersection_over_minimum
+        sys_dets,
+        0.5,
+        intersection_over_minimum,
+        lambda det: det.annotation.area * det.confidence,
     )
     dia_dets: List[Detection] = non_maximum_suppression(
-        dia_dets, 0.5, intersection_over_minimum
+        dia_dets,
+        0.5,
+        intersection_over_minimum,
+        lambda det: det.annotation.area * det.confidence,
     )
     hr_dets: List[Detection] = non_maximum_suppression(
-        hr_dets, 0.5, intersection_over_minimum
+        hr_dets,
+        0.5,
+        intersection_over_minimum,
+        lambda det: det.annotation.area * det.confidence,
     )
 
     dets: List[Detection] = sys_dets + dia_dets + hr_dets

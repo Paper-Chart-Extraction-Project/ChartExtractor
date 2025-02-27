@@ -146,6 +146,7 @@ def detect_numbers(
         detections=detections,
         threshold=0.5,
         overlap_comparator=intersection_over_minimum,
+        sorting_fn=lambda det: det.annotation.area * det.confidence,
     )
     return detections
 
