@@ -164,3 +164,4 @@ tests/unit_tests/test_data/*
 tests/testing_framework.ipynb
 /data
 config.yaml
+/dist
