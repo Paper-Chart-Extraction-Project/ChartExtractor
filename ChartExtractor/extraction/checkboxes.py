@@ -133,7 +133,7 @@ def detect_checkboxes(
         detections=detections,
         threshold=0.8,
         overlap_comparator=intersection_over_minimum,
-        sorting_fn=lambda det: det.annotation.area * det.annotation.confidence,
+        sorting_fn=lambda det: det.annotation.area * det.confidence,
     )
     return [det.annotation for det in detections]
 
