@@ -165,3 +165,4 @@ tests/testing_framework.ipynb
 /data
 config.yaml
 /dist
+/.venv
