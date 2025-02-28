@@ -19,11 +19,14 @@ opencv-python = "^4.10.0.84"
 numpy = "^2.1.2"
 pillow = "^10.4.0"
 ultralytics = "^8.3.6"
-ruff = "^0.6.9"
-pytest = "^8.3.3"
 scikit-learn = "^1.5.2"
-openpyxl = "^3.1.5"
 pyyaml = "^6.0.2"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.9"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.3.3"
 
 [build-system]
 requires = ["poetry-core"]
