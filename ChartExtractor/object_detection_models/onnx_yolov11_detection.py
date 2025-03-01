@@ -80,12 +80,19 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         """
         return 1/(1+np.exp(-x))
 
-    def __call__(self, images: List[np.array]) -> List[List[Detection]]:
+    def __call__(
+        self, 
+        images: List[np.array],
+        confidence: float = 0.5
+    ) -> List[List[Detection]]:
         """Runs the model on a list of images.
 
         Args:
             images (List[np.array]):
                 A list of images read by cv2.imread.
+            confidence (float):
+                The level of confidence below which all detections are culled.
+                Default of 0.5.
 
         Returns:
             A list of detections for each image.
@@ -97,12 +104,19 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         ]
         return detections
 
-    def detect(self, image: np.array) -> List[Detection]:
+    def detect(
+        self,
+        image: np.array,
+        confidence: float,
+    ) -> List[Detection]:
         """Runs the model on a single image.
         
         Args:
             image (np.array):
                 The image to detect on.
+            confidence (float):
+                The level of confidence below which all detections are culled.
+                Default of 0.5.
 
         Returns:
             A list of detections on the image.
@@ -115,9 +129,9 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         detections = self.postprocess_results(pred_results, im_width, im_height)
 
     def preprocess_image(
-            self,
-            image: np.array,
-        ) -> np.array:
+        self,
+        image: np.array,
+    ) -> np.array:
         """Preprocesses an image for running in a yolov11 model.
         
         Args:
@@ -140,12 +154,64 @@ class OnnxYolov11Detection(ObjectDetectionModel):
     def postprocess_results(
         self,
         pred_results,
-        image_width,
-        image_height,
+        image_width: int,
+        image_height: int,
+        confidence: float,
     ):
         """ """
         results = list()
         pred_results = [pred_results[i].reshape(-1) for i in range(len(out))]
         scalar_w = image_width/self.input_im_width
         scalar_h = image_height/self.input_im_height
-        grid_index = -2
+        grid_index = -2 # magic number...
+
+        for index in range(NUM_HEADS):
+            regression = output[index * 2 + 0]
+            classification = output[index * 2 + 1]
+
+            for h in range(MAPSIZE[index][0]):
+                for w in range(MAPSIZE[index][1]):
+                    grid_index += 2
+
+                    if class_num == 1:
+                        cls_max = self.sigmoid(cls[h*MAPSIZE[index][1]+w])
+                        cls_index: int = 0
+                    else:
+                        cls_max, cls_index = max(
+                            [
+                                (self.sigmoid(cls[cl*MAPSIZE[index][1]+h*MAPSIZE[index][1]+w]), cl)
+                                for cl in range(class_num)]
+                        )
+
+                    if cls_max > self.confidence:
+                        regdfl = list()
+                        for lc in range(4): #four???
+                            locval: int = 0
+                            sfsum = sum(np.exp(
+                                reg[((lc*16)+df)*MAPSIZE[index][0]*MAPSIZE[index][1]+h*MAPSIZE[index][1]+w])
+                                for df in range (16)
+                            )
+                            for df in range(16):
+                                sfval = np.exp(reg[((lc*16)+df) * MAPSIZE[index][0] * MAPSIZE[index][1] + h * MAPSIZE[index][1]+w]) / sfsum
+                                locval += sfval * df
+                            regdfl.append(locval)
+
+                        x1 = (MESHGRID[grid_index+0] - regdfl[0]) * strides[index]
+                        y1 = (MESHGRID[grid_index+1] - regdfl[1]) * strides[index]
+                        x2 = (MESHGRID[grid_index+0] - regdfl[2]) * strides[index]
+                        y2 = (MESHGRID[grid_index+1] - regdfl[3]) * strides[index]
+
+                        xmin = max(0, x1*scalar_w)
+                        ymin = max(0, y1*scalar_h)
+                        xmax = min(input_im_width, x2*scalar_w)
+                        ymax = min(input_im_height, y2*scalar_h)
+                        
+                        det = Detection(
+                            BoundingBox(cls_index, xmin, ymin, xmax, ymax),
+                            cls_max
+                        )
+                        detections.append(det)
+        
+        detections = non_maximum_suppresion(detections)
+        return detections
+
