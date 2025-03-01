@@ -59,3 +59,32 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         Returns: 1/(1+e^-x)
         """
         return 1/(1+np.exp(-x))
+
+    def preprocess_image(
+            self,
+            image: np.array,
+            new_width: int,
+            new_height: int
+        ) -> np.array:
+        """Preprocesses an image for running in a yolov11 model.
+        
+        Args:
+            image (np.array):
+                An image read by cv2.imread().
+            new_width (int):
+                The width to resize the image to.
+            new_height (int):
+                The height to resize the image to.
+
+        Returns:
+            A preprocessed image.
+        """
+        image: np.array = cv2.resize(
+            image,
+            (new_width, new_height),
+            interpolation=cv2.INTER_LINEAR
+        )
+        image: np.array = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = image.astype(np.float32)
+        image /= 255.0
+        return image
