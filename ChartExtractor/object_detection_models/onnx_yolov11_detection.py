@@ -19,6 +19,7 @@ modularity and reusability.
 
 # Built-in imports
 from pathlib import Path
+from typing import List
 
 # External imports
 import numpy as np
@@ -26,6 +27,13 @@ import onnxruntime as ort
 
 # Internal imports
 from ..object_detection_models.object_detection_model import ObjectDetectionModel
+
+
+MESHGRID: List = list()
+NUM_CLASSES: int = len(CLASSES)
+NUM_HEADS: int = 3
+STRIDES: List[int] = [8, 16, 32]
+MAPSIZE: List[List[int]] = [[80, 80], [40, 40], [20, 20]]
 
 
 class OnnxYolov11Detection(ObjectDetectionModel):
