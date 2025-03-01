@@ -30,11 +30,16 @@ from ..object_detection_models.object_detection_model import ObjectDetectionMode
 from ..utilities.detections import Detection
 
 
-MESHGRID: List = list()
 NUM_CLASSES: int = len(CLASSES)
 NUM_HEADS: int = 3
 STRIDES: List[int] = [8, 16, 32]
 MAPSIZE: List[List[int]] = [[80, 80], [40, 40], [20, 20]]
+MESHGRID: List = list()
+for index in range(NUM_HEADS):
+    for ix in range(MAPSIZE[index][0]):
+        for jx in range(MAPSIZE[index][1]):
+            MESHGRID.append(j+0.5)
+            MESHGRID.append(i+0.5)
 
 
 class OnnxYolov11Detection(ObjectDetectionModel):
@@ -58,7 +63,6 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         self.model = ort.InferenceSession(self.model_weights_filepath)
 
 
-    @staticmethod
     def sigmoid(self, x) -> int:
         """Applies the sigmoid function to x.
         
@@ -107,5 +111,22 @@ class OnnxYolov11Detection(ObjectDetectionModel):
 
         Returns:
             A list of detections for each image.
+        """
+        if not isinstance(images, list):
+            images = [images]
+        detections: List[List[Detection]] = [
+            self.detect(im) for im in images
+        ]
+        return detections
+
+    def detect(self, image: np.array) -> List[Detection]:
+        """Runs the model on a single image.
+        
+        Args:
+            image (np.array):
+                The image to detect on.
+
+        Returns:
+            A list of detections on the image.
         """
         pass
