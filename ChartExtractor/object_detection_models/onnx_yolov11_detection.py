@@ -158,8 +158,26 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         image_width: int,
         image_height: int,
         confidence: float,
-    ):
-        """ """
+    ) -> List[Detection]:
+        """Processes the raw results from the onnx model.
+        
+        I don't like this method. It was copy pasted from someone else's code and it is
+        very obtuse and difficult to understand.
+
+        Args:
+            pred_results:
+                The raw predictions from the onnx model.
+            image_width (int):
+                The original width of the image.
+            image_height (int):
+                The original height of the image.
+            confidence (float):
+                The level of confidence below which all detections are culled.
+                Default of 0.5.
+
+        Returns:
+            A list of Detection objects.
+        """
         results = list()
         pred_results = [pred_results[i].reshape(-1) for i in range(len(out))]
         scalar_w = image_width/self.input_im_width
