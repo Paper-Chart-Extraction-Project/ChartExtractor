@@ -24,14 +24,13 @@ from typing import List
 # External imports
 import numpy as np
 import onnxruntime as ort
+import yaml
 
 # Internal imports
 from ..object_detection_models.object_detection_model import ObjectDetectionModel
 from ..utilities.detections import Detection
-from ..utilities.detection_reassembly import non_maximum_suppresion
+from ..utilities.detection_reassembly import non_maximum_suppression
 
-
-NUM_CLASSES: int = len(CLASSES)
 NUM_HEADS: int = 3
 STRIDES: List[int] = [8, 16, 32]
 MAPSIZE: List[List[int]] = [[80, 80], [40, 40], [20, 20]]
@@ -57,6 +56,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
     def __init__(
         self,
         model_weights_filepath: Path,
+        model_metadata_filepath: Path,
         input_im_width: int = 640,
         input_im_height: int = 640,
     ):
@@ -65,11 +65,24 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         Args:
             model_weights_filepath (Path):
                 The filepath to the model's weights.
+            model_metadata_filepath (Path):
+                The filepath to the metadata (for class names).
+            input_im_width (int):
+                The image width that the model accepts.
+                Defaults to 640.
+            input_im_height (int):
+                The image height that the model accepts.
+                Defaults to 640.
         """
         self.model = ort.InferenceSession(self.model_weights_filepath)
         self.input_im_width = input_im_width
         self.input_im_height = input_im_height
-
+        self.classes = OnnxYolov11Detection.load_classes(model_metadata_filepath)
+        
+    @staticmethod
+    def load_classes(model_metadata_filepath) -> Dict[int, str]:
+        """ """
+        pass
 
     def sigmoid(self, x) -> int:
         """Applies the sigmoid function to x.
