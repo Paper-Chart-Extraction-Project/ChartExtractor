@@ -16,3 +16,6 @@ confidence scores, and potentially keypoints (if available in the model's output
 This approach simplifies the integration and usage of YOLOv8 within this program, promoting code
 modularity and reusability.
 """
+
+# Internal imports
+from ..object_detection_models.object_detection_model import ObjectDetectionModel
