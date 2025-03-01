@@ -28,6 +28,7 @@ import onnxruntime as ort
 # Internal imports
 from ..object_detection_models.object_detection_model import ObjectDetectionModel
 from ..utilities.detections import Detection
+from ..utilities.detection_reassembly import non_maximum_suppresion
 
 
 NUM_CLASSES: int = len(CLASSES)
@@ -54,11 +55,11 @@ class OnnxYolov11Detection(ObjectDetectionModel):
     """
 
     def __init__(
-            self,
-            model_weights_filepath: Path,
-            input_im_width: int = 640,
-            input_im_height: int = 640,
-        ):
+        self,
+        model_weights_filepath: Path,
+        input_im_width: int = 640,
+        input_im_height: int = 640,
+    ):
         """Initializes the onnx model.
         
         Args:
@@ -212,6 +213,6 @@ class OnnxYolov11Detection(ObjectDetectionModel):
                         )
                         detections.append(det)
         
-        detections = non_maximum_suppresion(detections)
+        detections: List[Detection] = non_maximum_suppresion(detections)
         return detections
 
