@@ -27,6 +27,7 @@ import onnxruntime as ort
 
 # Internal imports
 from ..object_detection_models.object_detection_model import ObjectDetectionModel
+from ..utilities.detections import Detection
 
 
 MESHGRID: List = list()
@@ -96,3 +97,15 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         image = image.astype(np.float32)
         image /= 255.0
         return image
+
+    def __call__(self, images: List[np.array]) -> List[List[Detection]]:
+        """Runs the model on a list of images.
+
+        Args:
+            images (List[np.array]):
+                A list of images read by cv2.imread.
+
+        Returns:
+            A list of detections for each image.
+        """
+        pass
