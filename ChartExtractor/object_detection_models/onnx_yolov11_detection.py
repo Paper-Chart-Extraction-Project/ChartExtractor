@@ -17,5 +17,45 @@ This approach simplifies the integration and usage of YOLOv8 within this program
 modularity and reusability.
 """
 
+# Built-in imports
+from pathlib import Path
+
+# External imports
+import numpy as np
+import onnxruntime as ort
+
 # Internal imports
 from ..object_detection_models.object_detection_model import ObjectDetectionModel
+
+
+class OnnxYolov11Detection(ObjectDetectionModel):
+    """Provides a wrapper for a yolov11 ONNX model.
+
+    This class inherits from the `ObjectDetectionModel` interface, enabling us to use the onnx
+    model within our program through a consistent interface.
+
+    Attributes:
+        model:
+            The underlying onnx model.
+    """
+
+    def __init__(self, model_weights_filepath: Path):
+        """Initializes the onnx model.
+        
+        Args:
+            model_weights_filepath (Path):
+                The filepath to the model's weights.
+        """
+        self.model = ort.InferenceSession(self.model_weights_filepath)
+
+
+    @staticmethod
+    def sigmoid(self, x) -> int:
+        """Applies the sigmoid function to x.
+        
+        Args:
+            x: the input number.
+
+        Returns: 1/(1+e^-x)
+        """
+        return 1/(1+np.exp(-x))
