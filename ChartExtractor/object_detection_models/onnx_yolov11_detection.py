@@ -80,6 +80,40 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         """
         return 1/(1+np.exp(-x))
 
+    def __call__(self, images: List[np.array]) -> List[List[Detection]]:
+        """Runs the model on a list of images.
+
+        Args:
+            images (List[np.array]):
+                A list of images read by cv2.imread.
+
+        Returns:
+            A list of detections for each image.
+        """
+        if not isinstance(images, list):
+            images = [images]
+        detections: List[List[Detection]] = [
+            self.detect(im) for im in images
+        ]
+        return detections
+
+    def detect(self, image: np.array) -> List[Detection]:
+        """Runs the model on a single image.
+        
+        Args:
+            image (np.array):
+                The image to detect on.
+
+        Returns:
+            A list of detections on the image.
+        """
+        im_width, im_height = image.shape[:2]
+        image: np.array = self.preprocess_image(image)
+        image: np.array = image.transpose((2, 0, 1))
+        image: np.array = np.expand_dims(image, axis=0)
+        pred_results = self.model.run(None, {'data': image})
+        detections = self.postprocess_results(pred_results, im_width, im_height)
+
     def preprocess_image(
             self,
             image: np.array,
@@ -115,37 +149,3 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         scalar_w = image_width/self.input_im_width
         scalar_h = image_height/self.input_im_height
         grid_index = -2
-
-    def __call__(self, images: List[np.array]) -> List[List[Detection]]:
-        """Runs the model on a list of images.
-
-        Args:
-            images (List[np.array]):
-                A list of images read by cv2.imread.
-
-        Returns:
-            A list of detections for each image.
-        """
-        if not isinstance(images, list):
-            images = [images]
-        detections: List[List[Detection]] = [
-            self.detect(im) for im in images
-        ]
-        return detections
-
-    def detect(self, image: np.array) -> List[Detection]:
-        """Runs the model on a single image.
-        
-        Args:
-            image (np.array):
-                The image to detect on.
-
-        Returns:
-            A list of detections on the image.
-        """
-        im_width, im_height = image.shape[:2]
-        image: np.array = self.preprocess_image(image)
-        image: np.array = image.transpose((2, 0, 1))
-        image: np.array = np.expand_dims(image, axis=0)
-        pred_results = self.model.run(None, {'data': image})
-        detections = self.postprocess_results(pred_results, im_width, im_height)
