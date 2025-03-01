@@ -53,7 +53,12 @@ class OnnxYolov11Detection(ObjectDetectionModel):
             The underlying onnx model.
     """
 
-    def __init__(self, model_weights_filepath: Path):
+    def __init__(
+            self,
+            model_weights_filepath: Path,
+            input_im_width: int = 640,
+            input_im_height: int = 640,
+        ):
         """Initializes the onnx model.
         
         Args:
@@ -61,6 +66,8 @@ class OnnxYolov11Detection(ObjectDetectionModel):
                 The filepath to the model's weights.
         """
         self.model = ort.InferenceSession(self.model_weights_filepath)
+        self.input_im_width = input_im_width
+        self.input_im_height = input_im_height
 
 
     def sigmoid(self, x) -> int:
@@ -76,31 +83,38 @@ class OnnxYolov11Detection(ObjectDetectionModel):
     def preprocess_image(
             self,
             image: np.array,
-            new_width: int,
-            new_height: int
         ) -> np.array:
         """Preprocesses an image for running in a yolov11 model.
         
         Args:
             image (np.array):
                 An image read by cv2.imread().
-            new_width (int):
-                The width to resize the image to.
-            new_height (int):
-                The height to resize the image to.
 
         Returns:
             A preprocessed image.
         """
         image: np.array = cv2.resize(
             image,
-            (new_width, new_height),
+            (self.input_im_width, self.input_im_height),
             interpolation=cv2.INTER_LINEAR
         )
         image: np.array = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = image.astype(np.float32)
         image /= 255.0
         return image
+    
+    def postprocess_results(
+        self,
+        pred_results,
+        image_width,
+        image_height,
+    ):
+        """ """
+        results = list()
+        pred_results = [pred_results[i].reshape(-1) for i in range(len(out))]
+        scalar_w = image_width/self.input_im_width
+        scalar_h = image_height/self.input_im_height
+        grid_index = -2
 
     def __call__(self, images: List[np.array]) -> List[List[Detection]]:
         """Runs the model on a list of images.
@@ -129,4 +143,9 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         Returns:
             A list of detections on the image.
         """
-        pass
+        im_width, im_height = image.shape[:2]
+        image: np.array = self.preprocess_image(image)
+        image: np.array = image.transpose((2, 0, 1))
+        image: np.array = np.expand_dims(image, axis=0)
+        pred_results = self.model.run(None, {'data': image})
+        detections = self.postprocess_results(pred_results, im_width, im_height)
