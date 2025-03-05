@@ -357,8 +357,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
     @staticmethod
     def draw_detections(
         image: np.ndarray,
-        predictions: np.ndarray,
-        classes: List[Tuple] = None,
+        detections: List[Detection],
         colors: List[Tuple] = None,
         mask_alpha: float = 0.3,
     ) -> np.ndarray:
@@ -367,8 +366,8 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         Args:
             image (np.ndarray):
                 An image read by cv2.imread().
-            predictions (np.ndarray):
-                The predictions as a numpy ndarray.
+            detections (List[Detections]):
+                The predictions as Detection objects.
             colors (List[Tuple]):
                 The colors to use for the objects.
             mask_alpha (float):
@@ -378,17 +377,11 @@ class OnnxYolov11Detection(ObjectDetectionModel):
             An image with detections drawn on top.
         """
 
-        def get_color(class_id: int) -> Tuple[int, int, int]:
+        def get_color(category: int) -> Tuple[int, int, int]:
             if colors is None:
                 return np.random.uniform(0, 255, size=(1, 3)).tolist()[0]
             else:
-                return colors[class_id]
-
-        def get_class_str(class_id: int) -> str:
-            if classes is None:
-                return str(class_id)
-            else:
-                return classes[class_id]
+                return colors[category]
 
         det_img = image.copy()
 
@@ -398,15 +391,14 @@ class OnnxYolov11Detection(ObjectDetectionModel):
 
         mask_img = image.copy()
 
-        boxes, scores, class_ids = (
-            predictions[:, :4].tolist(),
-            predictions[:, 4].tolist(),
-            predictions[:, 5].tolist(),
-        )
 
         # Draw bounding boxes, masks, and text annotations
-        for class_id, box, score in zip(class_ids, boxes, scores):
-            color = get_color(int(class_id))
+        for detection in detections:
+            category = detection.annotation.category
+            box = detection.annotation.box
+            score = detection.confidence
+
+            color = get_color(category)
             x1, y1, x2, y2 = int(box[0]), int(box[1]), int(box[2]), int(box[3])
 
             # Draw fill rectangle for mask
@@ -416,8 +408,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
             cv2.rectangle(det_img, (x1, y1), (x2, y2), color, 2)
 
             # Prepare text (label and score)
-            label = get_class_str(int(class_id))
-            caption = f"{label} {int(score * 100)}%"
+            caption = f"{category} {int(score * 100)}%"
 
             # Calculate text size and position
             (tw, th), _ = cv2.getTextSize(
