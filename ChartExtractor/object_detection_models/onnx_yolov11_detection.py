@@ -34,7 +34,6 @@ from ..utilities.detection_reassembly import non_maximum_suppression
 from ..utilities.read_config import read_yaml_file
 
 
-class_num = 256
 NUM_HEADS: int = 3
 STRIDES: List[int] = [8, 16, 32]
 MAPSIZE: List[List[int]] = [[80, 80], [40, 40], [20, 20]]
@@ -154,6 +153,10 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         image: np.array = np.expand_dims(image, axis=0)
         pred_results = self.model.run(None, {"images": image})
         detections = self.postprocess_results(pred_results, confidence)
+        detections = [
+            BoundingBox(d[5], d[0], d[1], d[2], d[3]), d[4]
+            for d in detections
+        ]
         return detections
 
     def preprocess_image(

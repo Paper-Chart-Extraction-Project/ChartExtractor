@@ -22,6 +22,7 @@ def read_config() -> Dict:
     potential_err_msg += "ChartExtractor package."
     config_data: Dict = read_yaml_file(config_path, potential_err_msg)
 
+
 def read_yaml_file(filepath: Path, err_msg) -> Dict:
     """Reads a yaml file. Raises slightly more helpful exceptions.
     
