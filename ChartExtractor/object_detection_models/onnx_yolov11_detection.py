@@ -90,8 +90,16 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         pass
 
     @staticmethod
-    def load_classes(model_metadata_filepath) -> Dict[int, str]:
-        """ """
+    def load_classes(model_metadata_filepath: Path) -> List[str]:
+        """Loads the classes from a yaml file into a list.
+        
+        Args:
+            model_metadata_filepath (Path):
+                The path to the model metadata.
+
+        Returns:
+            A list of all the classes in order.
+        """
         pass
 
     def __call__(
