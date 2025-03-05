@@ -25,13 +25,13 @@ from typing import Dict, List, Tuple
 import cv2
 import numpy as np
 import onnxruntime as ort
-import yaml
 
 # Internal imports
 from ..object_detection_models.object_detection_model import ObjectDetectionModel
 from ..utilities.annotations import BoundingBox
 from ..utilities.detections import Detection
 from ..utilities.detection_reassembly import non_maximum_suppression
+from ..utilities.read_config import read_yaml_file
 
 
 class_num = 256
@@ -96,11 +96,19 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         Args:
             model_metadata_filepath (Path):
                 The path to the model metadata.
+        
+        Raises:
+            Exception:
+                Any exception relating to loading a file.
 
         Returns:
             A list of all the classes in order.
         """
-        pass
+        potential_err_msg = "An exception has occured while loading the classes "
+        potential_err_msg += "yaml file. Ensure the model metadata filepath is "
+        potential_err_msg += "correct and the model's yaml file is correctly formatted."
+        classes: Dict = read_yaml_file(model_metadata_filepath)
+        return classes
 
     def __call__(
         self, images: List[np.array], confidence: float = 0.5
