@@ -23,12 +23,14 @@ def read_config() -> Dict:
     config_data: Dict = read_yaml_file(config_path, potential_err_msg)
 
 
-def read_yaml_file(filepath: Path, err_msg) -> Dict:
+def read_yaml_file(filepath: Path, err_msg: str) -> Dict:
     """Reads a yaml file. Raises slightly more helpful exceptions.
     
     Args:
         filepath (Path):
             The path to the yaml file.
+        err_msg (str):
+            The error message to print before the exception.
 
     Raises:
         Any exception relating to loading and parsing a yaml file.
