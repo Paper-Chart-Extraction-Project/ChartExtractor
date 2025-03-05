@@ -106,11 +106,14 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         potential_err_msg = "An exception has occured while loading the classes "
         potential_err_msg += "yaml file. Ensure the model metadata filepath is "
         potential_err_msg += "correct and the model's yaml file is correctly formatted."
-        classes: Dict = read_yaml_file(model_metadata_filepath)
+        classes: Dict = read_yaml_file(model_metadata_filepath, potential_err_msg)
         return classes
 
     def __call__(
-        self, images: List[np.array], confidence: float = 0.5
+        self,
+        images: List[np.array],
+        confidence: float = 0.75,
+        iou_threshold: float = 0.5
     ) -> List[List[Detection]]:
         """Runs the model on a list of images.
 
@@ -120,6 +123,9 @@ class OnnxYolov11Detection(ObjectDetectionModel):
             confidence (float):
                 The level of confidence below which all detections are culled.
                 Default of 0.5.
+            iou_threshold (float):
+                The intersection over union threshold under which to remove
+                detections via non-maximum suppression.
 
         Returns:
             A list of detections for each image.
@@ -127,7 +133,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         if not isinstance(images, list):
             images = [images]
         detections: List[List[Detection]] = [
-            self.detect(im, confidence) for im in images
+            self.detect(im, confidence, iou_threshold) for im in images
         ]
         return detections
 
@@ -135,6 +141,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         self,
         image: np.array,
         confidence: float,
+        iou_threshold: float,
     ) -> List[Detection]:
         """Runs the model on a single image.
 
@@ -144,6 +151,9 @@ class OnnxYolov11Detection(ObjectDetectionModel):
             confidence (float):
                 The level of confidence below which all detections are culled.
                 Default of 0.5.
+            iou_threshold (float):
+                The intersection over union threshold under which to remove
+                detections via non-maximum suppression.
 
         Returns:
             A list of detections on the image.
@@ -152,9 +162,18 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         image: np.array = image.transpose((2, 0, 1))
         image: np.array = np.expand_dims(image, axis=0)
         pred_results = self.model.run(None, {"images": image})
-        detections = self.postprocess_results(pred_results, confidence)
+        detections = self.postprocess_results(pred_results, confidence, iou_threshold)
         detections = [
-            BoundingBox(d[5], d[0], d[1], d[2], d[3]), d[4]
+            Detection(
+                BoundingBox(
+                    self.classes[d[5]],
+                    d[0].item(),
+                    d[1].item(),
+                    d[2].item(),
+                    d[3].item(),
+                ), 
+                d[4].item()
+            )
             for d in detections
         ]
         return detections
@@ -187,6 +206,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         self,
         pred_results,
         confidence_threshold: float,
+        iou_threshold: float,
     ) -> List[Detection]:
         """Processes the raw results from the onnx model.
 
@@ -199,12 +219,14 @@ class OnnxYolov11Detection(ObjectDetectionModel):
             confidence (float):
                 The level of confidence below which all detections are culled.
                 Default of 0.5.
+            iou_threshold (float):
+                The intersection over union threshold under which to remove
+                detections via non-maximum suppression.
 
         Returns:
             A list of Detection objects.
         """
         pred_results = pred_results[0][0]
-        pred_results[4:, :] = 1 / (1 + np.exp(-pred_results[4:, :]))
 
         confidences = np.max(pred_results[4:, :], axis=0)  # Get max confidence
         mask = confidences >= confidence_threshold  # Create a mask for cells
@@ -217,10 +239,10 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         class_indices = np.argmax(filtered_output[4:, :], axis=0)  # Get class indices
 
         x, y, w, h = filtered_output[:4, :]
-        x1 = np.round(x - w / 2).astype(np.int64)
-        y1 = np.round(y - h / 2).astype(np.int64)
-        x2 = np.round(x + w / 2).astype(np.int64)
-        y2 = np.round(y + h / 2).astype(np.int64)
+        x1 = x - (w / 2)
+        y1 = y - (h / 2)
+        x2 = x + (w / 2)
+        y2 = y + (h / 2)
 
         predictions = np.stack((x1, y1, x2, y2, confidences, class_indices), axis=1)
         predictions = predictions[self.non_max_suppression(predictions)]
