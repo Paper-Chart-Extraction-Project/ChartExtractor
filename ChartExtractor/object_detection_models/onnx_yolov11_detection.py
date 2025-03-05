@@ -90,7 +90,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         pass
 
     @staticmethod
-    def load_classes(model_metadata_filepath: Path) -> List[str]:
+    def load_classes(model_metadata_filepath: Path) -> Dict:
         """Loads the classes from a yaml file into a list.
         
         Args:
@@ -102,7 +102,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
                 Any exception relating to loading a file.
 
         Returns:
-            A list of all the classes in order.
+            A dictionary mapping the numerical id of a class to the class' name.
         """
         potential_err_msg = "An exception has occured while loading the classes "
         potential_err_msg += "yaml file. Ensure the model metadata filepath is "
