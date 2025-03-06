@@ -141,11 +141,13 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         Returns:
             A list of detections on the image.
         """
+        original_im_width, original_im_height = image.shape[:2]
         image: np.array = self.preprocess_image(image)
         image: np.array = image.transpose((2, 0, 1))
         image: np.array = np.expand_dims(image, axis=0)
         pred_results = self.model.run(None, {"images": image})
         detections = self.postprocess_results(pred_results, confidence, iou_threshold)
+        detections = self.scale_detections_back_to_input_size(detections, original_im_width, original_im_height)
         detections = [
             Detection(
                 BoundingBox(
@@ -346,7 +348,37 @@ class OnnxYolov11Detection(ObjectDetectionModel):
             keep = keep & ~condition
 
         return keep[sort_index.argsort()]
+    
+    def scale_detections_back_to_input_size(
+        self,
+        detections: np.ndarray,
+        original_im_width: int,
+        original_im_height: int,
+    ) -> np.ndarray:
+        """Scales the detections back to the original image's size.
+        
+        Currently only works with when scale_method is "resize".
 
+        Args:
+            detections (np.ndarray):
+                The predictions as a numpy ndarray.
+            original_im_width (int):
+                The width of the image.
+            original_im_height (int):
+                The height of the image.
+        Returns:
+            The detections which have been rescaled to their original image.
+        """
+        width_scalar: np.float32 = original_im_width/self.input_im_width
+        height_scalar: np.float32 = original_im_height/self.input_im_height
+        
+        detections[:, 0] *= width_scalar
+        detections[:, 1] *= height_scalar
+        detections[:, 2] *= width_scalar
+        detections[:, 3] *= height_scalar
+
+        return detections
+    
     @staticmethod
     def draw_detections(
         image: np.ndarray,
