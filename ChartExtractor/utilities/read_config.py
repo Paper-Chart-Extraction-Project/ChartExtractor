@@ -16,11 +16,12 @@ def read_config() -> Dict:
         A dictionary mapping constant names to file names of model weights
         and the tile size proportion that the model was trained on.
     """
-    config_path: Path = Path(__file__) / ".." / ".." / ".." / "config.yaml"
+    config_path: Path = (Path(__file__) / ".." / ".." / ".." / "config.yaml").resolve()
     potential_err_msg = "An exception has occured, ensure that config.yaml is "
     potential_err_msg += "correctly formatted and is at the root of the "
     potential_err_msg += "ChartExtractor package."
     config_data: Dict = read_yaml_file(config_path, potential_err_msg)
+    return config_data
 
 
 def read_yaml_file(filepath: Path, err_msg: str) -> Dict:
@@ -40,7 +41,7 @@ def read_yaml_file(filepath: Path, err_msg: str) -> Dict:
     """
     try:
         data: str = open(filepath, "r").read()
-        parsed_data: Dict = yaml.load(data, Loader=yaml.Loader)
+        parsed_data: Dict = yaml.safe_load(data)
         return parsed_data
     except Exception as e:
         print(err_msg)
