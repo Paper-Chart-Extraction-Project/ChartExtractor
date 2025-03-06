@@ -70,7 +70,7 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         self.model = ort.InferenceSession(model_weights_filepath)
         self.input_im_width = input_im_width
         self.input_im_height = input_im_height
-        self.classes = OnnxYolov11Detection.load_classes(model_metadata_filepath)
+        self.classes = self.load_classes(model_metadata_filepath)
 
     def from_model(self):
         pass
@@ -153,20 +153,22 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         image: np.array = np.expand_dims(image, axis=0)
         pred_results = self.model.run(None, {"images": image})
         detections = self.postprocess_results(pred_results, confidence, iou_threshold)
-        detections = [
+        return [
             Detection(
-                BoundingBox(
-                    self.classes[d[5]],
-                    d[0].item(),
-                    d[1].item(),
-                    d[2].item(),
-                    d[3].item(),
-                ), 
-                d[4].item()
+                Keypoint(
+                    Point(d[4].item(), d[5].item()),
+                    BoundingBox(
+                        self.classes[d[7]],
+                        d[0].item(),
+                        d[1].item(),
+                        d[2].item(),
+                        d[3].item(),
+                    ),
+                ),
+                d[6].item()
             )
             for d in detections
         ]
-        return detections
 
     def preprocess_image(
         self,
@@ -218,24 +220,27 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         """
         pred_results = pred_results[0][0]
 
-        confidences = np.max(pred_results[4:, :], axis=0)  # Get max confidence
+        confidences = pred_results[4, :]
         mask = confidences >= confidence_threshold  # Create a mask for cells
 
         if not np.any(mask):  # check if anything passes the confidence threshold
-            return np.empty((0, 6))
+            return np.empty((0, 8))
 
         filtered_output = pred_results[:, mask]  # Apply mask to filter cells
         confidences = confidences[mask]  # filter confidences
-        class_indices = np.argmax(filtered_output[4:, :], axis=0)  # Get class indices
+        class_indices = np.argmax(filtered_output[4:5, :], axis=0)  # Get class indices
 
         x, y, w, h = filtered_output[:4, :]
         x1 = x - (w / 2)
         y1 = y - (h / 2)
         x2 = x + (w / 2)
         y2 = y + (h / 2)
-
-        predictions = np.stack((x1, y1, x2, y2, confidences, class_indices), axis=1)
-        predictions = predictions[self.non_max_suppression(predictions)]
+        kpx = filtered_output[5, :]
+        kpy = filtered_output[6, :]
+        
+        predictions = np.stack((x1, y1, x2, y2, kpx, kpy, confidences, class_indices), axis=1)
+        predictions = predictions[self.keypoint_not_in_box(predictions)]
+        predictions = predictions[self.non_max_suppression(predictions, iou_threshold)]
         return predictions
 
     @staticmethod
@@ -296,7 +301,7 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
 
         these_areas = box_area(these_boxes.T)
         those_areas = box_area(those_boxes.T)
-
+    
         top_left = np.maximum(these_boxes[:, None, :2], those_boxes[:, :2])
         bottom_right = np.minimum(these_boxes[:, None, 2:], those_boxes[:, 2:])
 
@@ -309,13 +314,14 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         )
 
     def non_max_suppression(
-        self, predictions: np.ndarray, iou_threshold: float = 0.5
+        self, predictions: np.ndarray, iou_threshold
     ) -> np.ndarray:
         """Performs non-maximum suppression on a list of predicted boxes.
 
         Args:
             predictions (np.ndarray):
-                A numpy ndarray of bounding boxes in the format (x1, y1, x2, y2, conf, cls index).
+                A numpy ndarray of bounding boxes in the format
+                (x1, y1, x2, y2, kpx, kpy, conf, cls index).
             iou_threshold (float):
                 The threshold above which to consider two boxes to be overlapping.
 
@@ -323,13 +329,17 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
             A numpy array of booleans that encode which boxes need to be removed
             to perform non-maximum suppression. Use as a mask.
         """
+        indexes_of_box: Tuple[int, int] = [0, 3]
+        index_of_confidence: int = 6
+        index_of_category: int = 7
+
         rows, _ = predictions.shape
 
-        sort_index = np.flip(predictions[:, 4].argsort())
+        sort_index = np.flip(predictions[:, index_of_confidence].argsort())
         predictions = predictions[sort_index]
 
-        boxes = predictions[:, :4]
-        categories = predictions[:, 5]
+        boxes = predictions[:, indexes_of_box[0]:indexes_of_box[1]+1]
+        categories = predictions[:, index_of_category]
         ious = self.batch_iou(boxes, boxes)
         ious = ious - np.eye(rows)
 
@@ -341,9 +351,31 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
 
             condition = (iou > iou_threshold) & (categories == category)
             keep = keep & ~condition
-
+        
         return keep[sort_index.argsort()]
+    
+    def keypoint_not_in_box(self, predictions: np.ndarray) -> np.ndarray:
+        """Generates a mask that can filter keypoints that aren't in the box.
+        
+        Args:
+            predictions (np.ndarray):
+                A numpy ndarray of bounding boxes in the format
+                (x1, y1, x2, y2, kpx, kpy, conf, cls index).
 
+        Returns:
+            A mask showing which predictions have keypoints that are in bounds.
+        """
+        x1 = predictions[:, 0]
+        y1 = predictions[:, 1]
+        x2 = predictions[:, 2]
+        y2 = predictions[:, 3]
+        kpx = predictions[:, 4]
+        kpy = predictions[:, 5]
+        kpx_in_bounds = np.logical_and(x1<kpx, kpx<x2)
+        kpy_in_bounds = np.logical_and(y1<kpy, kpy<y2)
+        kp_in_bounds = np.logical_and(kpx_in_bounds, kpy_in_bounds)
+        return kp_in_bounds
+    
     @staticmethod
     def draw_detections(
         image: np.ndarray,

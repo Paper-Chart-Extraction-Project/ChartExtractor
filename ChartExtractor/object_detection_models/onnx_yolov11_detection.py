@@ -69,7 +69,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         self.model = ort.InferenceSession(model_weights_filepath)
         self.input_im_width = input_im_width
         self.input_im_height = input_im_height
-        self.classes = OnnxYolov11Detection.load_classes(model_metadata_filepath)
+        self.classes = self.load_classes(model_metadata_filepath)
 
     def from_model(self):
         pass
@@ -234,7 +234,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         y2 = y + (h / 2)
 
         predictions = np.stack((x1, y1, x2, y2, confidences, class_indices), axis=1)
-        predictions = predictions[self.non_max_suppression(predictions)]
+        predictions = predictions[self.non_max_suppression(predictions, iou_threshold)]
         return predictions
 
     @staticmethod
@@ -322,13 +322,17 @@ class OnnxYolov11Detection(ObjectDetectionModel):
             A numpy array of booleans that encode which boxes need to be removed
             to perform non-maximum suppression. Use as a mask.
         """
+        indexes_of_box: Tuple[int, int] = [0, 3]
+        index_of_confidence: int = 4
+        index_of_category: int = 5
+
         rows, _ = predictions.shape
 
-        sort_index = np.flip(predictions[:, 4].argsort())
+        sort_index = np.flip(predictions[:, index_of_confidence].argsort())
         predictions = predictions[sort_index]
 
-        boxes = predictions[:, :4]
-        categories = predictions[:, 5]
+        boxes = predictions[:, indexes_of_box[0]:indexes_of_box[1]+1]
+        categories = predictions[:, index_of_category]
         ious = self.batch_iou(boxes, boxes)
         ious = ious - np.eye(rows)
 
