@@ -13,7 +13,7 @@ Key functionalities include:
 These `Detection` objects encapsulate details about detected objects, including bounding boxes,
 confidence scores, and potentially keypoints (if available in the model's output).
 
-This approach simplifies the integration and usage of YOLOv8 within this program, promoting code
+This approach simplifies the integration and usage of YOLO within this program, promoting code
 modularity and reusability.
 """
 
