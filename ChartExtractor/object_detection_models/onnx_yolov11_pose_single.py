@@ -72,12 +72,6 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         self.input_im_height = input_im_height
         self.classes = self.load_classes(model_metadata_filepath)
 
-    def from_model(self):
-        pass
-
-    def from_weights_path(self):
-        pass
-
     @staticmethod
     def load_classes(model_metadata_filepath: Path) -> Dict:
         """Loads the classes from a yaml file into a list.
