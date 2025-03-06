@@ -95,8 +95,8 @@ class OnnxYolov11Detection(ObjectDetectionModel):
     def __call__(
         self,
         images: List[np.array],
-        confidence: float = 0.75,
-        iou_threshold: float = 0.5
+        confidence: float = 0.5,
+        iou_threshold: float = 0.1
     ) -> List[List[Detection]]:
         """Runs the model on a list of images.
 
@@ -149,7 +149,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         detections = [
             Detection(
                 BoundingBox(
-                    self.classes[d[5]],
+                    str(self.classes[int(d[5].item())]),
                     d[0].item(),
                     d[1].item(),
                     d[2].item(),

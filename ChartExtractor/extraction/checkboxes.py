@@ -14,6 +14,7 @@ from ..utilities.detection_reassembly import (
     non_maximum_suppression,
     intersection_over_minimum,
 )
+from ..utilities.image_conversion import pil_to_cv2
 from ..utilities.tiling import tile_image
 from ..object_detection_models.object_detection_model import ObjectDetectionModel
 
@@ -120,7 +121,8 @@ def detect_checkboxes(
         vertical_overlap_ratio,
     )
     detections: List[List[List[Detection]]] = [
-        detection_model(row, verbose=False) for row in image_tiles
+        [detection_model(pil_to_cv2(tile))[0] for tile in row]
+        for row in image_tiles
     ]
     detections: List[Detection] = untile_detections(
         detections,

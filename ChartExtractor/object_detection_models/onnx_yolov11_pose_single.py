@@ -96,8 +96,8 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
     def __call__(
         self,
         images: List[np.array],
-        confidence: float = 0.75,
-        iou_threshold: float = 0.5
+        confidence: float = 0.5,
+        iou_threshold: float = 0.1
     ) -> List[List[Detection]]:
         """Runs the model on a list of images.
 
@@ -152,7 +152,7 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
                 Keypoint(
                     Point(d[4].item(), d[5].item()),
                     BoundingBox(
-                        self.classes[d[7]],
+                        str(self.classes[int(d[7].item())]),
                         d[0].item(),
                         d[1].item(),
                         d[2].item(),

@@ -36,8 +36,8 @@ from ..label_clustering.clustering_methods import (
 from ..label_clustering.isolate_labels import (
     isolate_blood_pressure_legend_bounding_boxes,
 )
-from ..object_detection_models.ultralytics_yolov8 import UltralyticsYOLOv8
-from ..object_detection_models.ultralytics_yolov11_pose import UltralyticsYOLOv11Pose
+from ..object_detection_models.onnx_yolov11_detection import OnnxYolov11Detection
+from ..object_detection_models.onnx_yolov11_pose_single import OnnxYolov11PoseSingle
 from ..object_detection_models.object_detection_model import ObjectDetectionModel
 from ..utilities.detections import Detection
 from ..utilities.detection_reassembly import (
@@ -45,6 +45,7 @@ from ..utilities.detection_reassembly import (
     intersection_over_minimum,
     non_maximum_suppression,
 )
+from ..utilities.image_conversion import pil_to_cv2
 from ..utilities.read_config import read_config
 from ..utilities.tiling import tile_image
 
@@ -57,27 +58,41 @@ CORNER_LANDMARK_NAMES: List[str] = [
 ]
 PATH_TO_DATA: Path = (Path(os.path.dirname(__file__)) / ".." / ".." / "data").resolve()
 PATH_TO_MODELS: Path = PATH_TO_DATA / "models"
+PATH_TO_MODEL_METADATA = PATH_TO_DATA / "model_metadata"
 MODEL_CONFIG: Dict = read_config()
-INTRAOP_DOC_MODEL = UltralyticsYOLOv8.from_weights_path(
-    PATH_TO_MODELS / MODEL_CONFIG["intraoperative_document_landmarks"]["name"]
+INTRAOP_DOC_MODEL = OnnxYolov11Detection(
+    PATH_TO_MODELS / MODEL_CONFIG["intraoperative_document_landmarks"]["name"],
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["intraoperative_document_landmarks"]["name"].replace(".onnx", ".yaml")
 )
-PREOP_POSTOP_DOC_MODEL = UltralyticsYOLOv8.from_weights_path(
-    PATH_TO_MODELS / MODEL_CONFIG["preop_postop_document_landmarks"]["name"]
+PREOP_POSTOP_DOC_MODEL = OnnxYolov11Detection(
+    PATH_TO_MODELS / MODEL_CONFIG["preop_postop_document_landmarks"]["name"],
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["preop_postop_document_landmarks"]["name"].replace(".onnx", ".yaml"),
 )
-NUMBERS_MODEL = UltralyticsYOLOv8.from_weights_path(
-    PATH_TO_MODELS / MODEL_CONFIG["numbers"]["name"]
+NUMBERS_MODEL = OnnxYolov11Detection(
+    PATH_TO_MODELS / MODEL_CONFIG["numbers"]["name"],
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["numbers"]["name"].replace(".onnx", ".yaml")
 )
-SYSTOLIC_MODEL = UltralyticsYOLOv11Pose.from_weights_path(
-    PATH_TO_MODELS / MODEL_CONFIG["systolic"]["name"]
+SYSTOLIC_MODEL = OnnxYolov11PoseSingle(
+    PATH_TO_MODELS / MODEL_CONFIG["systolic"]["name"],
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["systolic"]["name"].replace(".onnx", ".yaml"),
+    608,
+    608,
 )
-DIASTOLIC_MODEL = UltralyticsYOLOv11Pose.from_weights_path(
-    PATH_TO_MODELS / MODEL_CONFIG["diastolic"]["name"]
+DIASTOLIC_MODEL = OnnxYolov11PoseSingle(
+    PATH_TO_MODELS / MODEL_CONFIG["diastolic"]["name"],
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["diastolic"]["name"].replace(".onnx", ".yaml"),
+    608,
+    608,
 )
-HEART_RATE_MODEL = UltralyticsYOLOv11Pose.from_weights_path(
-    PATH_TO_MODELS / MODEL_CONFIG["heart_rate"]["name"]
+HEART_RATE_MODEL = OnnxYolov11PoseSingle(
+    PATH_TO_MODELS / MODEL_CONFIG["heart_rate"]["name"],
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["heart_rate"]["name"].replace(".onnx", ".yaml"),
+    608,
+    608,
 )
-CHECKBOXES_MODEL = UltralyticsYOLOv8.from_weights_path(
-    PATH_TO_MODELS / MODEL_CONFIG["checkboxes"]["name"]
+CHECKBOXES_MODEL = OnnxYolov11Detection(
+    PATH_TO_MODELS / MODEL_CONFIG["checkboxes"]["name"],
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["checkboxes"]["name"].replace(".onnx", ".yaml"),
 )
 
 
@@ -344,7 +359,7 @@ def make_document_landmark_detections(
         MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
         MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
     )
-    detections = [document_model(row, verbose=False) for row in tiles]
+    detections = [[document_model(pil_to_cv2(tile))[0] for tile in row] for row in tiles]
     detections = untile_detections(
         detections,
         tile_size,
@@ -426,7 +441,8 @@ def make_bp_and_hr_detections(
             vertical_overlap_ratio,
         )
         tiled_detections: List[List[List[Detection]]] = [
-            model(row, conf=0.5) for row in tiles
+            [model(pil_to_cv2(tile), confidence=0.5)[0] for tile in row]
+            for row in tiles
         ]
         detections: List[Detection] = untile_detections(
             tiled_detections,
