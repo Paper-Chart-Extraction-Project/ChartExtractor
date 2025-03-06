@@ -23,7 +23,6 @@ class ObjectDetectionModel(Protocol):
     This class defines the interface that all concrete object detection models must adhere to.
     """
 
-    @abstractmethod
     def __call__(self, image) -> List[Detection]:
         """Detects objects on the image.
 

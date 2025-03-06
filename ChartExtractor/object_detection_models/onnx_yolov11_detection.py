@@ -19,7 +19,7 @@ modularity and reusability.
 
 # Built-in imports
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Literal, Tuple
 
 # External imports
 import cv2
@@ -178,7 +178,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         Returns:
             A preprocessed image.
         """
-        if method == "letterbox":
+        if resize_method == "letterbox":
             image, _ = self.letterbox(image, (self.input_im_width, self.input_im_height))
         else:
             image: np.array = cv2.resize(

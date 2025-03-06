@@ -181,7 +181,7 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         Returns:
             A preprocessed image.
         """
-        if method == "letterbox":
+        if resize_method == "letterbox":
             image, _ = self.letterbox(image, (self.input_im_width, self.input_im_height))
         else:
             image: np.array = cv2.resize(
