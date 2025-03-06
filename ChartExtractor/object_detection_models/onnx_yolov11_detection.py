@@ -34,17 +34,6 @@ from ..utilities.detection_reassembly import non_maximum_suppression
 from ..utilities.read_config import read_yaml_file
 
 
-NUM_HEADS: int = 3
-STRIDES: List[int] = [8, 16, 32]
-MAPSIZE: List[List[int]] = [[80, 80], [40, 40], [20, 20]]
-MESHGRID: List = list()
-for index in range(NUM_HEADS):
-    for ix in range(MAPSIZE[index][0]):
-        for jx in range(MAPSIZE[index][1]):
-            MESHGRID.append(jx + 0.5)
-            MESHGRID.append(ix + 0.5)
-
-
 class OnnxYolov11Detection(ObjectDetectionModel):
     """Provides a wrapper for a yolov11 ONNX model.
 
