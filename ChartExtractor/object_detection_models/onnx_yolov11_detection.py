@@ -170,22 +170,28 @@ class OnnxYolov11Detection(ObjectDetectionModel):
     def preprocess_image(
         self,
         image: np.array,
+        resize_method: Literal["resize", "letterbox"] = "resize",
     ) -> np.array:
         """Preprocesses an image for running in a yolov11 model.
 
         Args:
             image (np.array):
                 An image read by cv2.imread().
+            resize_method (Literal):
+                Determines the method of resizing the image.
+                One of ("resize", "letterbox").
 
         Returns:
             A preprocessed image.
         """
-        # image: np.array = cv2.resize(
-        #    image,
-        #    (self.input_im_width, self.input_im_height),
-        #    interpolation=cv2.INTER_LINEAR,
-        # )
-        image, _ = self.letterbox(image, (self.input_im_width, self.input_im_height))
+        if method == "letterbox":
+            image, _ = self.letterbox(image, (self.input_im_width, self.input_im_height))
+        else:
+            image: np.array = cv2.resize(
+               image,
+               (self.input_im_width, self.input_im_height),
+               interpolation=cv2.INTER_LINEAR,
+            )
         image: np.array = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = image.astype(np.float32)
         image /= 255.0
