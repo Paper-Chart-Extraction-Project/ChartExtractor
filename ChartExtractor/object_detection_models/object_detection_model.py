@@ -11,7 +11,6 @@ This approach promotes modularity, flexibility, and future-proofing of the progr
 
 # Built-in Imports
 from pathlib import Path
-from PIL import Image
 from typing import List, Protocol
 
 # Internal Imports
@@ -25,12 +24,12 @@ class ObjectDetectionModel(Protocol):
     """
 
     @abstractmethod
-    def __call__(self, image: Image.Image) -> List[Detection]:
+    def __call__(self, image) -> List[Detection]:
         """Detects objects on the image.
 
         Args:
-            image (Image.Image):
-                A PIL image that this model detects on.
+            image:
+                An image that this model detects on.
 
         Returns (List[Detection]):
             A list of Detection objects.
