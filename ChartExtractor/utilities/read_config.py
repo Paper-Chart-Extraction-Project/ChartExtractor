@@ -16,15 +16,34 @@ def read_config() -> Dict:
         A dictionary mapping constant names to file names of model weights
         and the tile size proportion that the model was trained on.
     """
+    config_path: Path = (Path(__file__) / ".." / ".." / ".." / "config.yaml").resolve()
+    potential_err_msg = "An exception has occured, ensure that config.yaml is "
+    potential_err_msg += "correctly formatted and is at the root of the "
+    potential_err_msg += "ChartExtractor package."
+    config_data: Dict = read_yaml_file(config_path, potential_err_msg)
+    return config_data
+
+
+def read_yaml_file(filepath: Path, err_msg: str) -> Dict:
+    """Reads a yaml file. Raises slightly more helpful exceptions.
+    
+    Args:
+        filepath (Path):
+            The path to the yaml file.
+        err_msg (str):
+            The error message to print before the exception.
+
+    Raises:
+        Any exception relating to loading and parsing a yaml file.
+
+    Returns:
+        The data within the yaml file as a dictionary.
+    """
     try:
-        config_path: Path = Path(__file__) / ".." / ".." / ".." / "config.yaml"
-        data: str = open(config_path.resolve(), "r").read()
-        parsed_data: Dict = yaml.load(data, Loader=yaml.Loader)
+        data: str = open(filepath, "r").read()
+        parsed_data: Dict = yaml.safe_load(data)
         return parsed_data
     except Exception as e:
-        err_msg = "An exception has occured, ensure that config.yaml is "
-        err_msg += "correctly formatted and is at the root of the "
-        err_msg += "ChartExtractor package."
         print(err_msg)
         print("Exact exception:")
         print(e)

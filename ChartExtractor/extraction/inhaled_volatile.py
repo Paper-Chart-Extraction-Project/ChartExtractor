@@ -96,7 +96,6 @@ def get_inhaled_volatile_digits(
         document_detections, "fluid_blood_product"
     )
     total: Optional[Detection] = get_detection_by_name(document_detections, "total")
-
     if any(
         [
             all([inhaled_volatile is None, inhaled_exhaled is None]),
@@ -105,12 +104,17 @@ def get_inhaled_volatile_digits(
     ):
         raise ValueError("Cannot find document landmarks to filter digits.")
 
-    get_center = attrgetter("annotation.center")
+    def get_y_center(det: Optional[Detection]) -> Optional[float]:
+        try:
+            return det.annotation.center[1]
+        except:
+            return None
+
     top: float = average_with_nones(
-        [get_center(inhaled_volatile)[1], get_center(inhaled_exhaled)[1]]
+        [get_y_center(inhaled_volatile), get_y_center(inhaled_exhaled)]
     )
     bottom: float = average_with_nones(
-        [get_center(fluid_blood_product)[1], get_center(total)[1]]
+        [get_y_center(fluid_blood_product), get_y_center(total)]
     )
 
-    return list(filter(lambda det: top < get_center(det)[1] < bottom, digit_detections))
+    return list(filter(lambda det: top < get_y_center(det) < bottom, digit_detections))

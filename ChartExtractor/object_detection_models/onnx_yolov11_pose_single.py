@@ -1,17 +1,21 @@
-"""This module implements the `OnnxYolov11Detection` wrapper class
+"""This module implements the `OnnxYolov11PoseSingle` wrapper class.
 
-The `OnnxYolov11Detection` class, which inherits from the `ObjectDetectionModel` interface,
-provides a wrapper for the YOLOv11 object detection model using the onnx runtime.
+The `OnnxYolov11PoseSingle` class, which inherits the `ObjectDetectionModel` interface,
+provides a wrapper for the YOLOv11 pose model using the onnx runtime. The poses that it
+estimates are single keypoint poses, like the kind used in this project.
 
 Key functionalities include:
     - Provides a common interface for detections (via the __call__ method).
     - Loading the YOLOv11 model from a weights file path.
     - Preprocessing images and postprocessing detections.
-    - Performing object detection on an image using the YOLOv11 model.
+    - Performing pose estimation on an image using the YOLOv11 model.
     - Converting the YOLOv11 model's output to a list of Detection objects.
 
 These `Detection` objects encapsulate details about detected objects, including bounding boxes,
 confidence scores, and potentially keypoints (if available in the model's output).
+
+This approach simplifies the integration and usage of YOLO within this program, promoting code
+modularity and reusability.
 """
 
 # Built-in imports
@@ -25,21 +29,21 @@ import onnxruntime as ort
 
 # Internal imports
 from ..object_detection_models.object_detection_model import ObjectDetectionModel
-from ..utilities.annotations import BoundingBox
+from ..utilities.annotations import BoundingBox, Keypoint, Point
 from ..utilities.detections import Detection
 from ..utilities.detection_reassembly import non_maximum_suppression
 from ..utilities.read_config import read_yaml_file
 
 
-class OnnxYolov11Detection(ObjectDetectionModel):
-    """Provides a wrapper for a yolov11 ONNX model.
-
+class OnnxYolov11PoseSingle(ObjectDetectionModel):
+    """Provides a wrapper for a yolov11 pose ONNX model.
+    
     This class inherits from the `ObjectDetectionModel` interface, enabling us to use the onnx
     model within our program through a consistent interface.
 
     Attributes:
         model:
-            The underlying onnx model.
+            The underlying onnx runtime model.
     """
 
     def __init__(
@@ -145,20 +149,22 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         pred_results = self.model.run(None, {"images": image})
         detections = self.postprocess_results(pred_results, confidence, iou_threshold)
         detections = self.scale_detections_back_to_input_size(detections, original_im_width, original_im_height)
-        detections = [
+        return [
             Detection(
-                BoundingBox(
-                    str(self.classes[int(d[5].item())]),
-                    d[0].item(),
-                    d[1].item(),
-                    d[2].item(),
-                    d[3].item(),
-                ), 
-                d[4].item()
+                Keypoint(
+                    Point(d[4].item(), d[5].item()),
+                    BoundingBox(
+                        str(self.classes[int(d[7].item())]),
+                        d[0].item(),
+                        d[1].item(),
+                        d[2].item(),
+                        d[3].item(),
+                    ),
+                ),
+                d[6].item()
             )
             for d in detections
         ]
-        return detections
 
     def preprocess_image(
         self,
@@ -216,26 +222,29 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         """
         pred_results = pred_results[0][0]
 
-        confidences = np.max(pred_results[4:, :], axis=0)  # Get max confidence
+        confidences = pred_results[4, :]
         mask = confidences >= confidence_threshold  # Create a mask for cells
 
         if not np.any(mask):  # check if anything passes the confidence threshold
-            return np.empty((0, 6))
+            return np.empty((0, 8))
 
         filtered_output = pred_results[:, mask]  # Apply mask to filter cells
         confidences = confidences[mask]  # filter confidences
-        class_indices = np.argmax(filtered_output[4:, :], axis=0)  # Get class indices
+        class_indices = np.argmax(filtered_output[4:5, :], axis=0)  # Get class indices
 
         x, y, w, h = filtered_output[:4, :]
         x1 = x - (w / 2)
         y1 = y - (h / 2)
         x2 = x + (w / 2)
         y2 = y + (h / 2)
-
-        predictions = np.stack((x1, y1, x2, y2, confidences, class_indices), axis=1)
+        kpx = filtered_output[5, :]
+        kpy = filtered_output[6, :]
+        
+        predictions = np.stack((x1, y1, x2, y2, kpx, kpy, confidences, class_indices), axis=1)
+        predictions = predictions[self.keypoint_not_in_box(predictions)]
         predictions = predictions[self.non_max_suppression(predictions, iou_threshold)]
         return predictions
-
+    
     @staticmethod
     def letterbox(
         image: np.ndarray,
@@ -294,7 +303,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
 
         these_areas = box_area(these_boxes.T)
         those_areas = box_area(those_boxes.T)
-
+    
         top_left = np.maximum(these_boxes[:, None, :2], those_boxes[:, :2])
         bottom_right = np.minimum(these_boxes[:, None, 2:], those_boxes[:, 2:])
 
@@ -307,13 +316,14 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         )
 
     def non_max_suppression(
-        self, predictions: np.ndarray, iou_threshold: float = 0.5
+        self, predictions: np.ndarray, iou_threshold
     ) -> np.ndarray:
         """Performs non-maximum suppression on a list of predicted boxes.
 
         Args:
             predictions (np.ndarray):
-                A numpy ndarray of bounding boxes in the format (x1, y1, x2, y2, conf, cls index).
+                A numpy ndarray of bounding boxes in the format
+                (x1, y1, x2, y2, kpx, kpy, conf, cls index).
             iou_threshold (float):
                 The threshold above which to consider two boxes to be overlapping.
 
@@ -322,8 +332,8 @@ class OnnxYolov11Detection(ObjectDetectionModel):
             to perform non-maximum suppression. Use as a mask.
         """
         indexes_of_box: Tuple[int, int] = [0, 3]
-        index_of_confidence: int = 4
-        index_of_category: int = 5
+        index_of_confidence: int = 6
+        index_of_category: int = 7
 
         rows, _ = predictions.shape
 
@@ -343,8 +353,30 @@ class OnnxYolov11Detection(ObjectDetectionModel):
 
             condition = (iou > iou_threshold) & (categories == category)
             keep = keep & ~condition
-
+        
         return keep[sort_index.argsort()]
+    
+    def keypoint_not_in_box(self, predictions: np.ndarray) -> np.ndarray:
+        """Generates a mask that can filter keypoints that aren't in the box.
+        
+        Args:
+            predictions (np.ndarray):
+                A numpy ndarray of bounding boxes in the format
+                (x1, y1, x2, y2, kpx, kpy, conf, cls index).
+
+        Returns:
+            A mask showing which predictions have keypoints that are in bounds.
+        """
+        x1 = predictions[:, 0]
+        y1 = predictions[:, 1]
+        x2 = predictions[:, 2]
+        y2 = predictions[:, 3]
+        kpx = predictions[:, 4]
+        kpy = predictions[:, 5]
+        kpx_in_bounds = np.logical_and(x1<kpx, kpx<x2)
+        kpy_in_bounds = np.logical_and(y1<kpy, kpy<y2)
+        kp_in_bounds = np.logical_and(kpx_in_bounds, kpy_in_bounds)
+        return kp_in_bounds
     
     def scale_detections_back_to_input_size(
         self,
@@ -363,18 +395,23 @@ class OnnxYolov11Detection(ObjectDetectionModel):
                 The width of the image.
             original_im_height (int):
                 The height of the image.
+
         Returns:
             The detections which have been rescaled to their original image.
         """
         width_scalar: np.float32 = original_im_width/self.input_im_width
         height_scalar: np.float32 = original_im_height/self.input_im_height
-        
+        # Rescale bounding box.       
         detections[:, 0] *= width_scalar
         detections[:, 1] *= height_scalar
         detections[:, 2] *= width_scalar
         detections[:, 3] *= height_scalar
+        # Rescale keypoints.
+        detections[:, 4] *= width_scalar
+        detections[:, 5] *= height_scalar
 
         return detections
+
     
     @staticmethod
     def draw_detections(

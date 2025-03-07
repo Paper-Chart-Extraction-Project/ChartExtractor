@@ -407,6 +407,11 @@ class Keypoint:
         return self.bounding_box.center
 
     @property
+    def area(self) -> float:
+        """This Keypoint's boundingbox area."""
+        return self.bounding_box.area
+
+    @property
     def box(self) -> Tuple[float]:
         """This keypoints boundingbox's [left, top, right, bottom]."""
         return self.bounding_box.box
