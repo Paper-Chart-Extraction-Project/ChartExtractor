@@ -20,6 +20,6 @@ ENV VIRTUAL_ENV=/app/.venv \
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-COPY ChartExtractor ./ChartExtractor
+COPY . ./ChartExtractor
 
-ENTRYPOINT ["poetry", "run", "python", "-m", "main.py"]
+#ENTRYPOINT ["python"]
