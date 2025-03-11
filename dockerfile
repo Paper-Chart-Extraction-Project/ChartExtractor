@@ -1,3 +1,15 @@
+# To put this on aws, build with this command:
+# docker buildx build --platform linux/amd64 --provenance=false -t docker-image:test .
+# To test whether it is functioning locally, use this command:
+# docker run --platform linux/amd64 -d -v ~/.aws-lambda-rie:/aws-lambda -p 9000:8080 \
+#   --entrypoint /aws-lambda/aws-lambda-rie \
+#   docker-image:test \
+#       /usr/local/bin/python -m awslambdaric lambda_function.handler
+# And then send data with:
+# curl "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+# Where the curly brace contains the data to send.
+
+
 # Define custom function directory
 ARG FUNCTION_DIR="/function"
 
