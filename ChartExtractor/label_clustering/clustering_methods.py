@@ -217,7 +217,7 @@ def __time_correction(clusters: List[Cluster]) -> List[Cluster]:
             # For the rest add 60 to them depending on their index.
             for ix, cluster in enumerate(sorted_clusters):
                 correct_label = (
-                    f"{str(int(re.findall(r'\d+', label)[0]) + (ix * 60))}_mins"
+                    str(int(re.findall(r'\d+', label)[0]) + (ix * 60)) + "_mins"
                 )
                 sorted_clusters[ix] = Cluster(cluster.bounding_boxes, correct_label)
 
