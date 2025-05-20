@@ -146,16 +146,16 @@ def generate_tile_coordinates(
         [
             (
                 x * round(slice_width * (1 - horizontal_overlap_ratio)),
-                y * round(slice_width * (1 - vertical_overlap_ratio)),
+                y * round(slice_height * (1 - vertical_overlap_ratio)),
                 slice_width + x * round(slice_width * (1 - horizontal_overlap_ratio)),
-                slice_height + y * round(slice_width * (1 - vertical_overlap_ratio)),
+                slice_height + y * round(slice_height * (1 - vertical_overlap_ratio)),
             )
             for x in range(
-                math.floor(image_width / (slice_width * (1 - horizontal_overlap_ratio)))
+                math.ceil(image_width / (slice_width * (1 - horizontal_overlap_ratio)))
             )
         ]
         for y in range(
-            math.floor(image_height / (slice_height * (1 - vertical_overlap_ratio)))
+            math.ceil(image_height / (slice_height * (1 - vertical_overlap_ratio)))
         )
     ]
     return tile_coords
