@@ -142,22 +142,26 @@ def generate_tile_coordinates(
         A 2d list of four coordinate tuples encoding the left, top, right, and
         bottom of each tile.
     """
-    tile_coords: List[List[Tuple[int, int, int, int]]] = [
-        [
-            (
-                x * round(slice_width * (1 - horizontal_overlap_ratio)),
-                y * round(slice_height * (1 - vertical_overlap_ratio)),
-                slice_width + x * round(slice_width * (1 - horizontal_overlap_ratio)),
-                slice_height + y * round(slice_height * (1 - vertical_overlap_ratio)),
-            )
-            for x in range(
-                math.ceil(image_width / (slice_width * (1 - horizontal_overlap_ratio)))
-            )
-        ]
-        for y in range(
-            math.ceil(image_height / (slice_height * (1 - vertical_overlap_ratio)))
-        )
-    ]
+    number_of_vertical_tiles: int = math.ceil(
+        image_height / (slice_height * (1 - vertical_overlap_ratio))
+    )
+    number_of_horizontal_tiles: int = math.ceil(
+        image_width / (slice_width * (1 - horizontal_overlap_ratio))
+    )
+    tile_coords: List[List[Tuple[int, int, int, int]]] = []
+    for y in range(number_of_vertical_tiles):
+        row: List[Tuple[int, int, int, int]] = []
+        for x in range(number_of_horizontal_tiles):
+            left = x * round(slice_width * (1 - horizontal_overlap_ratio))
+            top = y * round(slice_height * (1 - vertical_overlap_ratio))
+            right = left + slice_width
+            bottom = top + slice_height
+            row.append((left, top, right, bottom))
+            if right > image_width:
+                break
+        tile_coords.append(row)
+        if bottom > image_height:
+            break
     return tile_coords
 
 
