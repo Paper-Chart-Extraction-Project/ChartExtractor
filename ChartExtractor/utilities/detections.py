@@ -29,3 +29,10 @@ class Detection:
 
     annotation: Union[BoundingBox, Keypoint]
     confidence: float
+
+    def to_dict(self) -> dict:
+        """Converts this detection to a dictionary."""
+        return {
+            "annotation": self.annotation.to_dict(),
+            "confidence": self.confidence
+        }
