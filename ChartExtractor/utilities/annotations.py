@@ -30,9 +30,14 @@ class Point:
         return self.x == other.x and self.y == other.y
 
     def __repr__(self):
-        """Returns a string representation of this Point object."""
+        """Returns a string representation of this `Point` object."""
         return f"Point({self.x}, {self.y})"
-
+    
+    @classmethod
+    def from_dict(cls, point_dict: Dict[str, float]):
+        """Creates a `Point` from a dictionary."""
+        return Point(**point_dict)
+    
     def to_dict(self) -> str:
         """Returns a json serialized version of the point."""
         return vars(self)
@@ -99,7 +104,7 @@ class BoundingBox:
         self.top = top
         self.right = right
         self.bottom = bottom
-
+    
     @staticmethod
     def from_yolo(
         yolo_line: str,
@@ -168,7 +173,20 @@ class BoundingBox:
                 f"Category {int(coco_annotation['category_id'])} not found in the categories list."
             )
         return BoundingBox(category, left, top, right, bottom)
+    
+    @staticmethod
+    def from_dict(bbox_dict: Dict[str, float]):
+        """Constructs a `BoundingBox` from a dictionary of arguments.
 
+        Args:
+            `bbox_dict` (Dict[str, float]):
+                A dictionary containing entries corresponding to the four bounding box sides.
+
+        Returns:
+            A `BoundingBox` object containing the data from the dictionary.
+        """
+        return BoundingBox(**bbox_dict)
+    
     @classmethod
     def validate_box_values(
         cls, left: float, top: float, right: float, bottom: float
@@ -388,6 +406,25 @@ class Keypoint:
         keypoint_y = float(yolo_line.split()[6])
         keypoint = Point(keypoint_x * image_width, keypoint_y * image_height)
         return Keypoint(keypoint, bounding_box, do_keypoint_validation)
+
+    @staticmethod
+    def from_dict(keypoint_dict: Dict[str, Dict[str, float]], do_validation: bool = True):
+        """Constructs a `Keypoint` from a dictionary of arguments.
+
+        Args:
+            `keypoint_dict` (Dict[str, float]):
+                A dictionary containing entries that are passed in turn to the `BoundingBox` and
+                `Point` class' `from_dict` methods.
+            `do_validation` (bool):
+                A boolean encoding whether or not to do validation to make sure the keypoint is in
+                the bounding box.
+
+        Returns:
+            A `Keypoint` object containing the data from the dictionary.
+        """
+        keypoint: Point = Point.from_dict(keypoint_dict["keypoint"])
+        bounding_box: BoundingBox = BoundingBox.from_dict(keypoint_dict["bounding_box"])
+        return Keypoint(keypoint, bounding_box)
 
     @classmethod
     def validate_keypoint(cls, bounding_box: BoundingBox, keypoint: Point) -> None:
