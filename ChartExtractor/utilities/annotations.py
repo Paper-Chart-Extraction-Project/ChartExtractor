@@ -624,6 +624,6 @@ class Keypoint:
     def to_dict(self) -> dict:
         """Converts this keypoint to a dictionary of its variables."""
         return {
-            "bounding_box": vars(self.bounding_box),
-            "keypoint": vars(self.keypoint),
+            "bounding_box": self.bounding_box.to_dict(),
+            "keypoint": self.keypoint.to_dict()),
         }
