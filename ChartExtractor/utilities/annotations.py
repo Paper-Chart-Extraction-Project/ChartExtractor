@@ -662,5 +662,5 @@ class Keypoint:
         """Converts this keypoint to a dictionary of its variables."""
         return {
             "bounding_box": self.bounding_box.to_dict(),
-            "keypoint": self.keypoint.to_dict()),
+            "keypoint": self.keypoint.to_dict(),
         }
