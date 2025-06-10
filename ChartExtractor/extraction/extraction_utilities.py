@@ -5,14 +5,14 @@ from functools import reduce
 import json
 from pathlib import Path
 from PIL import Image
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 # External imports
 import numpy as np
 
 # Internal imports
 from ..object_detection_models.object_detection_model import ObjectDetectionModel
-from ..utilities.annotations import BoundingBox
+from ..utilities.annotations import BoundingBox, Keypoint
 from ..utilities.detections import Detection
 from ..utilities.detection_reassembly import (
     intersection_over_minimum,
@@ -205,3 +205,16 @@ def label_studio_to_bboxes(
         ]
         for sheet_data in json_data
     }
+
+
+def read_detections_from_json(
+    filepath: Path,
+    detection_type: Union[BoundingBox, Keypoint]
+) -> List[Detection]:
+    """Deserializes detections from a json file."""
+    pass
+
+
+def write_detections_to_json(filepath: Path):
+    """Serializes detections to a json file."""
+    pass
