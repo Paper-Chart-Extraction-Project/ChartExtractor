@@ -5,7 +5,7 @@ from functools import reduce
 import json
 from pathlib import Path
 from PIL import Image
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # External imports
 import numpy as np
@@ -211,8 +211,28 @@ def read_detections_from_json(
     filepath: Path,
     detection_type: Union[BoundingBox, Keypoint]
 ) -> List[Detection]:
-    """Deserializes detections from a json file."""
-    pass
+    """Deserializes detections from a json file.
+    
+    Args:
+        filepath (Path):
+            The filepath to the json detections.
+        detection_type (Union[BoundingBox, Keypoint]):
+            The type of detection that has been serialized.
+            Passed to Detection.from_dict directly.
+
+    Returns:
+        A list of Detection objects from the encoded data.
+    """
+    json_data: Dict[str, Any] = json.loads(open(str(filepath), 'r').read())
+    if not isinstance(json_data, list):
+        raise ValueError(f"Data at {filepath} is not a list of detections.")
+    
+    detections: List[Detection] = [
+        Detection.from_dict(det_dict, detection_type)
+        for det_dict in json_data
+    ]
+    return detections
+    
 
 
 def write_detections_to_json(filepath: Path):
