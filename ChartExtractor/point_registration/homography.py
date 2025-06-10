@@ -1,8 +1,9 @@
 """Module for remapping points using a homography transform.
 
-This module exposes a two functions, (1) find_homography, which is a thin wrapper around opencv's
-findHomography function that provides more robust error messages for this libraries usage, and
-(2) transform_point, which takes a point and a homography matrix and transforms the point.
+This module exposes two functions, (1) find_homography, which is a thin wrapper around opencv's
+findHomography function that restricts the original function's usage to only 2d points, and
+provides more robust error messages for this libraries usage, and (2) transform_point, which takes 
+a point and a homography matrix and transforms the point.
 
 Functions:
     find_homography(source_points: List[Tuple[int, int]], destination_points: List[Tuple[int, int]])
