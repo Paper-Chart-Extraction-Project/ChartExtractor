@@ -1,7 +1,7 @@
 """Module for remapping points using a homography transform.
 
 This module exposes a two functions, (1) find_homography, which is a thin wrapper around opencv's
-findHomography function so that cv2 doesn't have to be imported where this is used, and
+findHomography function that provides more robust error messages for this libraries usage, and
 (2) transform_point, which takes a point and a homography matrix and transforms the point.
 
 Functions:
@@ -23,6 +23,8 @@ def find_homography(
     destination_points: List[Tuple[int, int]],
 ) -> np.ndarray:
     """A thin wrapper around opencv's findHomography function.
+
+    Provides some additional checks and more informative errors.
     
     Args:
         source_points (List[Tuple[int, int]]):
@@ -35,7 +37,37 @@ def find_homography(
         to transform points according to the transformation that remaps the source points to the
         destination points.
     """
-    pass
+    too_few_source_points: bool = len(source_points) < 4
+    too_few_destination_points: bool = len(destination_points) < 4
+    unequal_point_sets: bool = len(source_points) != len(destination_points)
+    inconsistent_source_point_dimenstions: bool = len(set([len(p) for p in source_points])) == 1
+    inconsistent_destination_point_dimenstions: bool = (
+        len(set([len(p) for p in destination_points])) == 1
+    )
+
+    if too_few_source_points:
+        raise ValueError(
+            f"Too few points in source set (need at least 4, had {len(source_points)})."
+        )
+    if too_few_destination_points:
+        raise ValueError(
+            f"Too few points in destination set (need at least 4, had {len(destination_points)})."
+        )
+    if unequal_point_sets:
+        err_msg: str = "Point sets were unequal in length. "
+        err_msg += f"(length of source: {len(source_points)}, "
+        err_msg += f"length of destination: {len(destination_points)})"
+        raise ValueError(err_msg)
+    if inconsistent_source_point_dimenstions:
+        err_msg: str = "Source point set had inconsistent dimensions. "
+        err_msg += f"(Included dimensions: {len(set([len(p) for p in source_points]))})"
+        raise ValueError(err_msg)
+    if inconsistent_destination_point_dimenstions:
+        err_msg: str = "Destination point set had inconsistent dimensions. "
+        err_msg += f"(Included dimensions: {len(set([len(p) for p in destination_points]))})"
+        raise ValueError(err_msg)
+    
+    return findHomography(source_points, destination_points)
 
 
 def transform_point(
