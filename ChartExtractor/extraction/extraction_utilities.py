@@ -235,6 +235,27 @@ def read_detections_from_json(
     
 
 
-def write_detections_to_json(filepath: Path):
-    """Serializes detections to a json file."""
-    pass
+def write_detections_to_json(
+    filepath: Path
+    detections: List[Detection]
+) -> bool:
+    """Serializes detections to a json file.
+    
+    Args:
+        filepath (Path):
+            The filepath to store the json detections at.
+        detections (List[Detection]):
+            The detections to serialize and save.
+
+    Returns:
+        True if the writing was a success, False otherwise.
+    """
+    detections_as_dicts: List[Dict[str, Any]] = [detection.to_dict() for detection in detections]
+    json_data: str = json.dumps(detections_as_dicts)
+    try:
+        with open(str(filepath), 'w') as f:
+            f.write(json_data)
+        return True
+    except Exception as e:
+        print(f"Writing detections to json generated the following error:\n{e}")
+        return False
