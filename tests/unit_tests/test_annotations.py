@@ -14,6 +14,31 @@ class TestBoundingBox:
     def test_init(self):
         """Tests the init function with valid parameters."""
         BoundingBox("Test", 0, 0, 1, 1)
+    
+    def test_from_dict(self):
+        """Tests the from_dict constructor."""
+        bb_dict = {
+            "left": 1,
+            "right": 2,
+            "top": 3,
+            "bottom": 4,
+            "category": "Test"
+        }
+        true_bbox = BoundingBox("Test", 1, 3, 2, 4)
+        assert BoundingBox.from_dict(bb_dict) == true_bbox
+
+    def test_from_dict_fails(self):
+        """Tests the from_dict constructor where it is supposed to fail."""
+        bb_dict = {
+            "left": 1,
+            "right": 2,
+            "top": 3,
+            "bottom": 4,
+            "category": "Test",
+            "other": "thing"
+        }
+        with pytest.raises(TypeError):
+            BoundingBox.from_dict(bb_dict)
 
     # from_yolo
     def test_from_yolo(self):
