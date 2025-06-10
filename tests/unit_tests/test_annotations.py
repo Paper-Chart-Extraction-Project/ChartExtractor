@@ -212,6 +212,27 @@ class TestKeypoint:
         # Below box
         with pytest.raises(ValueError):
             Keypoint(Point(1, 4), BoundingBox("Test", 0, 2, 2, 3))
+    
+    def test_to_dict(self):
+        """Tests the to_dict method."""
+        point = Point(0.5, 2.25)
+        bbox = BoundingBox("Test", 0, 2, 1, 3)
+        kp = Keypoint(point, bbox)
+        kp_dict = kp.to_dict()
+        true_dict = {
+            "keypoint": {
+                "x": 0.5,
+                "y": 2.25,
+            },
+            "bounding_box": {
+                "left": 0,
+                "top": 2,
+                "right": 1,
+                "bottom": 3,
+                "category": "Test",
+            },
+        }
+        assert kp_dict == true_dict
 
     # to_yolo
     def test_to_yolo(self):
