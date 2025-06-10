@@ -83,4 +83,9 @@ def transform_point(
     Returns:
         A point which has been transformed by the homography.
     """
-    pass
+    if len(point) != 2:
+        raise ValueError(f"Point is not two dimensional: {point}.")
+    
+    remapped_point = homography_matrix.dot(np.array([point[0], point[1], 1]))
+    remapped_point /= remapped_point[2]
+    return (remapped_point[0], remapped_point[1])
