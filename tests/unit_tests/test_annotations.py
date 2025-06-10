@@ -28,7 +28,7 @@ class TestBoundingBox:
         assert BoundingBox.from_dict(bb_dict) == true_bbox
 
     def test_from_dict_fails(self):
-        """Tests the from_dict constructor where it is supposed to fail."""
+        """Tests the from_dict constructor when the dictionary contains an erroneous entry."""
         bb_dict = {
             "left": 1,
             "right": 2,
@@ -160,7 +160,27 @@ class TestKeypoint:
         kp = Point(0.25, 0.25)
         bbox = BoundingBox("Test", 0, 0, 1, 1)
         Keypoint(kp, bbox)
-
+    
+    def test_from_dict(self):
+        """Test the from_dict constructor."""
+        keypoint_dict = {
+            "keypoint": {
+                "x": 0.5,
+                "y": 2.25,
+            },
+            "bounding_box": {
+                "left": 0,
+                "right": 1,
+                "top": 2,
+                "bottom": 3,
+                "category": "Test"
+            },
+        }
+        true_point = Point(0.5, 2.25)
+        true_bounding_box = BoundingBox("Test", 0, 2, 1, 3)
+        true_keypoint = Keypoint(true_point, true_bounding_box)
+        assert Keypoint.from_dict(keypoint_dict) == true_keypoint
+    
     # from_yolo
     def test_from_yolo(self):
         """Tests the from_yolo constructor."""
