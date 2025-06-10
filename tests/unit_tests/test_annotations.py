@@ -14,6 +14,31 @@ class TestBoundingBox:
     def test_init(self):
         """Tests the init function with valid parameters."""
         BoundingBox("Test", 0, 0, 1, 1)
+    
+    def test_from_dict(self):
+        """Tests the from_dict constructor."""
+        bb_dict = {
+            "left": 1,
+            "right": 2,
+            "top": 3,
+            "bottom": 4,
+            "category": "Test"
+        }
+        true_bbox = BoundingBox("Test", 1, 3, 2, 4)
+        assert BoundingBox.from_dict(bb_dict) == true_bbox
+
+    def test_from_dict_fails(self):
+        """Tests the from_dict constructor when the dictionary contains an erroneous entry."""
+        bb_dict = {
+            "left": 1,
+            "right": 2,
+            "top": 3,
+            "bottom": 4,
+            "category": "Test",
+            "other": "thing"
+        }
+        with pytest.raises(TypeError):
+            BoundingBox.from_dict(bb_dict)
 
     # from_yolo
     def test_from_yolo(self):
@@ -102,6 +127,18 @@ class TestBoundingBox:
         """Tests the 'box' property."""
         bbox = BoundingBox("Test", 0, 0, 1, 1)
         assert [0, 0, 1, 1] == bbox.box
+    
+    def test_to_dict(self):
+        """Tests the to_dict method."""
+        bbox = BoundingBox("Test", 0, 2, 1, 3)
+        true_dict = {
+            "left": 0,
+            "right": 1,
+            "top": 2,
+            "bottom": 3,
+            "category": "Test"
+        }
+        assert bbox.to_dict() == true_dict
 
     # to_yolo
     def test_to_yolo(self):
@@ -123,7 +160,27 @@ class TestKeypoint:
         kp = Point(0.25, 0.25)
         bbox = BoundingBox("Test", 0, 0, 1, 1)
         Keypoint(kp, bbox)
-
+    
+    def test_from_dict(self):
+        """Test the from_dict constructor."""
+        keypoint_dict = {
+            "keypoint": {
+                "x": 0.5,
+                "y": 2.25,
+            },
+            "bounding_box": {
+                "left": 0,
+                "right": 1,
+                "top": 2,
+                "bottom": 3,
+                "category": "Test"
+            },
+        }
+        true_point = Point(0.5, 2.25)
+        true_bounding_box = BoundingBox("Test", 0, 2, 1, 3)
+        true_keypoint = Keypoint(true_point, true_bounding_box)
+        assert Keypoint.from_dict(keypoint_dict) == true_keypoint
+    
     # from_yolo
     def test_from_yolo(self):
         """Tests the from_yolo constructor."""
@@ -155,6 +212,27 @@ class TestKeypoint:
         # Below box
         with pytest.raises(ValueError):
             Keypoint(Point(1, 4), BoundingBox("Test", 0, 2, 2, 3))
+    
+    def test_to_dict(self):
+        """Tests the to_dict method."""
+        point = Point(0.5, 2.25)
+        bbox = BoundingBox("Test", 0, 2, 1, 3)
+        kp = Keypoint(point, bbox)
+        kp_dict = kp.to_dict()
+        true_dict = {
+            "keypoint": {
+                "x": 0.5,
+                "y": 2.25,
+            },
+            "bounding_box": {
+                "left": 0,
+                "top": 2,
+                "right": 1,
+                "bottom": 3,
+                "category": "Test",
+            },
+        }
+        assert kp_dict == true_dict
 
     # to_yolo
     def test_to_yolo(self):

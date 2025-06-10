@@ -5,6 +5,7 @@ It also provides helper functions for constructing these objects from YOLO forma
 
 # Built-in Imports
 from dataclasses import dataclass
+import json
 from typing import Dict, List, Tuple
 import warnings
 
@@ -29,8 +30,17 @@ class Point:
         return self.x == other.x and self.y == other.y
 
     def __repr__(self):
-        """Returns a string representation of this Point object."""
+        """Returns a string representation of this `Point` object."""
         return f"Point({self.x}, {self.y})"
+    
+    @classmethod
+    def from_dict(cls, point_dict: Dict[str, float]):
+        """Creates a `Point` from a dictionary."""
+        return Point(**point_dict)
+    
+    def to_dict(self) -> str:
+        """Returns a json serialized version of the point."""
+        return vars(self)
 
 
 @dataclass
@@ -53,10 +63,13 @@ class BoundingBox:
 
     Constructors :
         `from_yolo(yolo_line: str, image_width: int, image_height: int, int_to_category: Dict[int, str])`:
-            Constructs a `BoundingBox` from a line in a YOLO formatted labels file. It requires the original image dimensions and a dictionary mapping category IDs to category names.
+            Constructs a `BoundingBox` from a line in a YOLO formatted labels file.
+            It requires the original image dimensions and a dictionary mapping category IDs to
+            category names.
 
         `from_coco(coco_annotation: Dict, categories: List[Dict])`:
-            Constructs a `BoundingBox` from an annotation in a COCO data JSON file. It requires the annotation dictionary and a list of category dictionaries.
+            Constructs a `BoundingBox` from an annotation in a COCO data JSON file.
+            It requires the annotation dictionary and a list of category dictionaries.
 
 
     Properties :
@@ -91,7 +104,7 @@ class BoundingBox:
         self.top = top
         self.right = right
         self.bottom = bottom
-
+    
     @staticmethod
     def from_yolo(
         yolo_line: str,
@@ -160,7 +173,20 @@ class BoundingBox:
                 f"Category {int(coco_annotation['category_id'])} not found in the categories list."
             )
         return BoundingBox(category, left, top, right, bottom)
+    
+    @staticmethod
+    def from_dict(bbox_dict: Dict[str, float]):
+        """Constructs a `BoundingBox` from a dictionary of arguments.
 
+        Args:
+            `bbox_dict` (Dict[str, float]):
+                A dictionary containing entries corresponding to the four bounding box sides.
+
+        Returns:
+            A `BoundingBox` object containing the data from the dictionary.
+        """
+        return BoundingBox(**bbox_dict)
+    
     @classmethod
     def validate_box_values(
         cls, left: float, top: float, right: float, bottom: float
@@ -282,6 +308,10 @@ class BoundingBox:
         h = (self.bottom - self.top) / image_height
         return f"{c} {x:.{precision}f} {y:.{precision}f} {w:.{precision}f} {h:.{precision}f}"
 
+    def to_dict(self) -> dict:
+        """Returns a dictionary with all the attributes of this """
+        return vars(self)
+
 
 @dataclass
 class Keypoint:
@@ -289,14 +319,17 @@ class Keypoint:
 
     Attributes :
         `keypoint` (Tuple[float]):
-            A tuple containing the (x, y) coordinates of the keypoint relative to the top-left corner of the image.
+            A tuple containing the (x, y) coordinates of the keypoint relative to the top-left
+            corner of the image.
         `bounding_box` (BoundingBox):
             A `BoundingBox` object that defines the bounding box around the object containing the keypoint.
 
 
     Constructors :
         `from_yolo(yolo_line: str, image_width: int, image_height: int, id_to_category: Dict[int, str])`:
-            Constructs a Keypoint from a line in a YOLO formatted labels file. It requires the original image dimensions and a dictionary mapping category IDs to category names.
+            Constructs a Keypoint from a line in a YOLO formatted labels file.
+            It requires the original image dimensions and a dictionary mapping category IDs to
+            category names.
             **Note:** This method ignores the "visibility" information (denoted by 'v') in the YOLO format.
 
 
@@ -306,14 +339,18 @@ class Keypoint:
         `center` (Tuple[float]):
             The (x, y) coordinates of the bounding box's center (inherited from the `bounding_box`).
         `box` (Tuple[float]):
-            A list containing the bounding box coordinates as [left, top, right, bottom] (inherited from the `bounding_box`).
+            A list containing the bounding box coordinates as [left, top, right, bottom]
+            (inherited from the `bounding_box`).
 
 
     Methods :
         `to_yolo(self, image_width: int, image_height: int, category_to_id: Dict[str, int]) -> str`:
-            Generates a YOLO formatted string representation of this `Keypoint` object. It requires the image dimensions and a dictionary mapping category strings to integer labels.
+            Generates a YOLO formatted string representation of this `Keypoint` object.
+            It requires the image dimensions and a dictionary mapping category strings to integer
+            labels.
         `validate_keypoint(cls, bounding_box: BoundingBox, keypoint: Point) -> None`:
-            Validates that a keypoint lies within the specified bounding box. Raises a ValueError if the keypoint is outside the bounding box.
+            Validates that a keypoint lies within the specified bounding box.
+            Raises a ValueError if the keypoint is outside the bounding box.
     """
 
     keypoint: Point
@@ -370,6 +407,25 @@ class Keypoint:
         keypoint = Point(keypoint_x * image_width, keypoint_y * image_height)
         return Keypoint(keypoint, bounding_box, do_keypoint_validation)
 
+    @staticmethod
+    def from_dict(keypoint_dict: Dict[str, Dict[str, float]], do_validation: bool = True):
+        """Constructs a `Keypoint` from a dictionary of arguments.
+
+        Args:
+            `keypoint_dict` (Dict[str, float]):
+                A dictionary containing entries that are passed in turn to the `BoundingBox` and
+                `Point` class' `from_dict` methods.
+            `do_validation` (bool):
+                A boolean encoding whether or not to do validation to make sure the keypoint is in
+                the bounding box.
+
+        Returns:
+            A `Keypoint` object containing the data from the dictionary.
+        """
+        keypoint: Point = Point.from_dict(keypoint_dict["keypoint"])
+        bounding_box: BoundingBox = BoundingBox.from_dict(keypoint_dict["bounding_box"])
+        return Keypoint(keypoint, bounding_box)
+
     @classmethod
     def validate_keypoint(cls, bounding_box: BoundingBox, keypoint: Point) -> None:
         """Validates that a keypoint lies within the specified bounding box.
@@ -392,9 +448,9 @@ class Keypoint:
         in_bounds_y: bool = bounding_box.top <= keypoint.y <= bounding_box.bottom
         in_bounds: bool = in_bounds_x and in_bounds_y
         if not in_bounds:
-            raise ValueError(
-                f"Keypoint is not in the bounding box intended to enclose it (Keypoint:{(keypoint.x, keypoint.y)}, BoundingBox:{str(bounding_box)})"
-            )
+            err_msg: str = "Keypoint is not in the bounding box intended to enclose it "
+            err_msg += f"(Keypoint:{(keypoint.x, keypoint.y)}, BoundingBox:{str(bounding_box)})"
+            raise ValueError(err_msg)
 
     @property
     def category(self) -> str:
@@ -601,3 +657,10 @@ class Keypoint:
         else:
             yolo_line += f" {keypoint_x:.{precision}f} {keypoint_y:.{precision}f}"
         return yolo_line
+    
+    def to_dict(self) -> dict:
+        """Converts this keypoint to a dictionary of its variables."""
+        return {
+            "bounding_box": self.bounding_box.to_dict(),
+            "keypoint": self.keypoint.to_dict(),
+        }
