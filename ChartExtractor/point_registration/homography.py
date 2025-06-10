@@ -40,10 +40,8 @@ def find_homography(
     too_few_source_points: bool = len(source_points) < 4
     too_few_destination_points: bool = len(destination_points) < 4
     unequal_point_sets: bool = len(source_points) != len(destination_points)
-    inconsistent_source_point_dimenstions: bool = len(set([len(p) for p in source_points])) == 1
-    inconsistent_destination_point_dimenstions: bool = (
-        len(set([len(p) for p in destination_points])) == 1
-    )
+    source_points_not_two_dimensional: bool = set([len(p) for p in source_points]) == {2}
+    destination_points_not_two_dimensional: bool = set([len(p) for p in destination_points]) == {2}
 
     if too_few_source_points:
         raise ValueError(
@@ -58,13 +56,13 @@ def find_homography(
         err_msg += f"(length of source: {len(source_points)}, "
         err_msg += f"length of destination: {len(destination_points)})"
         raise ValueError(err_msg)
-    if inconsistent_source_point_dimenstions:
-        err_msg: str = "Source point set had inconsistent dimensions. "
-        err_msg += f"(Included dimensions: {len(set([len(p) for p in source_points]))})"
+    if source_points_not_two_dimensional:
+        err_msg: str = "Source point set contains non two dimensional points. "
+        err_msg += f"(Included dimensions: {set([len(p) for p in source_points])})"
         raise ValueError(err_msg)
-    if inconsistent_destination_point_dimenstions:
-        err_msg: str = "Destination point set had inconsistent dimensions. "
-        err_msg += f"(Included dimensions: {len(set([len(p) for p in destination_points]))})"
+    if destination_points_not_two_dimensional:
+        err_msg: str = "Destination point set contains non two dimensional points. "
+        err_msg += f"(Included dimensions: {set([len(p) for p in destination_points])})"
         raise ValueError(err_msg)
     
     return findHomography(source_points, destination_points)
