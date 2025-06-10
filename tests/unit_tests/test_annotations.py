@@ -127,6 +127,18 @@ class TestBoundingBox:
         """Tests the 'box' property."""
         bbox = BoundingBox("Test", 0, 0, 1, 1)
         assert [0, 0, 1, 1] == bbox.box
+    
+    def test_to_dict(self):
+        """Tests the to_dict method."""
+        bbox = BoundingBox("Test", 0, 2, 1, 3)
+        true_dict = {
+            "left": 0,
+            "right": 1,
+            "top": 2,
+            "bottom": 3,
+            "category": "Test"
+        }
+        assert bbox.to_dict() == true_dict
 
     # to_yolo
     def test_to_yolo(self):
