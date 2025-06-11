@@ -123,11 +123,29 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
         A dictionary containing all the data from the intraoperative side of
         the paper anesthesia record.
     """
-    image: Image.Image = homography_intraoperative_chart(
-        image, make_document_landmark_detections(image, "intraop")
+    landmark_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["intraoperative_document_landmarks"],
+        image.size
     )
-    document_landmark_detections: List[Detection] = make_document_landmark_detections(
-        image, "intraop"
+    uncorrected_document_landmark_detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        INTRAOP_DOC_MODEL,
+        landmark_tile_size,
+        landmark_tile_size,
+        MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
+        MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
+    )
+    image: Image.Image = homography_intraoperative_chart(
+        image,
+        uncorrected_document_landmark_detections,
+    )
+    document_landmark_detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        INTRAOP_DOC_MODEL,
+        landmark_tile_size,
+        landmark_tile_size,
+        MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
+        MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
     )
 
     digit_tile_size: int = compute_tile_size(MODEL_CONFIG["numbers"], image.size)
@@ -210,10 +228,19 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
         A dictionary containing all the data from the preoperative/postoperative
         side of the paper anesthesia record.
     """
-    image: Image.Image = homography_preoperative_chart(
-        image,
-        make_document_landmark_detections(image, "preop_postop"),
+    landmark_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["preop_postop_document_landmarks"],
+        image.size,
     )
+    document_landmark_detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        PREOP_POSTOP_DOC_MODEL,
+        landmark_tile_size,
+        landmark_tile_size,
+        MODEL_CONFIG["preop_postop_document_landmarks"]["horz_overlap_proportion"],
+        MODEL_CONFIG["preop_postop_document_landmarks"]["vert_overlap_proportion"],
+    )
+    image: Image.Image = homography_preoperative_chart(image, document_landmark_detections)
     digit_tile_size: int = compute_tile_size(MODEL_CONFIG["numbers"], image.size)
     digit_detections: List[Detection] = detect_objects_using_tiling(
         image,
@@ -231,7 +258,8 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
 
 
 def homography_intraoperative_chart(
-    image: Image.Image, intraop_document_detections: List[Detection]
+    image: Image.Image,
+    intraop_document_detections: List[Detection],
 ) -> Image.Image:
     """Performs a homography transformation on the intraoperative side of the chart.
 
@@ -282,7 +310,8 @@ def homography_intraoperative_chart(
 
 
 def homography_preoperative_chart(
-    image: Image.Image, preop_document_detections: List[Detection]
+    image: Image.Image,
+    preop_document_detections: List[Detection],
 ) -> Image.Image:
     """Performs a homography transformation on the preop/postop side of the chart.
 
@@ -348,56 +377,6 @@ def compute_tile_size(model_config: Dict, image_size: Tuple[int, int]) -> int:
         )
     )
     return tile_size
-
-
-def make_document_landmark_detections(
-    image: Image.Image,
-    document_side: Literal["intraop", "preop_postop"],
-) -> List[Detection]:
-    """Runs the document landmark detection model to find document landmarks.
-
-    Args:
-        `image` (Image.Image):
-            The image to detect on.
-        `document_side` (Path):
-            The side of the document to find landmarks on.
-
-    Returns:
-        A list of detections containing the locations of the document landmarks.
-    """
-    if document_side not in ["intraop", "preop_postop"]:
-        err_msg = f"Value for \"document_side\" is not in [\"intraop\", "
-        err_msg += f"\"preop_postop\"] (passed: {document_side})."
-        raise ValueError(err_msg)
-    
-    document_model: UltralyticsYOLOv8 = (
-        INTRAOP_DOC_MODEL if document_side == "intraop" else PREOP_POSTOP_DOC_MODEL
-    )
-    tile_size: float = compute_tile_size(
-        MODEL_CONFIG["intraoperative_document_landmarks"],
-        image.size,
-    )
-    tiles: List[List[Image.Image]] = tile_image(
-        image,
-        tile_size,
-        tile_size,
-        MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
-        MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
-    )
-    detections = [[document_model(pil_to_cv2(tile))[0] for tile in row] for row in tiles]
-    detections = untile_detections(
-        detections,
-        tile_size,
-        tile_size,
-        MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
-        MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
-    )
-    detections = non_maximum_suppression(
-        detections,
-        overlap_comparator=intersection_over_minimum,
-        sorting_fn=lambda det: det.annotation.area * det.confidence,
-    )
-    return detections
 
 
 def make_bp_and_hr_detections(
