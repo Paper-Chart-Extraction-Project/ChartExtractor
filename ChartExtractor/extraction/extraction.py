@@ -144,7 +144,12 @@ def run_models(
             }
         }
     """
-    pass
+    detections_dict: Dict[str, List[Detection]] = dict()
+    detections_dict["intraoperative"] = run_intraoperative_models(intraop_image)
+    detections_dict["preoperative_postoperative"] = (
+        run_preoperative_postoperative_models(preop_postop_image)
+    )
+    return detections_dict
 
 
 def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Detection]]:
