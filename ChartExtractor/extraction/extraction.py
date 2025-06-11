@@ -536,8 +536,20 @@ def make_intraop_checkbox_detections(
             image.size[1] * MODEL_CONFIG["checkboxes"]["tile_size_proportion"],
         )
     )
+    detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        CHECKBOXES_MODEL,
+        tile_size,
+        tile_size,
+        MODEL_CONFIG["checkboxes"]["horz_overlap_proportion"],
+        MODEL_CONFIG["checkboxes"]["vert_overlap_proportion"],
+        nms_threshold=0.8
+    )
     intraop_checkboxes = extract_checkboxes(
-        image, CHECKBOXES_MODEL, "intraoperative", tile_size, tile_size
+        detections,
+        "intraoperative",
+        image.size[0],
+        image.size[1],
     )
     return intraop_checkboxes
 
@@ -560,7 +572,19 @@ def make_preop_postop_checkbox_detections(
             image.size[1] * MODEL_CONFIG["checkboxes"]["tile_size_proportion"],
         )
     )
+    detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        CHECKBOXES_MODEL,
+        tile_size,
+        tile_size,
+        MODEL_CONFIG["checkboxes"]["horz_overlap_proportion"],
+        MODEL_CONFIG["checkboxes"]["vert_overlap_proportion"],
+        nms_threshold=0.8
+    )
     preop_postop_checkboxes = extract_checkboxes(
-        image, CHECKBOXES_MODEL, "preoperative", tile_size, tile_size
+        detections,
+        "preoperative",
+        image.size[0],
+        image.size[1],
     )
     return preop_postop_checkboxes
