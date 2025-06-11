@@ -1,6 +1,7 @@
 """Consolidates all the functionality for extracting data from charts into one function."""
 
 # Built-in imports
+from functools import partial
 import os
 from pathlib import Path
 from PIL import Image
@@ -13,7 +14,7 @@ from ..extraction.blood_pressure_and_heart_rate import (
 from ..extraction.checkboxes import extract_checkboxes
 from ..extraction.extraction_utilities import (
     combine_dictionaries,
-    detect_numbers,
+    detect_objects_using_tiling,
     label_studio_to_bboxes,
 )
 from ..extraction.inhaled_volatile import extract_inhaled_volatile
@@ -50,12 +51,6 @@ from ..utilities.read_config import read_config
 from ..utilities.tiling import tile_image
 
 
-CORNER_LANDMARK_NAMES: List[str] = [
-    "anesthesia_start",
-    "safety_checklist",
-    "lateral",
-    "units",
-]
 PATH_TO_DATA: Path = (Path(os.path.dirname(__file__)) / ".." / ".." / "data").resolve()
 PATH_TO_MODELS: Path = PATH_TO_DATA / "models"
 PATH_TO_MODEL_METADATA = PATH_TO_DATA / "model_metadata"
@@ -128,13 +123,40 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
         A dictionary containing all the data from the intraoperative side of
         the paper anesthesia record.
     """
+    landmark_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["intraoperative_document_landmarks"],
+        image.size
+    )
+    uncorrected_document_landmark_detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        INTRAOP_DOC_MODEL,
+        landmark_tile_size,
+        landmark_tile_size,
+        MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
+        MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
+    )
     image: Image.Image = homography_intraoperative_chart(
-        image, make_document_landmark_detections(image, "intraop")
+        image,
+        uncorrected_document_landmark_detections,
     )
-    document_landmark_detections: List[Detection] = make_document_landmark_detections(
-        image, "intraop"
+    document_landmark_detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        INTRAOP_DOC_MODEL,
+        landmark_tile_size,
+        landmark_tile_size,
+        MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
+        MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
     )
-    digit_detections: List[Detection] = make_digit_detections(image)
+
+    digit_tile_size: int = compute_tile_size(MODEL_CONFIG["numbers"], image.size)
+    digit_detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        NUMBERS_MODEL,
+        digit_tile_size,
+        digit_tile_size,
+        MODEL_CONFIG["numbers"]["horz_overlap_proportion"],
+        MODEL_CONFIG["numbers"]["vert_overlap_proportion"],
+    )
 
     # extract drug code and surgical timing
     codes: Dict = {"codes": extract_drug_codes(digit_detections, *image.size)}
@@ -206,11 +228,28 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
         A dictionary containing all the data from the preoperative/postoperative
         side of the paper anesthesia record.
     """
-    image: Image.Image = homography_preoperative_chart(
-        image,
-        make_document_landmark_detections(image, "preop_postop"),
+    landmark_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["preop_postop_document_landmarks"],
+        image.size,
     )
-    digit_detections: List[Detection] = make_digit_detections(image)
+    document_landmark_detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        PREOP_POSTOP_DOC_MODEL,
+        landmark_tile_size,
+        landmark_tile_size,
+        MODEL_CONFIG["preop_postop_document_landmarks"]["horz_overlap_proportion"],
+        MODEL_CONFIG["preop_postop_document_landmarks"]["vert_overlap_proportion"],
+    )
+    image: Image.Image = homography_preoperative_chart(image, document_landmark_detections)
+    digit_tile_size: int = compute_tile_size(MODEL_CONFIG["numbers"], image.size)
+    digit_detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        NUMBERS_MODEL,
+        digit_tile_size,
+        digit_tile_size,
+        MODEL_CONFIG["numbers"]["horz_overlap_proportion"],
+        MODEL_CONFIG["numbers"]["vert_overlap_proportion"],
+    )
     digit_data = extract_preop_postop_digit_data(digit_detections, *image.size)
     checkbox_data = {
         "preoperative_checkboxes": make_preop_postop_checkbox_detections(image)
@@ -219,7 +258,8 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
 
 
 def homography_intraoperative_chart(
-    image: Image.Image, intraop_document_detections: List[Detection]
+    image: Image.Image,
+    intraop_document_detections: List[Detection],
 ) -> Image.Image:
     """Performs a homography transformation on the intraoperative side of the chart.
 
@@ -270,7 +310,8 @@ def homography_intraoperative_chart(
 
 
 def homography_preoperative_chart(
-    image: Image.Image, preop_document_detections: List[Detection]
+    image: Image.Image,
+    preop_document_detections: List[Detection],
 ) -> Image.Image:
     """Performs a homography transformation on the preop/postop side of the chart.
 
@@ -320,89 +361,22 @@ def homography_preoperative_chart(
     )
 
 
-def make_document_landmark_detections(
-    image: Image.Image,
-    document_side: Literal["intraop", "preop_postop"],
-) -> List[Detection]:
-    """Runs the document landmark detection model to find document landmarks.
-
-    Args:
-        `image` (Image.Image):
-            The image to detect on.
-        `document_side` (Path):
-            The side of the document to find landmarks on.
-
-    Returns:
-        A list of detections containing the locations of the document landmarks.
-    """
-    if document_side not in ["intraop", "preop_postop"]:
-        err_msg = f"Value for \"document_side\" is not in [\"intraop\", "
-        err_msg += f"\"preop_postop\"] (passed: {document_side})."
-        raise ValueError(err_msg)
+def compute_tile_size(model_config: Dict, image_size: Tuple[int, int]) -> int:
+    """Finds the tile size for a model based on how its training dataset was generated.
     
-    document_model: UltralyticsYOLOv8 = (
-        INTRAOP_DOC_MODEL if document_side == "intraop" else PREOP_POSTOP_DOC_MODEL
-    )
-    tile_size_proportion: float = MODEL_CONFIG["intraoperative_document_landmarks"][
-        "tile_size_proportion"
-    ]
+    Args:
+        model_config (Dict):
+            The model's config dictionary.
+        image_size (Tuple[int, int])
+    """
+    tile_size_proportion = model_config["tile_size_proportion"]
     tile_size: int = int(
         min(
-            image.size[0] * tile_size_proportion,
-            image.size[1] * tile_size_proportion,
+            image_size[0] * tile_size_proportion,
+            image_size[1] * tile_size_proportion,
         )
     )
-    tiles: List[List[Image.Image]] = tile_image(
-        image,
-        tile_size,
-        tile_size,
-        MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
-        MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
-    )
-    detections = [[document_model(pil_to_cv2(tile))[0] for tile in row] for row in tiles]
-    detections = untile_detections(
-        detections,
-        tile_size,
-        tile_size,
-        MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
-        MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
-    )
-    detections = non_maximum_suppression(
-        detections,
-        overlap_comparator=intersection_over_minimum,
-        sorting_fn=lambda det: det.annotation.area * det.confidence,
-    )
-    return detections
-
-
-def make_digit_detections(
-    image: Image.Image,
-) -> List[Detection]:
-    """Runs the digit detection detection model to find handwritten digits.
-
-    Args:
-        `image` (Image.Image):
-            The image to detect on.
-
-    Returns:
-        A list of detections containing the locations of handwritten digits.
-    """
-    tile_size_proportion: float = MODEL_CONFIG["numbers"]["tile_size_proportion"]
-    tile_size = int(
-        min(
-            image.size[0] * tile_size_proportion,
-            image.size[1] * tile_size_proportion,
-        )
-    )
-    number_detections: List[Detection] = detect_numbers(
-        image,
-        NUMBERS_MODEL,
-        tile_size,
-        tile_size,
-        MODEL_CONFIG["numbers"]["horz_overlap_proportion"],
-        MODEL_CONFIG["numbers"]["vert_overlap_proportion"],
-    )
-    return number_detections
+    return tile_size
 
 
 def make_bp_and_hr_detections(
@@ -423,110 +397,43 @@ def make_bp_and_hr_detections(
     Returns:
         A dictionary mapping timestamps to values for systolic, diastolic, and heart rate.
     """
-
-    def tile_predict(
-        model: ObjectDetectionModel,
-        image: Image.Image,
-        tile_width: int,
-        tile_height: int,
-        horizontal_overlap_ratio: float,
-        vertical_overlap_ratio: float,
-    ):
-        """Performs tiled prediction."""
-        tiles: List[List[Image.Image]] = tile_image(
-            image,
-            tile_width,
-            tile_height,
-            horizontal_overlap_ratio,
-            vertical_overlap_ratio,
-        )
-        tiled_detections: List[List[List[Detection]]] = [
-            [model(pil_to_cv2(tile), confidence=0.5)[0] for tile in row]
-            for row in tiles
-        ]
-        detections: List[Detection] = untile_detections(
-            tiled_detections,
-            tile_width,
-            tile_height,
-            horizontal_overlap_ratio,
-            vertical_overlap_ratio,
-        )
-        return detections
-
-    sys_tile_size = int(
-        min(
-            image.size[0] * MODEL_CONFIG["systolic"]["tile_size_proportion"],
-            image.size[1] * MODEL_CONFIG["systolic"]["tile_size_proportion"],
-        )
-    )
-    dia_tile_size = int(
-        min(
-            image.size[0] * MODEL_CONFIG["diastolic"]["tile_size_proportion"],
-            image.size[1] * MODEL_CONFIG["diastolic"]["tile_size_proportion"],
-        )
-    )
-    hr_tile_size = int(
-        min(
-            image.size[0] * MODEL_CONFIG["heart_rate"]["tile_size_proportion"],
-            image.size[1] * MODEL_CONFIG["heart_rate"]["tile_size_proportion"],
-        )
-    )
-
-    sys_dets: List[Detection] = tile_predict(
-        SYSTOLIC_MODEL,
+    sys_tile_size: int = compute_tile_size(MODEL_CONFIG["systolic"], image.size)
+    dia_tile_size: int = compute_tile_size(MODEL_CONFIG["diastolic"], image.size)
+    hr_tile_size: int = compute_tile_size(MODEL_CONFIG["heart_rate"], image.size)
+    
+    sys_dets: List[Detection] = detect_objects_using_tiling(
         image.copy(),
+        SYSTOLIC_MODEL,
         sys_tile_size,
         sys_tile_size,
         MODEL_CONFIG["systolic"]["horz_overlap_proportion"],
         MODEL_CONFIG["systolic"]["vert_overlap_proportion"],
     )
-    dia_dets: List[Detection] = tile_predict(
-        DIASTOLIC_MODEL,
+    dia_dets: List[Detection] = detect_objects_using_tiling(
         image.copy(),
+        DIASTOLIC_MODEL,
         dia_tile_size,
         dia_tile_size,
         MODEL_CONFIG["diastolic"]["horz_overlap_proportion"],
         MODEL_CONFIG["diastolic"]["vert_overlap_proportion"],
     )
-    hr_dets: List[Detection] = tile_predict(
-        HEART_RATE_MODEL,
+    hr_dets: List[Detection] = detect_objects_using_tiling(
         image.copy(),
+        HEART_RATE_MODEL,
         hr_tile_size,
         hr_tile_size,
         MODEL_CONFIG["heart_rate"]["horz_overlap_proportion"],
         MODEL_CONFIG["heart_rate"]["vert_overlap_proportion"],
     )
 
-    sys_dets: List[Detection] = non_maximum_suppression(
-        sys_dets,
-        0.5,
-        intersection_over_minimum,
-        lambda det: det.annotation.area * det.confidence,
-    )
-    dia_dets: List[Detection] = non_maximum_suppression(
-        dia_dets,
-        0.5,
-        intersection_over_minimum,
-        lambda det: det.annotation.area * det.confidence,
-    )
-    hr_dets: List[Detection] = non_maximum_suppression(
-        hr_dets,
-        0.5,
-        intersection_over_minimum,
-        lambda det: det.annotation.area * det.confidence,
-    )
-
     dets: List[Detection] = sys_dets + dia_dets + hr_dets
     bp_and_hr = extract_heart_rate_and_blood_pressure(
         dets, time_clusters, mmhg_clusters
     )
-
     return bp_and_hr
 
 
-def make_intraop_checkbox_detections(
-    image: Image.Image,
-) -> Dict:
+def make_intraop_checkbox_detections(image: Image.Image) -> Dict:
     """Finds checkboxes on the intraoperative form, then associates a meaning to them.
 
     Args:
@@ -536,21 +443,26 @@ def make_intraop_checkbox_detections(
     Returns:
         A dictionary mapping names of checkboxes to a "checked" or "unchecked" state.
     """
-    tile_size: int = int(
-        min(
-            image.size[0] * MODEL_CONFIG["checkboxes"]["tile_size_proportion"],
-            image.size[1] * MODEL_CONFIG["checkboxes"]["tile_size_proportion"],
-        )
+    tile_size = compute_tile_size(MODEL_CONFIG["checkboxes"], image.size)
+    detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        CHECKBOXES_MODEL,
+        tile_size,
+        tile_size,
+        MODEL_CONFIG["checkboxes"]["horz_overlap_proportion"],
+        MODEL_CONFIG["checkboxes"]["vert_overlap_proportion"],
+        nms_threshold=0.8
     )
     intraop_checkboxes = extract_checkboxes(
-        image, CHECKBOXES_MODEL, "intraoperative", tile_size, tile_size
+        detections,
+        "intraoperative",
+        image.size[0],
+        image.size[1],
     )
     return intraop_checkboxes
 
 
-def make_preop_postop_checkbox_detections(
-    image: Image.Image,
-):
+def make_preop_postop_checkbox_detections(image: Image.Image):
     """Finds checkboxes on the intraoperative form, then associates a meaning to them.
 
     Args:
@@ -560,13 +472,20 @@ def make_preop_postop_checkbox_detections(
     Returns:
         A dictionary mapping names of checkboxes to a "checked" or "unchecked" state.
     """
-    tile_size: int = int(
-        min(
-            image.size[0] * MODEL_CONFIG["checkboxes"]["tile_size_proportion"],
-            image.size[1] * MODEL_CONFIG["checkboxes"]["tile_size_proportion"],
-        )
+    tile_size = compute_tile_size(MODEL_CONFIG["checkboxes"], image.size)
+    detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        CHECKBOXES_MODEL,
+        tile_size,
+        tile_size,
+        MODEL_CONFIG["checkboxes"]["horz_overlap_proportion"],
+        MODEL_CONFIG["checkboxes"]["vert_overlap_proportion"],
+        nms_threshold=0.8
     )
     preop_postop_checkboxes = extract_checkboxes(
-        image, CHECKBOXES_MODEL, "preoperative", tile_size, tile_size
+        detections,
+        "preoperative",
+        image.size[0],
+        image.size[1],
     )
     return preop_postop_checkboxes

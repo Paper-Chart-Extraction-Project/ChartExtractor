@@ -5,7 +5,7 @@ from functools import reduce
 import json
 from pathlib import Path
 from PIL import Image
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 # External imports
 import numpy as np
@@ -98,33 +98,59 @@ def compute_digit_distances_to_centroids(
     return closest_boxes
 
 
-def detect_numbers(
+def detect_objects_using_tiling(
     image: Image.Image,
     detection_model: ObjectDetectionModel,
     slice_width: int,
     slice_height: int,
     horizontal_overlap_ratio: float,
     vertical_overlap_ratio: float,
-    conf: float = 0.5,
+    minimum_confidence: float = 0.5,
+    nms_threshold: float = 0.5,
+    overlap_comparator: Callable[[Detection, Detection], float] = intersection_over_minimum,
+    sorting_fn: Callable[[Detection], float] = lambda det: det.annotation.area * det.confidence,
 ) -> List[Detection]:
-    """Detects handwritten digits on an image.
+    """Detects objects, especially small ones, using image tiling.
+
+    Splits an image up into smaller tiles, runs the model on each tile, then untiles the detections
+    and performs non-maximum suppression on the result.
 
     Args:
         `image` (Image.Image):
             The image to detect on.
         `detection_model` (ObjectDetectionModel):
-            The digit detection model.
+            The detection model to use. Can be any object that implements the ObjectDetectionModel
+            protocol.
         `slice_height` (int):
             The height of each slice.
         `slice_width` (int):
             The width of each slice.
         `horizontal_overlap_ratio` (float):
             The amount of left-right overlap between slices.
+            (Ex: 0.2 results in 20% of a tile overlapping with the tile on the left and 20%
+            overlapping on the right.)
         `vertical_overlap_ratio` (float):
             The amount of top-bottom overlap between slices.
-
+            (Ex: 0.2 results in 20% of a tile overlapping with the tile on the top and 20%
+            overlapping on the bottom.)
+        `minimum_confidence` (float):
+            The minimum confidence level. Any detection with a confidence score below this will not
+            be added to the returned detections. Defaults to 0.5.
+        `nms_threshold` (float):
+            The threshold above which nms registers a 'match', and deletes all but the first
+            detection in a 'group'. A group is determined by the sorting_fn. Defaults to 0.5.
+        `overlap_comparator` (float):
+            The function that determines how much two detections overlap. Defaults to the
+            intersection of the detections divided by the minimum of the two detection's areas.
+            This default prevents partial detections from remaining inside the full detection.
+        `sorting_fn` (Callable[[Detection], float]):
+            The function that applies a 'score' to each detection to determine which has priority
+            when NMS deletes detections. Only the detection with the highest score in a group
+            remains. Defaults to the detection's confidence times its area.
+    
     Returns:
-        A list of handwritten digit detections on the image.
+        A list of detections showing objects on the image that the object detection model was
+        trained to identify.
     """
     image_tiles: List[List[Image.Image]] = tile_image(
         image,
@@ -134,7 +160,7 @@ def detect_numbers(
         vertical_overlap_ratio,
     )
     detections: List[List[List[Detection]]] = [
-        [detection_model(pil_to_cv2(tile), confidence=conf)[0] for tile in row]
+        [detection_model(pil_to_cv2(tile), confidence=minimum_confidence)[0] for tile in row]
         for row in image_tiles
     ]
     detections: List[Detection] = untile_detections(
@@ -146,9 +172,9 @@ def detect_numbers(
     )
     detections: List[Detection] = non_maximum_suppression(
         detections=detections,
-        threshold=0.5,
-        overlap_comparator=intersection_over_minimum,
-        sorting_fn=lambda det: det.annotation.area * det.confidence,
+        threshold=nms_threshold,
+        overlap_comparator=overlap_comparator,
+        sorting_fn=sorting_fn,
     )
     return detections
 
@@ -236,7 +262,7 @@ def read_detections_from_json(
 
 
 def write_detections_to_json(
-    filepath: Path
+    filepath: Path,
     detections: List[Detection]
 ) -> bool:
     """Serializes detections to a json file.

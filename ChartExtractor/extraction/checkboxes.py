@@ -38,30 +38,22 @@ PREOP_POSTOP_CENTROIDS: Dict[str, Tuple[float, float]] = json.load(
 
 
 def extract_checkboxes(
-    image: Image.Image,
-    detection_model: ObjectDetectionModel,
+    detections: List[Detection],
     side: Literal["intraoperative", "preoperative"],
-    slice_width: int,
-    slice_height: int,
-    horizontal_overlap_ratio: float = 0.5,
-    vertical_overlap_ratio: float = 0.5,
+    image_width: int,
+    image_height: int,
 ) -> Dict[str, str]:
     """Extracts checkbox data from an image of a chart.
 
     Args:
-        `image` (Image.Image):
-            The image to extract checkboxes from.
-        `detection_model` (ObjectDetectionModel):
-            An object that implements the ObjectDetectionModel interface.
-        `slice_height` (int):
-            The height of each slice.
-        `slice_width` (int):
-            The width of each slice.
-        `horizontal_overlap_ratio` (float):
-            The amount of left-right overlap between slices.
-        `vertical_overlap_ratio` (float):
-            The amount of top-bottom overlap between slices.
-
+        detections (List[Detection]):
+            The detected checkboxes.
+        side (Literal["intraoperative", "preoperative"]):
+            The side of the chart.
+        image_width (int):
+            The original image's width.
+        image_height (int):
+            The original image's height.
     Returns:
         A dictionary mapping the name of checkboxes to "checked" or "unchecked".
     """
@@ -74,76 +66,21 @@ def extract_checkboxes(
             f'Invalid selection for side. Must be one of ["intraoperative", "preoperative"], value supplied was {side}'
         )
 
-    checkbox_bboxes: List[BoundingBox] = detect_checkboxes(
-        image,
-        detection_model,
-        slice_width,
-        slice_height,
-        horizontal_overlap_ratio,
-        vertical_overlap_ratio,
+    checkbox_bboxes: List[BoundingBox] = [det.annotation for det in detections]
+    names: Dict[str, str] = find_checkbox_names(
+        checkbox_bboxes,
+        centroids,
+        image_width,
+        image_height
     )
-    names: Dict[str, str] = find_checkbox_names(checkbox_bboxes, centroids, image.size)
     return names
-
-
-def detect_checkboxes(
-    image: Image.Image,
-    detection_model: ObjectDetectionModel,
-    slice_width: int,
-    slice_height: int,
-    horizontal_overlap_ratio: float,
-    vertical_overlap_ratio: float,
-) -> List[BoundingBox]:
-    """Uses an object detector to detect checkboxes and their state on an image.
-
-    Args:
-        `image` (Image.Image):
-            The image to extract checkboxes from.
-        `detection_model` (ObjectDetectionModel):
-            An object that implements the ObjectDetectionModel interface.
-        `slice_height` (int):
-            The height of each slice.
-        `slice_width` (int):
-            The width of each slice.
-        `horizontal_overlap_ratio` (float):
-            The amount of left-right overlap between slices.
-        `vertical_overlap_ratio` (float):
-            The amount of top-bottom overlap between slices.
-
-    Returns:
-        A list of Detection objects encoding the location and state of checkboxes.
-    """
-    image_tiles: List[List[Image.Image]] = tile_image(
-        image,
-        slice_width,
-        slice_height,
-        horizontal_overlap_ratio,
-        vertical_overlap_ratio,
-    )
-    detections: List[List[List[Detection]]] = [
-        [detection_model(pil_to_cv2(tile))[0] for tile in row]
-        for row in image_tiles
-    ]
-    detections: List[Detection] = untile_detections(
-        detections,
-        slice_width,
-        slice_height,
-        horizontal_overlap_ratio,
-        vertical_overlap_ratio,
-    )
-    detections: List[Detection] = non_maximum_suppression(
-        detections=detections,
-        threshold=0.8,
-        overlap_comparator=intersection_over_minimum,
-        sorting_fn=lambda det: det.annotation.area * det.confidence,
-    )
-    return [det.annotation for det in detections]
 
 
 def find_checkbox_names(
     checkboxes: List[BoundingBox],
     centroids: Dict[str, Tuple[float, float]],
-    imsize: Tuple[int, int],
+    image_width: int,
+    image_height: int,
     threshold: float = 0.025,
 ) -> Dict[str, str]:
     """Finds the names of checkboxes.
@@ -175,7 +112,7 @@ def find_checkbox_names(
 
     checkbox_values: Dict[str, str] = dict()
     for ckbx in checkboxes:
-        center = ckbx.center[0] / imsize[0], ckbx.center[1] / imsize[1]
+        center = ckbx.center[0] / image_width, ckbx.center[1] / image_height
         distance_to_all_centroids: Dict[str, float] = {
             name: distance(center, centroid) for (name, centroid) in centroids.items()
         }
@@ -188,19 +125,3 @@ def find_checkbox_names(
         checkbox_values[closest_checkbox_centroid] = ckbx.category
 
     return checkbox_values
-
-
-def find_interaoperative_checkbox_names(
-    intraoperative_checkboxes: List[BoundingBox], threshold: float = 0.025
-) -> Dict[str, str]:
-    """Finds the names of intraoperative checkboxes."""
-    return find_checkbox_names(intraoperative_checkboxes, INTRAOP_CENTROIDS, threshold)
-
-
-def find_preoperative_checkbox_names(
-    preoperative_checkboxes: List[BoundingBox], threshold: float = 0.025
-) -> Dict[str, str]:
-    """Finds the names of preoperative checkboxes."""
-    return find_checkbox_names(
-        preoperative_checkboxes, PREOP_POSTOP_CENTROIDS, threshold
-    )
