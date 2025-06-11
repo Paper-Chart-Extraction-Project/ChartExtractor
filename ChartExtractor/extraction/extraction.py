@@ -51,7 +51,6 @@ from ..utilities.read_config import read_config
 from ..utilities.tiling import tile_image
 
 
-CORNER_LANDMARK_NAMES: List[str] = ["anesthesia_start", "safety_checklist", "lateral", "units"]
 PATH_TO_DATA: Path = (Path(os.path.dirname(__file__)) / ".." / ".." / "data").resolve()
 PATH_TO_MODELS: Path = PATH_TO_DATA / "models"
 PATH_TO_MODEL_METADATA = PATH_TO_DATA / "model_metadata"
