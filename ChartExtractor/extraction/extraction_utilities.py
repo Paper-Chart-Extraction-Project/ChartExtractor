@@ -5,14 +5,14 @@ from functools import reduce
 import json
 from pathlib import Path
 from PIL import Image
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # External imports
 import numpy as np
 
 # Internal imports
 from ..object_detection_models.object_detection_model import ObjectDetectionModel
-from ..utilities.annotations import BoundingBox
+from ..utilities.annotations import BoundingBox, Keypoint
 from ..utilities.detections import Detection
 from ..utilities.detection_reassembly import (
     intersection_over_minimum,
@@ -205,3 +205,57 @@ def label_studio_to_bboxes(
         ]
         for sheet_data in json_data
     }
+
+
+def read_detections_from_json(
+    filepath: Path,
+    detection_type: Union[BoundingBox, Keypoint]
+) -> List[Detection]:
+    """Deserializes detections from a json file.
+    
+    Args:
+        filepath (Path):
+            The filepath to the json detections.
+        detection_type (Union[BoundingBox, Keypoint]):
+            The type of detection that has been serialized.
+            Passed to Detection.from_dict directly.
+
+    Returns:
+        A list of Detection objects from the encoded data.
+    """
+    json_data: Dict[str, Any] = json.loads(open(str(filepath), 'r').read())
+    if not isinstance(json_data, list):
+        raise ValueError(f"Data at {filepath} is not a list of detections.")
+    
+    detections: List[Detection] = [
+        Detection.from_dict(det_dict, detection_type)
+        for det_dict in json_data
+    ]
+    return detections
+    
+
+
+def write_detections_to_json(
+    filepath: Path
+    detections: List[Detection]
+) -> bool:
+    """Serializes detections to a json file.
+    
+    Args:
+        filepath (Path):
+            The filepath to store the json detections at.
+        detections (List[Detection]):
+            The detections to serialize and save.
+
+    Returns:
+        True if the writing was a success, False otherwise.
+    """
+    detections_as_dicts: List[Dict[str, Any]] = [detection.to_dict() for detection in detections]
+    json_data: str = json.dumps(detections_as_dicts)
+    try:
+        with open(str(filepath), 'w') as f:
+            f.write(json_data)
+        return True
+    except Exception as e:
+        print(f"Writing detections to json generated the following error:\n{e}")
+        return False
