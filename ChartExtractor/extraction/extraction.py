@@ -163,17 +163,87 @@ def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Dete
         A dictionary containing all of the detections on the intraoperative image.
         The structure of the dictionary is set up as:
         {
-            "intraoperative": {
-                "landmarks": [...],
-                "numbers": [...],
-                "checkboxes": [...],
-                "systolic": [...],
-                "diastoic": [...],
-                "heart_rate": [...],
-            }
+            "landmarks": [...],
+            "numbers": [...],
+            "checkboxes": [...],
+            "systolic": [...],
+            "diastoic": [...],
+            "heart_rate": [...],
         }
     """
-    pass
+    detections_dict: Dict[str, List[Detection]] = dict()
+
+    # landmarks
+    landmark_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["intraoperative_document_landmarks"],
+        intraop_image.size
+    )
+    detections_dict["landmarks"] = detect_objects_using_tiling(
+        intraop_image,
+        INTRAOP_DOC_MODEL,
+        landmark_tile_size,
+        landmark_tile_size,
+        MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
+        MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
+    )
+
+    # numbers
+    digit_tile_size: int = compute_tile_size(MODEL_CONFIG["numbers"], intraop_image.size)
+    detections_dict["numbers"] = detect_objects_using_tiling(
+        intraop_image,
+        NUMBERS_MODEL,
+        digit_tile_size,
+        digit_tile_size,
+        MODEL_CONFIG["numbers"]["horz_overlap_proportion"],
+        MODEL_CONFIG["numbers"]["vert_overlap_proportion"],
+    )
+
+    # checkboxes
+    tile_size = compute_tile_size(MODEL_CONFIG["checkboxes"], intraop_image.size)
+    detections_dict["checkboxes"] = detect_objects_using_tiling(
+        intraop_image,
+        CHECKBOXES_MODEL,
+        tile_size,
+        tile_size,
+        MODEL_CONFIG["checkboxes"]["horz_overlap_proportion"],
+        MODEL_CONFIG["checkboxes"]["vert_overlap_proportion"],
+        nms_threshold=0.8
+    )
+
+    # systolic
+    sys_tile_size: int = compute_tile_size(MODEL_CONFIG["systolic"], intraop_image.size)
+    detections_dict["systolic"] = detect_objects_using_tiling(
+        intraop_image.copy(),
+        SYSTOLIC_MODEL,
+        sys_tile_size,
+        sys_tile_size,
+        MODEL_CONFIG["systolic"]["horz_overlap_proportion"],
+        MODEL_CONFIG["systolic"]["vert_overlap_proportion"],
+    )
+    
+    # diastolic
+    dia_tile_size: int = compute_tile_size(MODEL_CONFIG["diastolic"], intraop_image.size)
+    detections_dict["diastolic"] = detect_objects_using_tiling(
+        intraop_image.copy(),
+        DIASTOLIC_MODEL,
+        dia_tile_size,
+        dia_tile_size,
+        MODEL_CONFIG["diastolic"]["horz_overlap_proportion"],
+        MODEL_CONFIG["diastolic"]["vert_overlap_proportion"],
+    )
+    
+    # heart rate
+    hr_tile_size: int = compute_tile_size(MODEL_CONFIG["heart_rate"], intraop_image.size)
+    detections_dict["heart_rate"] = detect_objects_using_tiling(
+        intraop_image.copy(),
+        HEART_RATE_MODEL,
+        hr_tile_size,
+        hr_tile_size,
+        MODEL_CONFIG["heart_rate"]["horz_overlap_proportion"],
+        MODEL_CONFIG["heart_rate"]["vert_overlap_proportion"],
+    )
+
+    return detections_dict
 
 
 def run_preoperative_postoperative_models(
@@ -190,11 +260,9 @@ def run_preoperative_postoperative_models(
         A dictionary containing all of the detections on the preoperative/postoperative image.
         The structure of the dictionary is set up as:
         {
-            "preoperative_postoperative": {
-                "landmarks": [...],
-                "numbers": [...],
-                "checkboxes": [...],
-            }
+            "landmarks": [...],
+            "numbers": [...],
+            "checkboxes": [...],
         }
     """
     pass
