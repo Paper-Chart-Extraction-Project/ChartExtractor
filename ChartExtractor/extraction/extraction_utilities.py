@@ -160,8 +160,8 @@ def detect_objects_using_tiling(
     slice_heigth: int,
     horizontal_overlap_ratio: float,
     vertical_overlap_ratio: float,
-    minimum_confidence: float,
-    nms_threshold: float,
+    minimum_confidence: float = 0.5,
+    nms_threshold: float = 0.5,
     overlap_comparator: Callable[[Detection, Detection], float] = intersection_over_minimum,
     sorting_fn: Callable[[Detection], float] = lambda det: det.annotation.area * det.confidence,
 ) -> List[Detection]:
@@ -190,10 +190,10 @@ def detect_objects_using_tiling(
             overlapping on the bottom.)
         `minimum_confidence` (float):
             The minimum confidence level. Any detection with a confidence score below this will not
-            be added to the returned detections.
+            be added to the returned detections. Defaults to 0.5.
         `nms_threshold` (float):
             The threshold above which nms registers a 'match', and deletes all but the first
-            detection in a 'group'. A group is determined by the sorting_fn.
+            detection in a 'group'. A group is determined by the sorting_fn. Defaults to 0.5.
         `overlap_comparator` (float):
             The function that determines how much two detections overlap. Defaults to the
             intersection of the detections divided by the minimum of the two detection's areas.
@@ -207,7 +207,31 @@ def detect_objects_using_tiling(
         A list of detections showing objects on the image that the object detection model was
         trained to identify.
     """
-    pass
+    image_tiles: List[List[Image.Image]] = tile_image(
+        image,
+        slice_width,
+        slice_height,
+        horizontal_overlap_ratio,
+        vertical_overlap_ratio,
+    )
+    detections: List[List[List[Detection]]] = [
+        [detection_model(pil_to_cv2(tile), confidence=minimum_confidence)[0] for tile in row]
+        for row in image_tiles
+    ]
+    detections: List[Detection] = untile_detections(
+        detections,
+        slice_width,
+        slice_height,
+        horizontal_overlap_ratio,
+        vertical_overlap_ratio,
+    )
+    detections: List[Detection] = non_maximum_suppression(
+        detections=detections,
+        threshold=nms_threshold,
+        overlap_comparator=overlap_comparator,
+        sorting_fn=sorting_fn,
+    )
+    return detections
 
 
 def get_detection_by_name(
