@@ -136,7 +136,19 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
     document_landmark_detections: List[Detection] = make_document_landmark_detections(
         image, "intraop"
     )
-    digit_detections: List[Detection] = make_digit_detections(image)
+
+    digit_tile_size: int = int(min(
+        image.size[0]*MODEL_CONFIG["numbers"]["tile_size_proportion"],
+        image.size[1]*MODEL_CONFIG["numbers"]["tile_size_proportion"],
+    ))
+    digit_detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        NUMBERS_MODEL,
+        digit_tile_size,
+        digit_tile_size,
+        MODEL_CONFIG["numbers"]["horz_overlap_proportion"],
+        MODEL_CONFIG["numbers"]["vertical_overlap_ratio"],
+    )
 
     # extract drug code and surgical timing
     codes: Dict = {"codes": extract_drug_codes(digit_detections, *image.size)}
@@ -212,7 +224,18 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
         image,
         make_document_landmark_detections(image, "preop_postop"),
     )
-    digit_detections: List[Detection] = make_digit_detections(image)
+    digit_tile_size: int = int(min(
+        image.size[0]*MODEL_CONFIG["numbers"]["tile_size_proportion"],
+        image.size[1]*MODEL_CONFIG["numbers"]["tile_size_proportion"],
+    ))
+    digit_detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        NUMBERS_MODEL,
+        digit_tile_size,
+        digit_tile_size,
+        MODEL_CONFIG["numbers"]["horz_overlap_proportion"],
+        MODEL_CONFIG["numbers"]["vertical_overlap_ratio"],
+    )
     digit_data = extract_preop_postop_digit_data(digit_detections, *image.size)
     checkbox_data = {
         "preoperative_checkboxes": make_preop_postop_checkbox_detections(image)
@@ -375,36 +398,6 @@ def make_document_landmark_detections(
         sorting_fn=lambda det: det.annotation.area * det.confidence,
     )
     return detections
-
-
-def make_digit_detections(
-    image: Image.Image,
-) -> List[Detection]:
-    """Runs the digit detection detection model to find handwritten digits.
-
-    Args:
-        `image` (Image.Image):
-            The image to detect on.
-
-    Returns:
-        A list of detections containing the locations of handwritten digits.
-    """
-    tile_size_proportion: float = MODEL_CONFIG["numbers"]["tile_size_proportion"]
-    tile_size = int(
-        min(
-            image.size[0] * tile_size_proportion,
-            image.size[1] * tile_size_proportion,
-        )
-    )
-    number_detections: List[Detection] = detect_objects_using_tiling(
-        image,
-        NUMBERS_MODEL,
-        tile_size,
-        tile_size,
-        MODEL_CONFIG["numbers"]["horz_overlap_proportion"],
-        MODEL_CONFIG["numbers"]["vert_overlap_proportion"],
-    )
-    return number_detections
 
 
 def make_bp_and_hr_detections(
