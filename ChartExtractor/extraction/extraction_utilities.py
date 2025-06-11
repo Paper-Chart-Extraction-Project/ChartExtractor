@@ -98,61 +98,6 @@ def compute_digit_distances_to_centroids(
     return closest_boxes
 
 
-def detect_numbers(
-    image: Image.Image,
-    detection_model: ObjectDetectionModel,
-    slice_width: int,
-    slice_height: int,
-    horizontal_overlap_ratio: float,
-    vertical_overlap_ratio: float,
-    conf: float = 0.5,
-) -> List[Detection]:
-    """Detects handwritten digits on an image.
-
-    Args:
-        `image` (Image.Image):
-            The image to detect on.
-        `detection_model` (ObjectDetectionModel):
-            The digit detection model.
-        `slice_height` (int):
-            The height of each slice.
-        `slice_width` (int):
-            The width of each slice.
-        `horizontal_overlap_ratio` (float):
-            The amount of left-right overlap between slices.
-        `vertical_overlap_ratio` (float):
-            The amount of top-bottom overlap between slices.
-
-    Returns:
-        A list of handwritten digit detections on the image.
-    """
-    image_tiles: List[List[Image.Image]] = tile_image(
-        image,
-        slice_width,
-        slice_height,
-        horizontal_overlap_ratio,
-        vertical_overlap_ratio,
-    )
-    detections: List[List[List[Detection]]] = [
-        [detection_model(pil_to_cv2(tile), confidence=conf)[0] for tile in row]
-        for row in image_tiles
-    ]
-    detections: List[Detection] = untile_detections(
-        detections,
-        slice_width,
-        slice_height,
-        horizontal_overlap_ratio,
-        vertical_overlap_ratio,
-    )
-    detections: List[Detection] = non_maximum_suppression(
-        detections=detections,
-        threshold=0.5,
-        overlap_comparator=intersection_over_minimum,
-        sorting_fn=lambda det: det.annotation.area * det.confidence,
-    )
-    return detections
-
-
 def detect_objects_using_tiling(
     image: Image.Image,
     detection_model: ObjectDetectionModel,

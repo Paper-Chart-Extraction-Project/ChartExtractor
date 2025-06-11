@@ -1,6 +1,7 @@
 """Consolidates all the functionality for extracting data from charts into one function."""
 
 # Built-in imports
+from functools import partial
 import os
 from pathlib import Path
 from PIL import Image
@@ -18,6 +19,7 @@ from ..extraction.extraction_utilities import (
 )
 from ..extraction.inhaled_volatile import extract_inhaled_volatile
 from ..extraction.intraoperative_digit_boxes import (
+    detect_objects_using_tiling,
     extract_drug_codes,
     extract_ett_size,
     extract_surgical_timing,
@@ -394,7 +396,7 @@ def make_digit_detections(
             image.size[1] * tile_size_proportion,
         )
     )
-    number_detections: List[Detection] = detect_numbers(
+    number_detections: List[Detection] = detect_objects_using_tiling(
         image,
         NUMBERS_MODEL,
         tile_size,
