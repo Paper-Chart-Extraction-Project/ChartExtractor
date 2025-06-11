@@ -102,7 +102,7 @@ def detect_objects_using_tiling(
     image: Image.Image,
     detection_model: ObjectDetectionModel,
     slice_width: int,
-    slice_heigth: int,
+    slice_height: int,
     horizontal_overlap_ratio: float,
     vertical_overlap_ratio: float,
     minimum_confidence: float = 0.5,
@@ -262,7 +262,7 @@ def read_detections_from_json(
 
 
 def write_detections_to_json(
-    filepath: Path
+    filepath: Path,
     detections: List[Detection]
 ) -> bool:
     """Serializes detections to a json file.

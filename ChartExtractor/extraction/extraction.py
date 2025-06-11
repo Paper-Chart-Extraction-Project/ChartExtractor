@@ -14,12 +14,11 @@ from ..extraction.blood_pressure_and_heart_rate import (
 from ..extraction.checkboxes import extract_checkboxes
 from ..extraction.extraction_utilities import (
     combine_dictionaries,
-    detect_numbers,
+    detect_objects_using_tiling,
     label_studio_to_bboxes,
 )
 from ..extraction.inhaled_volatile import extract_inhaled_volatile
 from ..extraction.intraoperative_digit_boxes import (
-    detect_objects_using_tiling,
     extract_drug_codes,
     extract_ett_size,
     extract_surgical_timing,
@@ -147,7 +146,7 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
         digit_tile_size,
         digit_tile_size,
         MODEL_CONFIG["numbers"]["horz_overlap_proportion"],
-        MODEL_CONFIG["numbers"]["vertical_overlap_ratio"],
+        MODEL_CONFIG["numbers"]["vert_overlap_proportion"],
     )
 
     # extract drug code and surgical timing
@@ -234,7 +233,7 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
         digit_tile_size,
         digit_tile_size,
         MODEL_CONFIG["numbers"]["horz_overlap_proportion"],
-        MODEL_CONFIG["numbers"]["vertical_overlap_ratio"],
+        MODEL_CONFIG["numbers"]["vert_overlap_proportion"],
     )
     digit_data = extract_preop_postop_digit_data(digit_detections, *image.size)
     checkbox_data = {
