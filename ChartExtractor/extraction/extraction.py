@@ -51,12 +51,7 @@ from ..utilities.read_config import read_config
 from ..utilities.tiling import tile_image
 
 
-CORNER_LANDMARK_NAMES: List[str] = [
-    "anesthesia_start",
-    "safety_checklist",
-    "lateral",
-    "units",
-]
+CORNER_LANDMARK_NAMES: List[str] = ["anesthesia_start", "safety_checklist", "lateral", "units"]
 PATH_TO_DATA: Path = (Path(os.path.dirname(__file__)) / ".." / ".." / "data").resolve()
 PATH_TO_MODELS: Path = PATH_TO_DATA / "models"
 PATH_TO_MODEL_METADATA = PATH_TO_DATA / "model_metadata"
@@ -136,10 +131,7 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
         image, "intraop"
     )
 
-    digit_tile_size: int = int(min(
-        image.size[0]*MODEL_CONFIG["numbers"]["tile_size_proportion"],
-        image.size[1]*MODEL_CONFIG["numbers"]["tile_size_proportion"],
-    ))
+    digit_tile_size: int = compute_tile_size(MODEL_CONFIG["numbers"], image.size)
     digit_detections: List[Detection] = detect_objects_using_tiling(
         image,
         NUMBERS_MODEL,
@@ -223,10 +215,7 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
         image,
         make_document_landmark_detections(image, "preop_postop"),
     )
-    digit_tile_size: int = int(min(
-        image.size[0]*MODEL_CONFIG["numbers"]["tile_size_proportion"],
-        image.size[1]*MODEL_CONFIG["numbers"]["tile_size_proportion"],
-    ))
+    digit_tile_size: int = compute_tile_size(MODEL_CONFIG["numbers"], image.size)
     digit_detections: List[Detection] = detect_objects_using_tiling(
         image,
         NUMBERS_MODEL,
@@ -344,6 +333,24 @@ def homography_preoperative_chart(
     )
 
 
+def compute_tile_size(model_config: Dict, image_size: Tuple[int, int]) -> int:
+    """Finds the tile size for a model based on how its training dataset was generated.
+    
+    Args:
+        model_config (Dict):
+            The model's config dictionary.
+        image_size (Tuple[int, int])
+    """
+    tile_size_proportion = model_config["tile_size_proportion"]
+    tile_size: int = int(
+        min(
+            image_size[0] * tile_size_proportion,
+            image_size[1] * tile_size_proportion,
+        )
+    )
+    return tile_size
+
+
 def make_document_landmark_detections(
     image: Image.Image,
     document_side: Literal["intraop", "preop_postop"],
@@ -367,14 +374,9 @@ def make_document_landmark_detections(
     document_model: UltralyticsYOLOv8 = (
         INTRAOP_DOC_MODEL if document_side == "intraop" else PREOP_POSTOP_DOC_MODEL
     )
-    tile_size_proportion: float = MODEL_CONFIG["intraoperative_document_landmarks"][
-        "tile_size_proportion"
-    ]
-    tile_size: int = int(
-        min(
-            image.size[0] * tile_size_proportion,
-            image.size[1] * tile_size_proportion,
-        )
+    tile_size: float = compute_tile_size(
+        MODEL_CONFIG["intraoperative_document_landmarks"],
+        image.size,
     )
     tiles: List[List[Image.Image]] = tile_image(
         image,
@@ -447,24 +449,9 @@ def make_bp_and_hr_detections(
         )
         return detections
 
-    sys_tile_size = int(
-        min(
-            image.size[0] * MODEL_CONFIG["systolic"]["tile_size_proportion"],
-            image.size[1] * MODEL_CONFIG["systolic"]["tile_size_proportion"],
-        )
-    )
-    dia_tile_size = int(
-        min(
-            image.size[0] * MODEL_CONFIG["diastolic"]["tile_size_proportion"],
-            image.size[1] * MODEL_CONFIG["diastolic"]["tile_size_proportion"],
-        )
-    )
-    hr_tile_size = int(
-        min(
-            image.size[0] * MODEL_CONFIG["heart_rate"]["tile_size_proportion"],
-            image.size[1] * MODEL_CONFIG["heart_rate"]["tile_size_proportion"],
-        )
-    )
+    sys_tile_size: int = compute_tile_size(MODEL_CONFIG["systolic"], image.size)
+    dia_tile_size: int = compute_tile_size(MODEL_CONFIG["diastolic"], image.size)
+    hr_tile_size: int = compute_tile_size(MODEL_CONFIG["heart_rate"], image.size)
 
     sys_dets: List[Detection] = tile_predict(
         SYSTOLIC_MODEL,
@@ -518,9 +505,7 @@ def make_bp_and_hr_detections(
     return bp_and_hr
 
 
-def make_intraop_checkbox_detections(
-    image: Image.Image,
-) -> Dict:
+def make_intraop_checkbox_detections(image: Image.Image) -> Dict:
     """Finds checkboxes on the intraoperative form, then associates a meaning to them.
 
     Args:
@@ -530,12 +515,7 @@ def make_intraop_checkbox_detections(
     Returns:
         A dictionary mapping names of checkboxes to a "checked" or "unchecked" state.
     """
-    tile_size: int = int(
-        min(
-            image.size[0] * MODEL_CONFIG["checkboxes"]["tile_size_proportion"],
-            image.size[1] * MODEL_CONFIG["checkboxes"]["tile_size_proportion"],
-        )
-    )
+    tile_size = compute_tile_size(MODEL_CONFIG["checkboxes"], image.size)
     detections: List[Detection] = detect_objects_using_tiling(
         image,
         CHECKBOXES_MODEL,
@@ -554,9 +534,7 @@ def make_intraop_checkbox_detections(
     return intraop_checkboxes
 
 
-def make_preop_postop_checkbox_detections(
-    image: Image.Image,
-):
+def make_preop_postop_checkbox_detections(image: Image.Image):
     """Finds checkboxes on the intraoperative form, then associates a meaning to them.
 
     Args:
@@ -566,12 +544,7 @@ def make_preop_postop_checkbox_detections(
     Returns:
         A dictionary mapping names of checkboxes to a "checked" or "unchecked" state.
     """
-    tile_size: int = int(
-        min(
-            image.size[0] * MODEL_CONFIG["checkboxes"]["tile_size_proportion"],
-            image.size[1] * MODEL_CONFIG["checkboxes"]["tile_size_proportion"],
-        )
-    )
+    tile_size = compute_tile_size(MODEL_CONFIG["checkboxes"], image.size)
     detections: List[Detection] = detect_objects_using_tiling(
         image,
         CHECKBOXES_MODEL,
