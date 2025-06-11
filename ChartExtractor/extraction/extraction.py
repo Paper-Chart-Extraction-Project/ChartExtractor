@@ -265,7 +265,46 @@ def run_preoperative_postoperative_models(
             "checkboxes": [...],
         }
     """
-    pass
+    detections_dict: Dict[str, List[Detection]] = dict()
+    
+    # landmarks
+    landmark_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["preop_postop_document_landmarks"],
+        preop_postop_image.size,
+    )
+    detections_dict["landmarks"] = detect_objects_using_tiling(
+        preop_postop_image,
+        PREOP_POSTOP_DOC_MODEL,
+        landmark_tile_size,
+        landmark_tile_size,
+        MODEL_CONFIG["preop_postop_document_landmarks"]["horz_overlap_proportion"],
+        MODEL_CONFIG["preop_postop_document_landmarks"]["vert_overlap_proportion"],
+    )
+
+    # numbers
+    digit_tile_size: int = compute_tile_size(MODEL_CONFIG["numbers"], preop_postop_image.size)
+    detections_dict["numbers"] = detect_objects_using_tiling(
+        preop_postop_image,
+        NUMBERS_MODEL,
+        digit_tile_size,
+        digit_tile_size,
+        MODEL_CONFIG["numbers"]["horz_overlap_proportion"],
+        MODEL_CONFIG["numbers"]["vert_overlap_proportion"],
+    )
+
+    # checkboxes
+    tile_size = compute_tile_size(MODEL_CONFIG["checkboxes"], preop_postop_image.size)
+    detections_dict["checkboxes"] = detect_objects_using_tiling(
+        preop_postop_image,
+        CHECKBOXES_MODEL,
+        tile_size,
+        tile_size,
+        MODEL_CONFIG["checkboxes"]["horz_overlap_proportion"],
+        MODEL_CONFIG["checkboxes"]["vert_overlap_proportion"],
+        nms_threshold=0.8
+    )
+
+    return detections_dict
 
 
 def digitize_intraop_record(image: Image.Image) -> Dict:
