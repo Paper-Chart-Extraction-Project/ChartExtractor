@@ -111,6 +111,90 @@ def digitize_sheet(intraop_image: Image.Image, preop_postop_image: Image.Image) 
     return data
 
 
+def run_models(
+    intraop_image: Image.Image,
+    preop_postop_image: Image.Image
+) -> Dict[str, List[Detection]]:
+    """Runs all the models and puts their output into a dictionary.
+    
+    Args:
+        `intraop_image` (Image.Image):
+            A smartphone photograph of the intraoperative side of the paper
+            anesthesia record.
+        `preop_postop_image` (Image.Image):
+            A smartphone photograph of the preoperative/postoperative side of the
+            paper anesthesia record.
+    
+    Returns:
+        A dictionary containing all the detections on both images. The structure of the dictionary
+        is set up as:
+        {
+            "intraoperative": {
+                "landmarks": [...],
+                "numbers": [...],
+                "checkboxes": [...],
+                "systolic": [...],
+                "diastoic": [...],
+                "heart_rate": [...],
+            },
+            "preoperative_postoperative": {
+                "landmarks": [...],
+                "numbers": [...],
+                "checkboxes": [...],
+            }
+        }
+    """
+    pass
+
+
+def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Detection]]:
+    """Runs all the models on the preoperative/postoperative image and outputs to a dictionary.
+    
+    Args:
+        `intraop_image` (Image.Image):
+            A smartphone photograph of the intraoperative side of the paper anesthesia record.
+    
+    Returns:
+        A dictionary containing all of the detections on the intraoperative image.
+        The structure of the dictionary is set up as:
+        {
+            "intraoperative": {
+                "landmarks": [...],
+                "numbers": [...],
+                "checkboxes": [...],
+                "systolic": [...],
+                "diastoic": [...],
+                "heart_rate": [...],
+            }
+        }
+    """
+    pass
+
+
+def run_preoperative_postoperative_models(
+    preop_postop_image: Image.Image
+) -> Dict[str, List[Detection]]:
+    """Runs all the models on the preoperative/postoperative image and outputs to a dictionary.
+    
+    Args:
+        `preop_postop_image` (Image.Image):
+            A smartphone photograph of the preoperative/postoperative side of the
+            paper anesthesia record.
+    
+    Returns:
+        A dictionary containing all of the detections on the preoperative/postoperative image.
+        The structure of the dictionary is set up as:
+        {
+            "preoperative_postoperative": {
+                "landmarks": [...],
+                "numbers": [...],
+                "checkboxes": [...],
+            }
+        }
+    """
+    pass
+
+
 def digitize_intraop_record(image: Image.Image) -> Dict:
     """Digitizes the intraoperative side of a paper anesthesia record.
 
