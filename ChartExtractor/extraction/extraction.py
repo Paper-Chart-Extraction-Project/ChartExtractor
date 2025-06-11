@@ -397,89 +397,39 @@ def make_bp_and_hr_detections(
     Returns:
         A dictionary mapping timestamps to values for systolic, diastolic, and heart rate.
     """
-
-    def tile_predict(
-        model: ObjectDetectionModel,
-        image: Image.Image,
-        tile_width: int,
-        tile_height: int,
-        horizontal_overlap_ratio: float,
-        vertical_overlap_ratio: float,
-    ):
-        """Performs tiled prediction."""
-        tiles: List[List[Image.Image]] = tile_image(
-            image,
-            tile_width,
-            tile_height,
-            horizontal_overlap_ratio,
-            vertical_overlap_ratio,
-        )
-        tiled_detections: List[List[List[Detection]]] = [
-            [model(pil_to_cv2(tile), confidence=0.5)[0] for tile in row]
-            for row in tiles
-        ]
-        detections: List[Detection] = untile_detections(
-            tiled_detections,
-            tile_width,
-            tile_height,
-            horizontal_overlap_ratio,
-            vertical_overlap_ratio,
-        )
-        return detections
-
     sys_tile_size: int = compute_tile_size(MODEL_CONFIG["systolic"], image.size)
     dia_tile_size: int = compute_tile_size(MODEL_CONFIG["diastolic"], image.size)
     hr_tile_size: int = compute_tile_size(MODEL_CONFIG["heart_rate"], image.size)
-
-    sys_dets: List[Detection] = tile_predict(
-        SYSTOLIC_MODEL,
+    
+    sys_dets: List[Detection] = detect_objects_using_tiling(
         image.copy(),
+        SYSTOLIC_MODEL,
         sys_tile_size,
         sys_tile_size,
         MODEL_CONFIG["systolic"]["horz_overlap_proportion"],
         MODEL_CONFIG["systolic"]["vert_overlap_proportion"],
     )
-    dia_dets: List[Detection] = tile_predict(
-        DIASTOLIC_MODEL,
+    dia_dets: List[Detection] = detect_objects_using_tiling(
         image.copy(),
+        DIASTOLIC_MODEL,
         dia_tile_size,
         dia_tile_size,
         MODEL_CONFIG["diastolic"]["horz_overlap_proportion"],
         MODEL_CONFIG["diastolic"]["vert_overlap_proportion"],
     )
-    hr_dets: List[Detection] = tile_predict(
-        HEART_RATE_MODEL,
+    hr_dets: List[Detection] = detect_objects_using_tiling(
         image.copy(),
+        HEART_RATE_MODEL,
         hr_tile_size,
         hr_tile_size,
         MODEL_CONFIG["heart_rate"]["horz_overlap_proportion"],
         MODEL_CONFIG["heart_rate"]["vert_overlap_proportion"],
     )
 
-    sys_dets: List[Detection] = non_maximum_suppression(
-        sys_dets,
-        0.5,
-        intersection_over_minimum,
-        lambda det: det.annotation.area * det.confidence,
-    )
-    dia_dets: List[Detection] = non_maximum_suppression(
-        dia_dets,
-        0.5,
-        intersection_over_minimum,
-        lambda det: det.annotation.area * det.confidence,
-    )
-    hr_dets: List[Detection] = non_maximum_suppression(
-        hr_dets,
-        0.5,
-        intersection_over_minimum,
-        lambda det: det.annotation.area * det.confidence,
-    )
-
     dets: List[Detection] = sys_dets + dia_dets + hr_dets
     bp_and_hr = extract_heart_rate_and_blood_pressure(
         dets, time_clusters, mmhg_clusters
     )
-
     return bp_and_hr
 
 
