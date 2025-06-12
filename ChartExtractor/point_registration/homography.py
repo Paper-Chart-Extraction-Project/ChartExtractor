@@ -14,9 +14,15 @@ Functions:
         Remaps a single point using the homography matrix.
 """
 
+# Built-in imports
+from typing import List, Tuple
+
+# Internal imports
+from ..utilities.annotations import BoundingBox
+
+# External imports
 import cv2
 import numpy as np
-from typing import List, Tuple
 
 
 def find_homography(
@@ -69,10 +75,7 @@ def find_homography(
     return findHomography(source_points, destination_points)
 
 
-def transform_point(
-    point: Tuple[int, int],
-    homography_matrix: np.ndarray,
-) -> Tuple[int, int]:
+def transform_point(point: Tuple[int, int], homography_matrix: np.ndarray) -> Tuple[int, int]:
     """Remaps a single point using the homography matrix.
     
     Args:
@@ -90,3 +93,35 @@ def transform_point(
     remapped_point = homography_matrix.dot(np.array([point[0], point[1], 1]))
     remapped_point /= remapped_point[2]
     return (remapped_point[0], remapped_point[1])
+
+
+def transform_box(box: BoundingBox, homography_matrix: np.ndarray) -> BoundingBox:
+    """Remaps a BoundingBox using the homography matrix.
+
+    Args:
+        box (BoundingBox):
+            The bounding box to remap.
+        homography_matrix (np.ndarray):
+            A homography matrix
+    """
+    remapped_top_left: Tuple[float, float] = transform_point((box.left, box.top), homography_matrix)
+    remapped_top_right: Tuple[float, float] = transform_point(
+        (box.right, box.top),
+        homography_matrix,
+    )
+    remapped_bottom_left: Tuple[float, float] = transform_point(
+        (box.left, box.bottom),
+        homography_matrix,
+    )
+    remapped_bottom_right: Tuple[float, float] = transform_point(
+        (box.right, box.bottom),
+        homography_matrix,
+    )
+    
+    left = min(remapped_top_left[0], remapped_bottom_left[0])
+    top = min(remapped_top_left[1], remapped_top_right[1])
+    right = max(remapped_top_right[0], remapped_bottom_right[0])
+    bottom = max(remapped_bottom_left[1], remapped_bottom_right[1])
+
+    return BoundingBox(box.category, left, top, right, bottom)
+    
