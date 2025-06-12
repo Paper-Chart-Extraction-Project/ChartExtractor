@@ -5,7 +5,7 @@ from functools import partial
 import os
 from pathlib import Path
 from PIL import Image
-from typing import Dict, List, Literal, Tuple
+from typing import Any, Dict, List, Literal, Tuple
 
 # Internal Imports
 from ..extraction.blood_pressure_and_heart_rate import (
@@ -323,7 +323,14 @@ def assign_meaning_to_detections(detections_dict: Dict[str, List[Detection]]) ->
         A dictionary with data that approximately matches the encoded meaning that the medical
         provider wrote onto the chart.
     """
-    pass
+    data: Dict[str, Any] = dict()
+    data.update(assign_meaning_to_intraoperative_detections(detections_dict["intraoperative"]))
+    data.update(
+        assign_meaning_to_preoperative_postoperative_detections(
+            data_dict["preoperative_postoperative"]
+        )
+    )
+    return data
 
 
 def assign_meaning_to_intraoperative_detections(
