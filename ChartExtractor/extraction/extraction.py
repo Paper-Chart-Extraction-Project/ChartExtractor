@@ -51,6 +51,9 @@ from ..utilities.image_conversion import pil_to_cv2
 from ..utilities.read_config import read_config
 from ..utilities.tiling import tile_image
 
+# External Imports
+import numpy as np
+
 
 PATH_TO_DATA: Path = (Path(os.path.dirname(__file__)) / ".." / ".." / "data").resolve()
 PATH_TO_MODELS: Path = PATH_TO_DATA / "models"
@@ -347,7 +350,18 @@ def assign_meaning_to_intraoperative_detections(
         A dictionary with data that approximately matches the encoded meaning that the medical
         provider wrote onto the intraoperative side of the chart.
     """
-    pass
+    landmark_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["intraoperative_document_landmarks"],
+        image.size
+    )
+    uncorrected_document_landmark_detections: List[Detection] = detect_objects_using_tiling(
+        image,
+        INTRAOP_DOC_MODEL,
+        landmark_tile_size,
+        landmark_tile_size,
+        MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
+        MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
+    )
 
 
 def assign_meaning_to_preoperative_postoperative_detections(
@@ -511,6 +525,95 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
         "preoperative_checkboxes": make_preop_postop_checkbox_detections(image)
     }
     return combine_dictionaries([digit_data, checkbox_data])
+
+
+def create_homography_matrix(
+    landmark_detections: List[Detection],
+    corner_landmark_names: List[str],
+    destination_landmarks: List[BoundingBox]
+) -> np.ndarray:
+    """Creates a homography matrix from the corner landmarks.
+    
+    Args:
+        landmark_detections (List[Detection]):
+            The list of detected landmarks.
+        corner_landmark_names (List[str]):
+            The list of names that match categories from the landmark detections.
+        destination_landmarks (List[BoundingBox]):
+            The landmark locations on the perfect, scanned image.
+
+    Returns:
+        A homography matrix that linearly transforms points from the original image to the
+        scanned, perfect image.
+    """
+    dest_points = [
+        bb.center
+        for bb in sorted(
+            list(filter(lambda x: x.category in corner_landmark_names, destination_landmarks)),
+            key=lambda bb: bb.category,
+        )
+    ]
+    src_points = [
+        bb.annotation.center
+        for bb in sorted(
+            list(
+                filter(
+                    lambda x: x.annotation.category in corner_landmark_names,
+                    landmark_detections,
+                )
+            ),
+            key=lambda bb: bb.annotation.category,
+        )
+    ]
+    return find_homography(src_points, dest_points)
+
+
+def create_intraoperative_homography_matrix(landmark_detections: List[Detection]) -> np.ndarray:
+    """Creates a homography matrix for the intraoperative side of the chart.
+    
+    Args:
+        landmark_detections (List[Detection]):
+            The list of detected landmarks.
+
+    Returns:
+        A homography matrix that linearly transforms points from the original image to the
+        scanned, perfect image.
+    """
+    corner_landmark_names: List[str] = [
+        "anesthesia_start",
+        "safety_checklist",
+        "lateral",
+        "units",
+    ]
+    dst_landmarks: List[BoundingBox] = label_studio_to_bboxes(
+        str(PATH_TO_DATA / "intraop_document_landmarks.json")
+    )["unified_intraoperative_preoperative_flowsheet_v1_1_front.png"]
+    return create_homography_matrix(landmark_detections, corner_landmark_names, dst_landmarks)
+
+
+def create_preoperative_postoperative_homography_matrix(
+    landmark_detections: List[Detection]
+) -> np.ndarray:
+    """Creates a homography matrix for the intraoperative side of the chart.
+    
+    Args:
+        landmark_detections (List[Detection]):
+            The list of detected landmarks.
+
+    Returns:
+        A homography matrix that linearly transforms points from the original image to the
+        scanned, perfect image.
+    """
+    corner_landmark_names: List[str] = [
+        "patient_profile",
+        "weight",
+        "signature",
+        "disposition",
+    ]
+    dst_landmarks: List[BoundingBox] = label_studio_to_bboxes(
+        str(PATH_TO_DATA / "preoperative_document_landmarks.json")
+    )["unified_intraoperative_preoperative_flowsheet_v1_1_back.png"]
+    return create_homography_matrix(landmark_detections, corner_landmark_names, dst_landmarks)
 
 
 def homography_intraoperative_chart(
