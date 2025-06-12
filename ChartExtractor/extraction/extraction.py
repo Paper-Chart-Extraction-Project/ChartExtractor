@@ -40,6 +40,7 @@ from ..label_clustering.isolate_labels import (
 from ..object_detection_models.onnx_yolov11_detection import OnnxYolov11Detection
 from ..object_detection_models.onnx_yolov11_pose_single import OnnxYolov11PoseSingle
 from ..object_detection_models.object_detection_model import ObjectDetectionModel
+from ..point_registration.homography import find_homography, transform_point
 from ..utilities.detections import Detection
 from ..utilities.detection_reassembly import (
     untile_detections,
@@ -305,6 +306,58 @@ def run_preoperative_postoperative_models(
     )
 
     return detections_dict
+
+
+def assign_meaning_to_detections(detections_dict: Dict[str, List[Detection]]) -> Dict[str, Any]:
+    """Imputes values to the detections to get the data encoded by the provider onto the chart.
+    
+    Examples of assigning meaning include getting mmHg and timestamp values for blood pressure
+    markers, assigning meaning to checked/unchecked checkbox detections, etc.
+
+    Args:
+        detections_dict (Dict[str, List[Detection]]):
+            The detections from all models on both sides of the chart. Dictionary must match the
+            template that is output by run_models.
+
+    Returns:
+        A dictionary with data that approximately matches the encoded meaning that the medical
+        provider wrote onto the chart.
+    """
+    pass
+
+
+def assign_meaning_to_intraoperative_detections(
+    intraop_detections_dict: Dict[str, List[Detection]]
+) -> Dict[str, Any]:
+    """Imputes values to the detections on the intraoperative side of the chart.
+    
+    Args:
+        intraop_detections_dict (Dict[str, List[Detection]]):
+            The detections from all models on the intraoperative side of the chart.
+            Must match the template that is output by run_intraoperative_models.
+
+    Returns:
+        A dictionary with data that approximately matches the encoded meaning that the medical
+        provider wrote onto the intraoperative side of the chart.
+    """
+    pass
+
+
+def assign_meaning_to_preoperative_postoperative_detections(
+    preop_postop_detections_dict: Dict[str, List[Detection]]
+) -> Dict[str, Any]:
+    """Imputes values to the detections on the preoperative/postoperative side of the chart.
+    
+    Args:
+        intraop_detections_dict (Dict[str, List[Detection]]):
+            The detections from all models on the preoperative/postoperative side of the chart.
+            Must match the template that is output by run_intraoperative_models.
+
+    Returns:
+        A dictionary with data that approximately matches the encoded meaning that the medical
+        provider wrote onto the preoperative/postoperative side of the chart.
+    """
+    pass
 
 
 def digitize_intraop_record(image: Image.Image) -> Dict:
