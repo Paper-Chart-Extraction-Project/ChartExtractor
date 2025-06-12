@@ -103,6 +103,9 @@ def transform_box(box: BoundingBox, homography_matrix: np.ndarray) -> BoundingBo
             The bounding box to remap.
         homography_matrix (np.ndarray):
             A homography matrix
+
+    Returns:
+        A BoundingBox that has been transformed by the homography.
     """
     remapped_top_left: Tuple[float, float] = transform_point((box.left, box.top), homography_matrix)
     remapped_top_right: Tuple[float, float] = transform_point(
@@ -124,4 +127,21 @@ def transform_box(box: BoundingBox, homography_matrix: np.ndarray) -> BoundingBo
     bottom = max(remapped_bottom_left[1], remapped_bottom_right[1])
 
     return BoundingBox(box.category, left, top, right, bottom)
+
+
+def transform_keypoint(keypoint: Keypoint, homography_matrix: np.ndarray) -> Keypoint:
+    """Remaps a Keypoint using the homography matrix.
     
+    Args:
+        keypoint (Keypoint):
+            The keypoint to remap.
+        homography_matrix (np.ndarray):
+            A homography matrix
+
+    Returns:
+        A Keypoint that has been transformed by the homography.
+    """
+    point = (keypoint.keypoint.x, keypoint.keypoint.y)
+    remapped_point = transform_point(point, homography_matrix)
+    remapped_box = transform_box(keypoint.bounding_box, homography_matrix)
+    return Keypoint(remapped_point, remapped_box, do_keypoint_validation=False)
