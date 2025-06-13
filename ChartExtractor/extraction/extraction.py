@@ -485,7 +485,7 @@ def assign_meaning_to_preoperative_postoperative_detections(
             *image_size
         )
     )
-    extracted_data["preoperative_checkboxes"] = extract_checkboxes(
+    extracted_data["checkboxes"] = extract_checkboxes(
         corrected_detections_dict["checkboxes"],
         "preoperative",
         *image_size
