@@ -334,11 +334,11 @@ def assign_meaning_to_detections(detections_dict: Dict[str, List[Detection]]) ->
         provider wrote onto the chart.
     """
     data: Dict[str, Any] = dict()
-    data.update(assign_meaning_to_intraoperative_detections(detections_dict["intraoperative"]))
-    data.update(
-        assign_meaning_to_preoperative_postoperative_detections(
-            data_dict["preoperative_postoperative"]
-        )
+    data["intraoperative"] = assign_meaning_to_intraoperative_detections(
+        detections_dict["intraoperative"]
+    )
+    data["preoperative_postoperative"] = assign_meaning_to_preoperative_postoperative_detections(
+        detections_dict["preoperative_postoperative"]
     )
     return data
 
@@ -447,7 +447,8 @@ def assign_meaning_to_intraoperative_detections(
 
 
 def assign_meaning_to_preoperative_postoperative_detections(
-    preop_postop_detections_dict: Dict[str, List[Detection]]
+    preop_postop_detections_dict: Dict[str, List[Detection]],
+    image_size: Tuple[int, int] = (3300, 2550)
 ) -> Dict[str, Any]:
     """Imputes values to the detections on the preoperative/postoperative side of the chart.
     
@@ -460,7 +461,36 @@ def assign_meaning_to_preoperative_postoperative_detections(
         A dictionary with data that approximately matches the encoded meaning that the medical
         provider wrote onto the preoperative/postoperative side of the chart.
     """
-    pass
+    h = create_preoperative_postoperative_homography_matrix(
+        preop_postop_detections_dict["landmarks"]
+    )
+    corrected_detections_dict: Dict[str, List[Detection]] = dict()
+    for (key, detections) in preop_postop_detections_dict.items():
+        if len(detections) == 0:
+            continue
+        remap_func = (
+            transform_box
+            if isinstance(detections[0].annotation, BoundingBox)
+            else transform_keypoint
+        )
+        corrected_detections_dict[key] = [
+            Detection(remap_func(det.annotation, h), det.confidence) for det in detections
+        ]
+
+    extracted_data: Dict[str, Any] = dict()
+
+    extracted_data.update(
+        extract_preop_postop_digit_data(
+            corrected_detections_dict["numbers"], 
+            *image_size
+        )
+    )
+    extracted_data["preoperative_checkboxes"] = extract_checkboxes(
+        corrected_detections_dict["checkboxes"],
+        "preoperative",
+        *image_size
+    )
+    return extracted_data
 
 
 def digitize_intraop_record(image: Image.Image) -> Dict:
