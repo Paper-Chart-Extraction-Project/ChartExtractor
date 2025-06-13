@@ -1,7 +1,8 @@
 """Consolidates all the functionality for extracting data from charts into one function."""
 
 # Built-in imports
-from functools import partial
+from functools import partial, reduce
+from operator import concat
 import os
 from pathlib import Path
 from PIL import Image
@@ -40,7 +41,13 @@ from ..label_clustering.isolate_labels import (
 from ..object_detection_models.onnx_yolov11_detection import OnnxYolov11Detection
 from ..object_detection_models.onnx_yolov11_pose_single import OnnxYolov11PoseSingle
 from ..object_detection_models.object_detection_model import ObjectDetectionModel
-from ..point_registration.homography import find_homography, transform_point
+from ..point_registration.homography import (
+    find_homography,
+    transform_point,
+    transform_box,
+    transform_keypoint,
+)
+from ..utilities.annotations import BoundingBox, Keypoint
 from ..utilities.detections import Detection
 from ..utilities.detection_reassembly import (
     untile_detections,
@@ -337,7 +344,8 @@ def assign_meaning_to_detections(detections_dict: Dict[str, List[Detection]]) ->
 
 
 def assign_meaning_to_intraoperative_detections(
-    intraop_detections_dict: Dict[str, List[Detection]]
+    intraop_detections_dict: Dict[str, List[Detection]],
+    image_size: Tuple[int, int] = (3300, 2550)
 ) -> Dict[str, Any]:
     """Imputes values to the detections on the intraoperative side of the chart.
     
@@ -345,23 +353,97 @@ def assign_meaning_to_intraoperative_detections(
         intraop_detections_dict (Dict[str, List[Detection]]):
             The detections from all models on the intraoperative side of the chart.
             Must match the template that is output by run_intraoperative_models.
+        image_size (Tuple[int, int]):
+            The size of the image.
 
     Returns:
         A dictionary with data that approximately matches the encoded meaning that the medical
         provider wrote onto the intraoperative side of the chart.
     """
-    landmark_tile_size: int = compute_tile_size(
-        MODEL_CONFIG["intraoperative_document_landmarks"],
-        image.size
+    h = create_intraoperative_homography_matrix(intraop_detections_dict["landmarks"])
+    corrected_detections_dict: Dict[str, List[Detection]] = dict()
+    for (key, detections) in intraop_detections_dict.items():
+        if len(detections) == 0:
+            continue
+        remap_func = (
+            transform_box
+            if isinstance(detections[0].annotation, BoundingBox)
+            else transform_keypoint
+        )
+        corrected_detections_dict[key] = [
+            Detection(remap_func(det.annotation, h), det.confidence) for det in detections
+        ]
+    
+    extracted_data: Dict[str, Any] = dict()
+
+    # extract drug code and surgical timing
+    extracted_data["codes"] = extract_drug_codes(
+        corrected_detections_dict["numbers"],
+        *image_size
     )
-    uncorrected_document_landmark_detections: List[Detection] = detect_objects_using_tiling(
-        image,
-        INTRAOP_DOC_MODEL,
-        landmark_tile_size,
-        landmark_tile_size,
-        MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
-        MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
+    extracted_data["timing"] = extract_surgical_timing(
+        corrected_detections_dict["numbers"],
+        *image_size
     )
+    extracted_data["ett_size"] = extract_ett_size(
+        corrected_detections_dict["numbers"],
+        *image_size
+    )
+
+    # extract inhaled volatile drugs
+    time_boxes, mmhg_boxes = isolate_blood_pressure_legend_bounding_boxes(
+        [det.annotation for det in corrected_detections_dict["landmarks"]], *image_size
+    )
+    time_clusters: List[Cluster] = cluster_boxes(
+        time_boxes, cluster_kmeans, "mins", possible_nclusters=[40, 41, 42]
+    )
+    mmhg_clusters: List[Cluster] = cluster_boxes(
+        mmhg_boxes, cluster_kmeans, "mmhg", possible_nclusters=[18, 19, 20]
+    )
+
+    legend_locations: Dict[str, Tuple[float, float]] = find_legend_locations(
+        time_clusters + mmhg_clusters
+    )
+    extracted_data["inhaled_volatile"] = extract_inhaled_volatile(
+        corrected_detections_dict["numbers"],
+        legend_locations,
+        corrected_detections_dict["landmarks"]
+    )
+
+    # extract bp and hr
+    bp_and_hr_dets = reduce(
+        concat,
+        [
+            corrected_detections_dict["systolic"],
+            corrected_detections_dict["diastolic"],
+            corrected_detections_dict["heart_rate"],
+        ],
+        list()
+    )
+    
+    extracted_data["bp_and_hr"] = extract_heart_rate_and_blood_pressure(
+        bp_and_hr_dets,
+        time_clusters,
+        mmhg_clusters,
+    )
+
+    # extract physiological indicators
+    extracted_data["physiological_indicators"] = extract_physiological_indicators(
+        corrected_detections_dict["numbers"],
+        legend_locations,
+        corrected_detections_dict["landmarks"],
+        *image_size
+    )
+
+    # extract checkboxes
+    extracted_data["checkboxes"] = extract_checkboxes(
+        corrected_detections_dict["checkboxes"],
+        "intraoperative",
+        image_size[0],
+        image_size[1],
+    )
+
+    return extracted_data
 
 
 def assign_meaning_to_preoperative_postoperative_detections(
@@ -447,6 +529,7 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
     legend_locations: Dict[str, Tuple[float, float]] = find_legend_locations(
         time_clusters + mmhg_clusters
     )
+
     inhaled_volatile: Dict = {
         "inhaled_volatile": extract_inhaled_volatile(
             digit_detections, legend_locations, document_landmark_detections

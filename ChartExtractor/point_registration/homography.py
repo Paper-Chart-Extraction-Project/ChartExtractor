@@ -18,10 +18,10 @@ Functions:
 from typing import List, Tuple
 
 # Internal imports
-from ..utilities.annotations import BoundingBox
+from ..utilities.annotations import BoundingBox, Keypoint, Point
 
 # External imports
-import cv2
+from cv2 import findHomography
 import numpy as np
 
 
@@ -47,8 +47,8 @@ def find_homography(
     too_few_source_points: bool = len(source_points) < 4
     too_few_destination_points: bool = len(destination_points) < 4
     unequal_point_sets: bool = len(source_points) != len(destination_points)
-    source_points_not_two_dimensional: bool = set([len(p) for p in source_points]) == {2}
-    destination_points_not_two_dimensional: bool = set([len(p) for p in destination_points]) == {2}
+    source_points_not_two_dimensional: bool = set([len(p) for p in source_points]) != {2}
+    destination_points_not_two_dimensional: bool = set([len(p) for p in destination_points]) != {2}
 
     if too_few_source_points:
         raise ValueError(
@@ -72,7 +72,7 @@ def find_homography(
         err_msg += f"(Included dimensions: {set([len(p) for p in destination_points])})"
         raise ValueError(err_msg)
     
-    return findHomography(source_points, destination_points)
+    return findHomography(np.array(source_points), np.array(destination_points))[0]
 
 
 def transform_point(point: Tuple[int, int], homography_matrix: np.ndarray) -> Tuple[int, int]:
@@ -144,4 +144,4 @@ def transform_keypoint(keypoint: Keypoint, homography_matrix: np.ndarray) -> Key
     point = (keypoint.keypoint.x, keypoint.keypoint.y)
     remapped_point = transform_point(point, homography_matrix)
     remapped_box = transform_box(keypoint.bounding_box, homography_matrix)
-    return Keypoint(remapped_point, remapped_box, do_keypoint_validation=False)
+    return Keypoint(Point(*remapped_point), remapped_box, do_keypoint_validation=False)
