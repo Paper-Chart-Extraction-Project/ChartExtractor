@@ -15,6 +15,7 @@ confidence scores, and potentially keypoints (if available in the model's output
 """
 
 # Built-in imports
+import json
 from pathlib import Path
 from typing import Dict, List, Literal, Tuple
 
@@ -28,7 +29,6 @@ from ..object_detection_models.object_detection_model import ObjectDetectionMode
 from ..utilities.annotations import BoundingBox
 from ..utilities.detections import Detection
 from ..utilities.detection_reassembly import non_maximum_suppression
-from ..utilities.read_config import read_yaml_file
 
 
 class OnnxYolov11Detection(ObjectDetectionModel):
@@ -86,7 +86,11 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         potential_err_msg = "An exception has occured while loading the classes "
         potential_err_msg += "yaml file. Ensure the model metadata filepath is "
         potential_err_msg += "correct and the model's yaml file is correctly formatted."
-        classes: Dict = read_yaml_file(model_metadata_filepath, potential_err_msg)
+        try:
+            classes: Dict[str, str] = json.loads(open(model_metadata_filepath, 'r').read())
+        except FileNotFoundError as e:
+            print(potential_err_msg)
+            print(e)
         return classes
 
     def __call__(
