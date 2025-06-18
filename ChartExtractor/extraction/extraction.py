@@ -2,6 +2,7 @@
 
 # Built-in imports
 from functools import partial, reduce
+import json
 from operator import concat
 import os
 from pathlib import Path
@@ -55,7 +56,6 @@ from ..utilities.detection_reassembly import (
     non_maximum_suppression,
 )
 from ..utilities.image_conversion import pil_to_cv2
-from ..utilities.read_config import read_config
 from ..utilities.tiling import tile_image
 
 # External Imports
@@ -65,40 +65,40 @@ import numpy as np
 PATH_TO_DATA: Path = (Path(os.path.dirname(__file__)) / ".." / ".." / "data").resolve()
 PATH_TO_MODELS: Path = PATH_TO_DATA / "models"
 PATH_TO_MODEL_METADATA = PATH_TO_DATA / "model_metadata"
-MODEL_CONFIG: Dict = read_config()
+MODEL_CONFIG: Dict = json.loads(open(str(PATH_TO_DATA/"config.json"), 'r').read())
 INTRAOP_DOC_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["intraoperative_document_landmarks"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["intraoperative_document_landmarks"]["name"].replace(".onnx", ".yaml")
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["intraoperative_document_landmarks"]["name"].replace(".onnx", ".json")
 )
 PREOP_POSTOP_DOC_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["preop_postop_document_landmarks"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["preop_postop_document_landmarks"]["name"].replace(".onnx", ".yaml"),
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["preop_postop_document_landmarks"]["name"].replace(".onnx", ".json"),
 )
 NUMBERS_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["numbers"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["numbers"]["name"].replace(".onnx", ".yaml")
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["numbers"]["name"].replace(".onnx", ".json")
 )
 SYSTOLIC_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["systolic"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["systolic"]["name"].replace(".onnx", ".yaml"),
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["systolic"]["name"].replace(".onnx", ".json"),
     608,
     608,
 )
 DIASTOLIC_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["diastolic"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["diastolic"]["name"].replace(".onnx", ".yaml"),
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["diastolic"]["name"].replace(".onnx", ".json"),
     608,
     608,
 )
 HEART_RATE_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["heart_rate"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["heart_rate"]["name"].replace(".onnx", ".yaml"),
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["heart_rate"]["name"].replace(".onnx", ".json"),
     608,
     608,
 )
 CHECKBOXES_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["checkboxes"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["checkboxes"]["name"].replace(".onnx", ".yaml"),
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["checkboxes"]["name"].replace(".onnx", ".json"),
 )
 
 

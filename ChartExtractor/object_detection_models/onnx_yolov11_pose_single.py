@@ -19,6 +19,7 @@ modularity and reusability.
 """
 
 # Built-in imports
+import json
 from pathlib import Path
 from typing import Dict, List, Literal, Tuple
 
@@ -32,7 +33,6 @@ from ..object_detection_models.object_detection_model import ObjectDetectionMode
 from ..utilities.annotations import BoundingBox, Keypoint, Point
 from ..utilities.detections import Detection
 from ..utilities.detection_reassembly import non_maximum_suppression
-from ..utilities.read_config import read_yaml_file
 
 
 class OnnxYolov11PoseSingle(ObjectDetectionModel):
@@ -49,7 +49,7 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
     def __init__(
         self,
         model_weights_filepath: Path,
-        model_metadata_filepath: Path,
+        model_classes_filepath: Path,
         input_im_width: int = 640,
         input_im_height: int = 640,
     ):
@@ -58,8 +58,8 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         Args:
             model_weights_filepath (Path):
                 The filepath to the model's weights.
-            model_metadata_filepath (Path):
-                The filepath to the metadata (for class names).
+            model_classes_filepath (Path):
+                The filepath to a json file with all the classes.
             input_im_width (int):
                 The image width that the model accepts.
                 Defaults to 640.
@@ -70,7 +70,7 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         self.model = ort.InferenceSession(model_weights_filepath)
         self.input_im_width = input_im_width
         self.input_im_height = input_im_height
-        self.classes = self.load_classes(model_metadata_filepath)
+        self.classes = self.load_classes(model_classes_filepath)
 
     @staticmethod
     def load_classes(model_metadata_filepath: Path) -> Dict:
@@ -90,7 +90,11 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         potential_err_msg = "An exception has occured while loading the classes "
         potential_err_msg += "yaml file. Ensure the model metadata filepath is "
         potential_err_msg += "correct and the model's yaml file is correctly formatted."
-        classes: Dict = read_yaml_file(model_metadata_filepath, potential_err_msg)
+        try:
+            classes: Dict[str, str] = json.loads(open(model_metadata_filepath, 'r').read())
+        except FileNotFoundError as e:
+            print(potential_err_msg)
+            print(e)
         return classes
 
     def __call__(
