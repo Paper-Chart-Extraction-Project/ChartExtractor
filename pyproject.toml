@@ -19,7 +19,6 @@ opencv-python-headless = "^4.10.0.84"
 numpy = "^2.1.2"
 pillow = "^10.4.0"
 scikit-learn = "^1.5.2"
-pyyaml = "^6.0.2"
 onnxruntime = "^1.20.1"
 
 [tool.poetry.group.dev.dependencies]
