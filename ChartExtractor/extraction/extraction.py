@@ -68,37 +68,37 @@ PATH_TO_MODEL_METADATA = PATH_TO_DATA / "model_metadata"
 MODEL_CONFIG: Dict = read_config()
 INTRAOP_DOC_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["intraoperative_document_landmarks"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["intraoperative_document_landmarks"]["name"].replace(".onnx", ".yaml")
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["intraoperative_document_landmarks"]["name"].replace(".onnx", ".json")
 )
 PREOP_POSTOP_DOC_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["preop_postop_document_landmarks"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["preop_postop_document_landmarks"]["name"].replace(".onnx", ".yaml"),
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["preop_postop_document_landmarks"]["name"].replace(".onnx", ".json"),
 )
 NUMBERS_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["numbers"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["numbers"]["name"].replace(".onnx", ".yaml")
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["numbers"]["name"].replace(".onnx", ".json")
 )
 SYSTOLIC_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["systolic"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["systolic"]["name"].replace(".onnx", ".yaml"),
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["systolic"]["name"].replace(".onnx", ".json"),
     608,
     608,
 )
 DIASTOLIC_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["diastolic"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["diastolic"]["name"].replace(".onnx", ".yaml"),
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["diastolic"]["name"].replace(".onnx", ".json"),
     608,
     608,
 )
 HEART_RATE_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["heart_rate"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["heart_rate"]["name"].replace(".onnx", ".yaml"),
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["heart_rate"]["name"].replace(".onnx", ".json"),
     608,
     608,
 )
 CHECKBOXES_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["checkboxes"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["checkboxes"]["name"].replace(".onnx", ".yaml"),
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["checkboxes"]["name"].replace(".onnx", ".json"),
 )
 
 
