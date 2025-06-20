@@ -10,7 +10,7 @@ authors = [
 ]
 license = "GPL-3.0-or-later"
 readme = "README.md"
-packages = [{include = "ChartExtractor"}]
+packages = [{include = "ChartExtractor", from = "src"}]
 
 
 [tool.poetry.dependencies]
