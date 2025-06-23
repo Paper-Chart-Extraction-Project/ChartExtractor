@@ -1,33 +1,34 @@
-[tool.poetry]
-name = "ChartExtractor"
-version = "0.1.0"
-description = "ChartExtractor uses computer vision to convert images of paper charts to digital data."
-authors = [
-    "RyanDoesMath <vcz2aj@uvahealth.org>",
-    "mattbeck1 <mtb2tgk@virginia.edu>",
-    "hvalenty <unc6kr@virginia.edu>",
-    "charbelmarche33 <cmarche@mail.umw.edu>",
-]
-license = "GPL-3.0-or-later"
-readme = "README.md"
-packages = [{include = "ChartExtractor"}]
-
-
-[tool.poetry.dependencies]
-python = "^3.12"
-opencv-python-headless = "^4.10.0.84"
-numpy = "^2.1.2"
-pillow = "^10.4.0"
-scikit-learn = "^1.5.2"
-onnxruntime = "^1.20.1"
-
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.6.9"
-ultralytics = "^8.3.6"
-
-[tool.poetry.group.test.dependencies]
-pytest = "^8.3.3"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ChartExtractor"
+version = "1.0.0a"
+dependencies = [
+    "numpy",
+    "onnxruntime",
+    "opencv-python",
+    "pillow",
+    "scikit-learn",
+    "scipy"
+]
+authors = [
+    {name = "Ryan Folks", email = "vcz2aj@uvahealth.org"},
+    {name = "Charbel Marche", email = "qdy4zt@virginia.edu"},
+    {name = "Hannah Valenty", email = "unc6kr@virginia.edu"},
+    {name = "Matthew Beck", email = "mtb2tgk@virginia.edu"}
+]
+maintainers = [
+    {name = "Ryan Folks", email = "vcz2aj@uvahealth.org"},
+    {name = "Charbel Marche", email = "qdy4zt@virginia.edu"}
+]
+description = "A library for digitizing smartphone images of paper surgical records."
+readme = "README.md"
+license = "GPL-3.0"
+license-files = ["LICENSE"]
+keywords = ["computer vision"]
+classifiers = ["Development Status :: 3 - Alpha"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

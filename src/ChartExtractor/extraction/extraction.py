@@ -1,13 +1,12 @@
 """Consolidates all the functionality for extracting data from charts into one function."""
 
 # Built-in imports
-from functools import partial, reduce
+from functools import reduce
 import json
 from operator import concat
-import os
 from pathlib import Path
 from PIL import Image
-from typing import Any, Dict, List, Literal, Tuple
+from typing import Any, Dict, List, Tuple
 
 # Internal Imports
 from ..extraction.blood_pressure_and_heart_rate import (
@@ -41,64 +40,70 @@ from ..label_clustering.isolate_labels import (
 )
 from ..object_detection_models.onnx_yolov11_detection import OnnxYolov11Detection
 from ..object_detection_models.onnx_yolov11_pose_single import OnnxYolov11PoseSingle
-from ..object_detection_models.object_detection_model import ObjectDetectionModel
 from ..point_registration.homography import (
     find_homography,
-    transform_point,
     transform_box,
     transform_keypoint,
 )
-from ..utilities.annotations import BoundingBox, Keypoint
+from ..utilities.annotations import BoundingBox
 from ..utilities.detections import Detection
-from ..utilities.detection_reassembly import (
-    untile_detections,
-    intersection_over_minimum,
-    non_maximum_suppression,
-)
-from ..utilities.image_conversion import pil_to_cv2
-from ..utilities.tiling import tile_image
 
 # External Imports
 import numpy as np
 
 
-PATH_TO_DATA: Path = (Path(os.path.dirname(__file__)) / ".." / ".." / "data").resolve()
+PATH_TO_DATA: Path = (Path(__file__) / ".." / ".." / "data").resolve()
 PATH_TO_MODELS: Path = PATH_TO_DATA / "models"
 PATH_TO_MODEL_METADATA = PATH_TO_DATA / "model_metadata"
-MODEL_CONFIG: Dict = json.loads(open(str(PATH_TO_DATA/"config.json"), 'r').read())
+MODEL_CONFIG: Dict = json.loads(open(str(PATH_TO_DATA / "config.json"), "r").read())
 INTRAOP_DOC_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["intraoperative_document_landmarks"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["intraoperative_document_landmarks"]["name"].replace(".onnx", ".json")
+    PATH_TO_MODEL_METADATA
+    / MODEL_CONFIG["intraoperative_document_landmarks"]["name"].replace(
+        ".onnx", ".json"
+    ),
+    MODEL_CONFIG["intraoperative_document_landmarks"]["imgsz"],
+    MODEL_CONFIG["intraoperative_document_landmarks"]["imgsz"],
 )
 PREOP_POSTOP_DOC_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["preop_postop_document_landmarks"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["preop_postop_document_landmarks"]["name"].replace(".onnx", ".json"),
+    PATH_TO_MODEL_METADATA
+    / MODEL_CONFIG["preop_postop_document_landmarks"]["name"].replace(".onnx", ".json"),
+    MODEL_CONFIG["preop_postop_document_landmarks"]["imgsz"],
+    MODEL_CONFIG["preop_postop_document_landmarks"]["imgsz"],
 )
 NUMBERS_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["numbers"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["numbers"]["name"].replace(".onnx", ".json")
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["numbers"]["name"].replace(".onnx", ".json"),
+    MODEL_CONFIG["numbers"]["imgsz"],
+    MODEL_CONFIG["numbers"]["imgsz"],
 )
 SYSTOLIC_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["systolic"]["name"],
     PATH_TO_MODEL_METADATA / MODEL_CONFIG["systolic"]["name"].replace(".onnx", ".json"),
-    608,
-    608,
+    MODEL_CONFIG["systolic"]["imgsz"],
+    MODEL_CONFIG["systolic"]["imgsz"],
 )
 DIASTOLIC_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["diastolic"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["diastolic"]["name"].replace(".onnx", ".json"),
-    608,
-    608,
+    PATH_TO_MODEL_METADATA
+    / MODEL_CONFIG["diastolic"]["name"].replace(".onnx", ".json"),
+    MODEL_CONFIG["diastolic"]["imgsz"],
+    MODEL_CONFIG["diastolic"]["imgsz"],
 )
 HEART_RATE_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["heart_rate"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["heart_rate"]["name"].replace(".onnx", ".json"),
-    608,
-    608,
+    PATH_TO_MODEL_METADATA
+    / MODEL_CONFIG["heart_rate"]["name"].replace(".onnx", ".json"),
+    MODEL_CONFIG["heart_rate"]["imgsz"],
+    MODEL_CONFIG["heart_rate"]["imgsz"],
 )
 CHECKBOXES_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["checkboxes"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["checkboxes"]["name"].replace(".onnx", ".json"),
+    PATH_TO_MODEL_METADATA
+    / MODEL_CONFIG["checkboxes"]["name"].replace(".onnx", ".json"),
+    MODEL_CONFIG["checkboxes"]["imgsz"],
+    MODEL_CONFIG["checkboxes"]["imgsz"],
 )
 
 
@@ -123,11 +128,10 @@ def digitize_sheet(intraop_image: Image.Image, preop_postop_image: Image.Image) 
 
 
 def run_models(
-    intraop_image: Image.Image,
-    preop_postop_image: Image.Image
+    intraop_image: Image.Image, preop_postop_image: Image.Image
 ) -> Dict[str, List[Detection]]:
     """Runs all the models and puts their output into a dictionary.
-    
+
     Args:
         `intraop_image` (Image.Image):
             A smartphone photograph of the intraoperative side of the paper
@@ -135,7 +139,7 @@ def run_models(
         `preop_postop_image` (Image.Image):
             A smartphone photograph of the preoperative/postoperative side of the
             paper anesthesia record.
-    
+
     Returns:
         A dictionary containing all the detections on both images. The structure of the dictionary
         is set up as:
@@ -165,11 +169,11 @@ def run_models(
 
 def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Detection]]:
     """Runs all the models on the preoperative/postoperative image and outputs to a dictionary.
-    
+
     Args:
         `intraop_image` (Image.Image):
             A smartphone photograph of the intraoperative side of the paper anesthesia record.
-    
+
     Returns:
         A dictionary containing all of the detections on the intraoperative image.
         The structure of the dictionary is set up as:
@@ -186,8 +190,7 @@ def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Dete
 
     # landmarks
     landmark_tile_size: int = compute_tile_size(
-        MODEL_CONFIG["intraoperative_document_landmarks"],
-        intraop_image.size
+        MODEL_CONFIG["intraoperative_document_landmarks"], intraop_image.size
     )
     detections_dict["landmarks"] = detect_objects_using_tiling(
         intraop_image,
@@ -199,7 +202,9 @@ def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Dete
     )
 
     # numbers
-    digit_tile_size: int = compute_tile_size(MODEL_CONFIG["numbers"], intraop_image.size)
+    digit_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["numbers"], intraop_image.size
+    )
     detections_dict["numbers"] = detect_objects_using_tiling(
         intraop_image,
         NUMBERS_MODEL,
@@ -218,7 +223,7 @@ def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Dete
         tile_size,
         MODEL_CONFIG["checkboxes"]["horz_overlap_proportion"],
         MODEL_CONFIG["checkboxes"]["vert_overlap_proportion"],
-        nms_threshold=0.8
+        nms_threshold=0.8,
     )
 
     # systolic
@@ -231,9 +236,11 @@ def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Dete
         MODEL_CONFIG["systolic"]["horz_overlap_proportion"],
         MODEL_CONFIG["systolic"]["vert_overlap_proportion"],
     )
-    
+
     # diastolic
-    dia_tile_size: int = compute_tile_size(MODEL_CONFIG["diastolic"], intraop_image.size)
+    dia_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["diastolic"], intraop_image.size
+    )
     detections_dict["diastolic"] = detect_objects_using_tiling(
         intraop_image.copy(),
         DIASTOLIC_MODEL,
@@ -242,9 +249,11 @@ def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Dete
         MODEL_CONFIG["diastolic"]["horz_overlap_proportion"],
         MODEL_CONFIG["diastolic"]["vert_overlap_proportion"],
     )
-    
+
     # heart rate
-    hr_tile_size: int = compute_tile_size(MODEL_CONFIG["heart_rate"], intraop_image.size)
+    hr_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["heart_rate"], intraop_image.size
+    )
     detections_dict["heart_rate"] = detect_objects_using_tiling(
         intraop_image.copy(),
         HEART_RATE_MODEL,
@@ -258,15 +267,15 @@ def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Dete
 
 
 def run_preoperative_postoperative_models(
-    preop_postop_image: Image.Image
+    preop_postop_image: Image.Image,
 ) -> Dict[str, List[Detection]]:
     """Runs all the models on the preoperative/postoperative image and outputs to a dictionary.
-    
+
     Args:
         `preop_postop_image` (Image.Image):
             A smartphone photograph of the preoperative/postoperative side of the
             paper anesthesia record.
-    
+
     Returns:
         A dictionary containing all of the detections on the preoperative/postoperative image.
         The structure of the dictionary is set up as:
@@ -277,7 +286,7 @@ def run_preoperative_postoperative_models(
         }
     """
     detections_dict: Dict[str, List[Detection]] = dict()
-    
+
     # landmarks
     landmark_tile_size: int = compute_tile_size(
         MODEL_CONFIG["preop_postop_document_landmarks"],
@@ -293,7 +302,9 @@ def run_preoperative_postoperative_models(
     )
 
     # numbers
-    digit_tile_size: int = compute_tile_size(MODEL_CONFIG["numbers"], preop_postop_image.size)
+    digit_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["numbers"], preop_postop_image.size
+    )
     detections_dict["numbers"] = detect_objects_using_tiling(
         preop_postop_image,
         NUMBERS_MODEL,
@@ -312,15 +323,17 @@ def run_preoperative_postoperative_models(
         tile_size,
         MODEL_CONFIG["checkboxes"]["horz_overlap_proportion"],
         MODEL_CONFIG["checkboxes"]["vert_overlap_proportion"],
-        nms_threshold=0.8
+        nms_threshold=0.8,
     )
 
     return detections_dict
 
 
-def assign_meaning_to_detections(detections_dict: Dict[str, List[Detection]]) -> Dict[str, Any]:
+def assign_meaning_to_detections(
+    detections_dict: Dict[str, List[Detection]],
+) -> Dict[str, Any]:
     """Imputes values to the detections to get the data encoded by the provider onto the chart.
-    
+
     Examples of assigning meaning include getting mmHg and timestamp values for blood pressure
     markers, assigning meaning to checked/unchecked checkbox detections, etc.
 
@@ -337,18 +350,20 @@ def assign_meaning_to_detections(detections_dict: Dict[str, List[Detection]]) ->
     data["intraoperative"] = assign_meaning_to_intraoperative_detections(
         detections_dict["intraoperative"]
     )
-    data["preoperative_postoperative"] = assign_meaning_to_preoperative_postoperative_detections(
-        detections_dict["preoperative_postoperative"]
+    data["preoperative_postoperative"] = (
+        assign_meaning_to_preoperative_postoperative_detections(
+            detections_dict["preoperative_postoperative"]
+        )
     )
     return data
 
 
 def assign_meaning_to_intraoperative_detections(
     intraop_detections_dict: Dict[str, List[Detection]],
-    image_size: Tuple[int, int] = (3300, 2550)
+    image_size: Tuple[int, int] = (3300, 2550),
 ) -> Dict[str, Any]:
     """Imputes values to the detections on the intraoperative side of the chart.
-    
+
     Args:
         intraop_detections_dict (Dict[str, List[Detection]]):
             The detections from all models on the intraoperative side of the chart.
@@ -362,7 +377,7 @@ def assign_meaning_to_intraoperative_detections(
     """
     h = create_intraoperative_homography_matrix(intraop_detections_dict["landmarks"])
     corrected_detections_dict: Dict[str, List[Detection]] = dict()
-    for (key, detections) in intraop_detections_dict.items():
+    for key, detections in intraop_detections_dict.items():
         if len(detections) == 0:
             continue
         remap_func = (
@@ -371,23 +386,21 @@ def assign_meaning_to_intraoperative_detections(
             else transform_keypoint
         )
         corrected_detections_dict[key] = [
-            Detection(remap_func(det.annotation, h), det.confidence) for det in detections
+            Detection(remap_func(det.annotation, h), det.confidence)
+            for det in detections
         ]
-    
+
     extracted_data: Dict[str, Any] = dict()
 
     # extract drug code and surgical timing
     extracted_data["codes"] = extract_drug_codes(
-        corrected_detections_dict["numbers"],
-        *image_size
+        corrected_detections_dict["numbers"], *image_size
     )
     extracted_data["timing"] = extract_surgical_timing(
-        corrected_detections_dict["numbers"],
-        *image_size
+        corrected_detections_dict["numbers"], *image_size
     )
     extracted_data["ett_size"] = extract_ett_size(
-        corrected_detections_dict["numbers"],
-        *image_size
+        corrected_detections_dict["numbers"], *image_size
     )
 
     # extract inhaled volatile drugs
@@ -407,7 +420,7 @@ def assign_meaning_to_intraoperative_detections(
     extracted_data["inhaled_volatile"] = extract_inhaled_volatile(
         corrected_detections_dict["numbers"],
         legend_locations,
-        corrected_detections_dict["landmarks"]
+        corrected_detections_dict["landmarks"],
     )
 
     # extract bp and hr
@@ -418,9 +431,9 @@ def assign_meaning_to_intraoperative_detections(
             corrected_detections_dict["diastolic"],
             corrected_detections_dict["heart_rate"],
         ],
-        list()
+        list(),
     )
-    
+
     extracted_data["bp_and_hr"] = extract_heart_rate_and_blood_pressure(
         bp_and_hr_dets,
         time_clusters,
@@ -448,10 +461,10 @@ def assign_meaning_to_intraoperative_detections(
 
 def assign_meaning_to_preoperative_postoperative_detections(
     preop_postop_detections_dict: Dict[str, List[Detection]],
-    image_size: Tuple[int, int] = (3300, 2550)
+    image_size: Tuple[int, int] = (3300, 2550),
 ) -> Dict[str, Any]:
     """Imputes values to the detections on the preoperative/postoperative side of the chart.
-    
+
     Args:
         intraop_detections_dict (Dict[str, List[Detection]]):
             The detections from all models on the preoperative/postoperative side of the chart.
@@ -465,7 +478,7 @@ def assign_meaning_to_preoperative_postoperative_detections(
         preop_postop_detections_dict["landmarks"]
     )
     corrected_detections_dict: Dict[str, List[Detection]] = dict()
-    for (key, detections) in preop_postop_detections_dict.items():
+    for key, detections in preop_postop_detections_dict.items():
         if len(detections) == 0:
             continue
         remap_func = (
@@ -474,21 +487,19 @@ def assign_meaning_to_preoperative_postoperative_detections(
             else transform_keypoint
         )
         corrected_detections_dict[key] = [
-            Detection(remap_func(det.annotation, h), det.confidence) for det in detections
+            Detection(remap_func(det.annotation, h), det.confidence)
+            for det in detections
         ]
 
     extracted_data: Dict[str, Any] = dict()
 
     extracted_data.update(
         extract_preop_postop_digit_data(
-            corrected_detections_dict["numbers"], 
-            *image_size
+            corrected_detections_dict["numbers"], *image_size
         )
     )
     extracted_data["checkboxes"] = extract_checkboxes(
-        corrected_detections_dict["checkboxes"],
-        "preoperative",
-        *image_size
+        corrected_detections_dict["checkboxes"], "preoperative", *image_size
     )
     return extracted_data
 
@@ -506,16 +517,21 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
         the paper anesthesia record.
     """
     landmark_tile_size: int = compute_tile_size(
-        MODEL_CONFIG["intraoperative_document_landmarks"],
-        image.size
+        MODEL_CONFIG["intraoperative_document_landmarks"], image.size
     )
-    uncorrected_document_landmark_detections: List[Detection] = detect_objects_using_tiling(
-        image,
-        INTRAOP_DOC_MODEL,
-        landmark_tile_size,
-        landmark_tile_size,
-        MODEL_CONFIG["intraoperative_document_landmarks"]["horz_overlap_proportion"],
-        MODEL_CONFIG["intraoperative_document_landmarks"]["vert_overlap_proportion"],
+    uncorrected_document_landmark_detections: List[Detection] = (
+        detect_objects_using_tiling(
+            image,
+            INTRAOP_DOC_MODEL,
+            landmark_tile_size,
+            landmark_tile_size,
+            MODEL_CONFIG["intraoperative_document_landmarks"][
+                "horz_overlap_proportion"
+            ],
+            MODEL_CONFIG["intraoperative_document_landmarks"][
+                "vert_overlap_proportion"
+            ],
+        )
     )
     image: Image.Image = homography_intraoperative_chart(
         image,
@@ -623,7 +639,9 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
         MODEL_CONFIG["preop_postop_document_landmarks"]["horz_overlap_proportion"],
         MODEL_CONFIG["preop_postop_document_landmarks"]["vert_overlap_proportion"],
     )
-    image: Image.Image = homography_preoperative_chart(image, document_landmark_detections)
+    image: Image.Image = homography_preoperative_chart(
+        image, document_landmark_detections
+    )
     digit_tile_size: int = compute_tile_size(MODEL_CONFIG["numbers"], image.size)
     digit_detections: List[Detection] = detect_objects_using_tiling(
         image,
@@ -643,10 +661,10 @@ def digitize_preop_postop_record(image: Image.Image) -> Dict:
 def create_homography_matrix(
     landmark_detections: List[Detection],
     corner_landmark_names: List[str],
-    destination_landmarks: List[BoundingBox]
+    destination_landmarks: List[BoundingBox],
 ) -> np.ndarray:
     """Creates a homography matrix from the corner landmarks.
-    
+
     Args:
         landmark_detections (List[Detection]):
             The list of detected landmarks.
@@ -662,7 +680,11 @@ def create_homography_matrix(
     dest_points = [
         bb.center
         for bb in sorted(
-            list(filter(lambda x: x.category in corner_landmark_names, destination_landmarks)),
+            list(
+                filter(
+                    lambda x: x.category in corner_landmark_names, destination_landmarks
+                )
+            ),
             key=lambda bb: bb.category,
         )
     ]
@@ -681,9 +703,11 @@ def create_homography_matrix(
     return find_homography(src_points, dest_points)
 
 
-def create_intraoperative_homography_matrix(landmark_detections: List[Detection]) -> np.ndarray:
+def create_intraoperative_homography_matrix(
+    landmark_detections: List[Detection],
+) -> np.ndarray:
     """Creates a homography matrix for the intraoperative side of the chart.
-    
+
     Args:
         landmark_detections (List[Detection]):
             The list of detected landmarks.
@@ -701,14 +725,16 @@ def create_intraoperative_homography_matrix(landmark_detections: List[Detection]
     dst_landmarks: List[BoundingBox] = label_studio_to_bboxes(
         str(PATH_TO_DATA / "intraop_document_landmarks.json")
     )["unified_intraoperative_preoperative_flowsheet_v1_1_front.png"]
-    return create_homography_matrix(landmark_detections, corner_landmark_names, dst_landmarks)
+    return create_homography_matrix(
+        landmark_detections, corner_landmark_names, dst_landmarks
+    )
 
 
 def create_preoperative_postoperative_homography_matrix(
-    landmark_detections: List[Detection]
+    landmark_detections: List[Detection],
 ) -> np.ndarray:
     """Creates a homography matrix for the intraoperative side of the chart.
-    
+
     Args:
         landmark_detections (List[Detection]):
             The list of detected landmarks.
@@ -726,7 +752,9 @@ def create_preoperative_postoperative_homography_matrix(
     dst_landmarks: List[BoundingBox] = label_studio_to_bboxes(
         str(PATH_TO_DATA / "preoperative_document_landmarks.json")
     )["unified_intraoperative_preoperative_flowsheet_v1_1_back.png"]
-    return create_homography_matrix(landmark_detections, corner_landmark_names, dst_landmarks)
+    return create_homography_matrix(
+        landmark_detections, corner_landmark_names, dst_landmarks
+    )
 
 
 def homography_intraoperative_chart(
@@ -835,7 +863,7 @@ def homography_preoperative_chart(
 
 def compute_tile_size(model_config: Dict, image_size: Tuple[int, int]) -> int:
     """Finds the tile size for a model based on how its training dataset was generated.
-    
+
     Args:
         model_config (Dict):
             The model's config dictionary.
@@ -872,7 +900,7 @@ def make_bp_and_hr_detections(
     sys_tile_size: int = compute_tile_size(MODEL_CONFIG["systolic"], image.size)
     dia_tile_size: int = compute_tile_size(MODEL_CONFIG["diastolic"], image.size)
     hr_tile_size: int = compute_tile_size(MODEL_CONFIG["heart_rate"], image.size)
-    
+
     sys_dets: List[Detection] = detect_objects_using_tiling(
         image.copy(),
         SYSTOLIC_MODEL,
@@ -923,7 +951,7 @@ def make_intraop_checkbox_detections(image: Image.Image) -> Dict:
         tile_size,
         MODEL_CONFIG["checkboxes"]["horz_overlap_proportion"],
         MODEL_CONFIG["checkboxes"]["vert_overlap_proportion"],
-        nms_threshold=0.8
+        nms_threshold=0.8,
     )
     intraop_checkboxes = extract_checkboxes(
         detections,
@@ -952,7 +980,7 @@ def make_preop_postop_checkbox_detections(image: Image.Image):
         tile_size,
         MODEL_CONFIG["checkboxes"]["horz_overlap_proportion"],
         MODEL_CONFIG["checkboxes"]["vert_overlap_proportion"],
-        nms_threshold=0.8
+        nms_threshold=0.8,
     )
     preop_postop_checkboxes = extract_checkboxes(
         detections,

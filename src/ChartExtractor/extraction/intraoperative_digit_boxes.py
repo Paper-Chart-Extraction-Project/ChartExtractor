@@ -12,7 +12,7 @@ from ..utilities.annotations import BoundingBox
 from ..utilities.detections import Detection
 
 
-DATA_FILEPATH: Path = Path(__file__).parents[2] / "data"
+DATA_FILEPATH: Path = Path(__file__) / ".." / ".." / "data"
 FILEPATH_TO_NUMBER_BOX_CENTROIDS: Path = (
     DATA_FILEPATH / "centroids" / "intraop_digit_box_centroids.json"
 )

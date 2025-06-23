@@ -71,11 +71,11 @@ class OnnxYolov11Detection(ObjectDetectionModel):
     @staticmethod
     def load_classes(model_metadata_filepath: Path) -> Dict:
         """Loads the classes from a yaml file into a list.
-        
+
         Args:
             model_metadata_filepath (Path):
                 The path to the model metadata.
-        
+
         Raises:
             Exception:
                 Any exception relating to loading a file.
@@ -87,7 +87,9 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         potential_err_msg += "yaml file. Ensure the model metadata filepath is "
         potential_err_msg += "correct and the model's yaml file is correctly formatted."
         try:
-            classes: Dict[str, str] = json.loads(open(model_metadata_filepath, 'r').read())
+            classes: Dict[str, str] = json.loads(
+                open(model_metadata_filepath, "r").read()
+            )
         except FileNotFoundError as e:
             print(potential_err_msg)
             print(e)
@@ -97,7 +99,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         self,
         images: List[np.array],
         confidence: float = 0.5,
-        iou_threshold: float = 0.1
+        iou_threshold: float = 0.1,
     ) -> List[List[Detection]]:
         """Runs the model on a list of images.
 
@@ -148,17 +150,19 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         image: np.array = np.expand_dims(image, axis=0)
         pred_results = self.model.run(None, {"images": image})
         detections = self.postprocess_results(pred_results, confidence, iou_threshold)
-        detections = self.scale_detections_back_to_input_size(detections, original_im_width, original_im_height)
+        detections = self.scale_detections_back_to_input_size(
+            detections, original_im_width, original_im_height
+        )
         detections = [
             Detection(
                 BoundingBox(
-                    str(self.classes[int(d[5].item())]),
+                    str(self.classes[str(int(d[5].item()))]),
                     d[0].item(),
                     d[1].item(),
                     d[2].item(),
                     d[3].item(),
-                ), 
-                d[4].item()
+                ),
+                d[4].item(),
             )
             for d in detections
         ]
@@ -182,12 +186,14 @@ class OnnxYolov11Detection(ObjectDetectionModel):
             A preprocessed image.
         """
         if resize_method == "letterbox":
-            image, _ = self.letterbox(image, (self.input_im_width, self.input_im_height))
+            image, _ = self.letterbox(
+                image, (self.input_im_width, self.input_im_height)
+            )
         else:
             image: np.array = cv2.resize(
-               image,
-               (self.input_im_width, self.input_im_height),
-               interpolation=cv2.INTER_LINEAR,
+                image,
+                (self.input_im_width, self.input_im_height),
+                interpolation=cv2.INTER_LINEAR,
             )
         image: np.array = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = image.astype(np.float32)
@@ -334,7 +340,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         sort_index = np.flip(predictions[:, index_of_confidence].argsort())
         predictions = predictions[sort_index]
 
-        boxes = predictions[:, indexes_of_box[0]:indexes_of_box[1]+1]
+        boxes = predictions[:, indexes_of_box[0] : indexes_of_box[1] + 1]
         categories = predictions[:, index_of_category]
         ious = self.batch_iou(boxes, boxes)
         ious = ious - np.eye(rows)
@@ -349,7 +355,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
             keep = keep & ~condition
 
         return keep[sort_index.argsort()]
-    
+
     def scale_detections_back_to_input_size(
         self,
         detections: np.ndarray,
@@ -357,7 +363,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         original_im_height: int,
     ) -> np.ndarray:
         """Scales the detections back to the original image's size.
-        
+
         Currently only works with when scale_method is "resize".
 
         Args:
@@ -370,16 +376,16 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         Returns:
             The detections which have been rescaled to their original image.
         """
-        width_scalar: np.float32 = original_im_width/self.input_im_width
-        height_scalar: np.float32 = original_im_height/self.input_im_height
-        
+        width_scalar: np.float32 = original_im_width / self.input_im_width
+        height_scalar: np.float32 = original_im_height / self.input_im_height
+
         detections[:, 0] *= width_scalar
         detections[:, 1] *= height_scalar
         detections[:, 2] *= width_scalar
         detections[:, 3] *= height_scalar
 
         return detections
-    
+
     @staticmethod
     def draw_detections(
         image: np.ndarray,
@@ -416,7 +422,6 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         text_thickness = int(min([img_height, img_width]) * 0.001)
 
         mask_img = image.copy()
-
 
         # Draw bounding boxes, masks, and text annotations
         for detection in detections:
