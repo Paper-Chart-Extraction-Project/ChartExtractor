@@ -1,13 +1,12 @@
 """Consolidates all the functionality for extracting data from charts into one function."""
 
 # Built-in imports
-from functools import partial, reduce
+from functools import reduce
 import json
 from operator import concat
-import os
 from pathlib import Path
 from PIL import Image
-from typing import Any, Dict, List, Literal, Tuple
+from typing import Any, Dict, List, Tuple
 
 # Internal Imports
 from ..extraction.blood_pressure_and_heart_rate import (
@@ -41,22 +40,13 @@ from ..label_clustering.isolate_labels import (
 )
 from ..object_detection_models.onnx_yolov11_detection import OnnxYolov11Detection
 from ..object_detection_models.onnx_yolov11_pose_single import OnnxYolov11PoseSingle
-from ..object_detection_models.object_detection_model import ObjectDetectionModel
 from ..point_registration.homography import (
     find_homography,
-    transform_point,
     transform_box,
     transform_keypoint,
 )
-from ..utilities.annotations import BoundingBox, Keypoint
+from ..utilities.annotations import BoundingBox
 from ..utilities.detections import Detection
-from ..utilities.detection_reassembly import (
-    untile_detections,
-    intersection_over_minimum,
-    non_maximum_suppression,
-)
-from ..utilities.image_conversion import pil_to_cv2
-from ..utilities.tiling import tile_image
 
 # External Imports
 import numpy as np
