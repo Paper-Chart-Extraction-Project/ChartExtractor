@@ -62,40 +62,48 @@ INTRAOP_DOC_MODEL = OnnxYolov11Detection(
     / MODEL_CONFIG["intraoperative_document_landmarks"]["name"].replace(
         ".onnx", ".json"
     ),
+    MODEL_CONFIG["intraoperative_document_landmarks"]["imgsz"],
+    MODEL_CONFIG["intraoperative_document_landmarks"]["imgsz"],
 )
 PREOP_POSTOP_DOC_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["preop_postop_document_landmarks"]["name"],
     PATH_TO_MODEL_METADATA
     / MODEL_CONFIG["preop_postop_document_landmarks"]["name"].replace(".onnx", ".json"),
+    MODEL_CONFIG["preop_postop_document_landmarks"]["imgsz"],
+    MODEL_CONFIG["preop_postop_document_landmarks"]["imgsz"],
 )
 NUMBERS_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["numbers"]["name"],
     PATH_TO_MODEL_METADATA / MODEL_CONFIG["numbers"]["name"].replace(".onnx", ".json"),
+    MODEL_CONFIG["numbers"]["imgsz"],
+    MODEL_CONFIG["numbers"]["imgsz"],
 )
 SYSTOLIC_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["systolic"]["name"],
     PATH_TO_MODEL_METADATA / MODEL_CONFIG["systolic"]["name"].replace(".onnx", ".json"),
-    608,
-    608,
+    MODEL_CONFIG["systolic"]["imgsz"],
+    MODEL_CONFIG["systolic"]["imgsz"],
 )
 DIASTOLIC_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["diastolic"]["name"],
     PATH_TO_MODEL_METADATA
     / MODEL_CONFIG["diastolic"]["name"].replace(".onnx", ".json"),
-    608,
-    608,
+    MODEL_CONFIG["diastolic"]["imgsz"],
+    MODEL_CONFIG["diastolic"]["imgsz"],
 )
 HEART_RATE_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["heart_rate"]["name"],
     PATH_TO_MODEL_METADATA
     / MODEL_CONFIG["heart_rate"]["name"].replace(".onnx", ".json"),
-    608,
-    608,
+    MODEL_CONFIG["heart_rate"]["imgsz"],
+    MODEL_CONFIG["heart_rate"]["imgsz"],
 )
 CHECKBOXES_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["checkboxes"]["name"],
     PATH_TO_MODEL_METADATA
     / MODEL_CONFIG["checkboxes"]["name"].replace(".onnx", ".json"),
+    MODEL_CONFIG["checkboxes"]["imgsz"],
+    MODEL_CONFIG["checkboxes"]["imgsz"],
 )
 
 

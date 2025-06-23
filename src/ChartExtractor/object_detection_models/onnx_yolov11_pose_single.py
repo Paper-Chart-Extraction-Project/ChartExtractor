@@ -37,7 +37,7 @@ from ..utilities.detection_reassembly import non_maximum_suppression
 
 class OnnxYolov11PoseSingle(ObjectDetectionModel):
     """Provides a wrapper for a yolov11 pose ONNX model.
-    
+
     This class inherits from the `ObjectDetectionModel` interface, enabling us to use the onnx
     model within our program through a consistent interface.
 
@@ -75,11 +75,11 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
     @staticmethod
     def load_classes(model_metadata_filepath: Path) -> Dict:
         """Loads the classes from a yaml file into a list.
-        
+
         Args:
             model_metadata_filepath (Path):
                 The path to the model metadata.
-        
+
         Raises:
             Exception:
                 Any exception relating to loading a file.
@@ -91,7 +91,9 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         potential_err_msg += "yaml file. Ensure the model metadata filepath is "
         potential_err_msg += "correct and the model's yaml file is correctly formatted."
         try:
-            classes: Dict[str, str] = json.loads(open(model_metadata_filepath, 'r').read())
+            classes: Dict[str, str] = json.loads(
+                open(model_metadata_filepath, "r").read()
+            )
         except FileNotFoundError as e:
             print(potential_err_msg)
             print(e)
@@ -101,7 +103,7 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         self,
         images: List[np.array],
         confidence: float = 0.5,
-        iou_threshold: float = 0.1
+        iou_threshold: float = 0.1,
     ) -> List[List[Detection]]:
         """Runs the model on a list of images.
 
@@ -152,20 +154,22 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         image: np.array = np.expand_dims(image, axis=0)
         pred_results = self.model.run(None, {"images": image})
         detections = self.postprocess_results(pred_results, confidence, iou_threshold)
-        detections = self.scale_detections_back_to_input_size(detections, original_im_width, original_im_height)
+        detections = self.scale_detections_back_to_input_size(
+            detections, original_im_width, original_im_height
+        )
         return [
             Detection(
                 Keypoint(
                     Point(d[4].item(), d[5].item()),
                     BoundingBox(
-                        str(self.classes[int(d[7].item())]),
+                        str(self.classes[str(int(d[7].item()))]),
                         d[0].item(),
                         d[1].item(),
                         d[2].item(),
                         d[3].item(),
                     ),
                 ),
-                d[6].item()
+                d[6].item(),
             )
             for d in detections
         ]
@@ -188,12 +192,14 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
             A preprocessed image.
         """
         if resize_method == "letterbox":
-            image, _ = self.letterbox(image, (self.input_im_width, self.input_im_height))
+            image, _ = self.letterbox(
+                image, (self.input_im_width, self.input_im_height)
+            )
         else:
             image: np.array = cv2.resize(
-               image,
-               (self.input_im_width, self.input_im_height),
-               interpolation=cv2.INTER_LINEAR,
+                image,
+                (self.input_im_width, self.input_im_height),
+                interpolation=cv2.INTER_LINEAR,
             )
         image: np.array = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = image.astype(np.float32)
@@ -243,12 +249,14 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         y2 = y + (h / 2)
         kpx = filtered_output[5, :]
         kpy = filtered_output[6, :]
-        
-        predictions = np.stack((x1, y1, x2, y2, kpx, kpy, confidences, class_indices), axis=1)
+
+        predictions = np.stack(
+            (x1, y1, x2, y2, kpx, kpy, confidences, class_indices), axis=1
+        )
         predictions = predictions[self.keypoint_not_in_box(predictions)]
         predictions = predictions[self.non_max_suppression(predictions, iou_threshold)]
         return predictions
-    
+
     @staticmethod
     def letterbox(
         image: np.ndarray,
@@ -307,7 +315,7 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
 
         these_areas = box_area(these_boxes.T)
         those_areas = box_area(those_boxes.T)
-    
+
         top_left = np.maximum(these_boxes[:, None, :2], those_boxes[:, :2])
         bottom_right = np.minimum(these_boxes[:, None, 2:], those_boxes[:, 2:])
 
@@ -319,9 +327,7 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
             these_areas[:, None] + those_areas - intersection_areas
         )
 
-    def non_max_suppression(
-        self, predictions: np.ndarray, iou_threshold
-    ) -> np.ndarray:
+    def non_max_suppression(self, predictions: np.ndarray, iou_threshold) -> np.ndarray:
         """Performs non-maximum suppression on a list of predicted boxes.
 
         Args:
@@ -344,7 +350,7 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         sort_index = np.flip(predictions[:, index_of_confidence].argsort())
         predictions = predictions[sort_index]
 
-        boxes = predictions[:, indexes_of_box[0]:indexes_of_box[1]+1]
+        boxes = predictions[:, indexes_of_box[0] : indexes_of_box[1] + 1]
         categories = predictions[:, index_of_category]
         ious = self.batch_iou(boxes, boxes)
         ious = ious - np.eye(rows)
@@ -357,12 +363,12 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
 
             condition = (iou > iou_threshold) & (categories == category)
             keep = keep & ~condition
-        
+
         return keep[sort_index.argsort()]
-    
+
     def keypoint_not_in_box(self, predictions: np.ndarray) -> np.ndarray:
         """Generates a mask that can filter keypoints that aren't in the box.
-        
+
         Args:
             predictions (np.ndarray):
                 A numpy ndarray of bounding boxes in the format
@@ -377,11 +383,11 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         y2 = predictions[:, 3]
         kpx = predictions[:, 4]
         kpy = predictions[:, 5]
-        kpx_in_bounds = np.logical_and(x1<kpx, kpx<x2)
-        kpy_in_bounds = np.logical_and(y1<kpy, kpy<y2)
+        kpx_in_bounds = np.logical_and(x1 < kpx, kpx < x2)
+        kpy_in_bounds = np.logical_and(y1 < kpy, kpy < y2)
         kp_in_bounds = np.logical_and(kpx_in_bounds, kpy_in_bounds)
         return kp_in_bounds
-    
+
     def scale_detections_back_to_input_size(
         self,
         detections: np.ndarray,
@@ -389,7 +395,7 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         original_im_height: int,
     ) -> np.ndarray:
         """Scales the detections back to the original image's size.
-        
+
         Currently only works with when scale_method is "resize".
 
         Args:
@@ -403,9 +409,9 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         Returns:
             The detections which have been rescaled to their original image.
         """
-        width_scalar: np.float32 = original_im_width/self.input_im_width
-        height_scalar: np.float32 = original_im_height/self.input_im_height
-        # Rescale bounding box.       
+        width_scalar: np.float32 = original_im_width / self.input_im_width
+        height_scalar: np.float32 = original_im_height / self.input_im_height
+        # Rescale bounding box.
         detections[:, 0] *= width_scalar
         detections[:, 1] *= height_scalar
         detections[:, 2] *= width_scalar
@@ -416,7 +422,6 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
 
         return detections
 
-    
     @staticmethod
     def draw_detections(
         image: np.ndarray,
@@ -453,7 +458,6 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         text_thickness = int(min([img_height, img_width]) * 0.001)
 
         mask_img = image.copy()
-
 
         # Draw bounding boxes, masks, and text annotations
         for detection in detections:
