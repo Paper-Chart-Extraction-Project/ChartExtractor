@@ -22,7 +22,7 @@ from ..object_detection_models.object_detection_model import ObjectDetectionMode
 import numpy as np
 
 
-DATA_FILEPATH: Path = Path(__file__).parents[2] / "data"
+DATA_FILEPATH: Path = Path(__file__) / ".." / ".." / "data"
 FILEPATH_TO_INTRAOP_CENTROIDS: Path = (
     DATA_FILEPATH / "centroids" / "intraop_checkbox_centroids.json"
 )
@@ -68,10 +68,7 @@ def extract_checkboxes(
 
     checkbox_bboxes: List[BoundingBox] = [det.annotation for det in detections]
     names: Dict[str, str] = find_checkbox_names(
-        checkbox_bboxes,
-        centroids,
-        image_width,
-        image_height
+        checkbox_bboxes, centroids, image_width, image_height
     )
     return names
 
