@@ -13,7 +13,7 @@ from ..utilities.detections import Detection
 import numpy as np
 
 
-DATA_FILEPATH: Path = Path(__file__) / ".." / ".." / "data"
+DATA_FILEPATH: Path = Path(__file__).parents[1] / "data"
 FILEPATH_TO_INTRAOP_CENTROIDS: Path = (
     DATA_FILEPATH / "centroids" / "intraop_checkbox_centroids.json"
 )
