@@ -64,6 +64,7 @@ INTRAOP_DOC_MODEL = OnnxYolov11Detection(
     ),
     MODEL_CONFIG["intraoperative_document_landmarks"]["imgsz"],
     MODEL_CONFIG["intraoperative_document_landmarks"]["imgsz"],
+    lazy_loading=True,
 )
 PREOP_POSTOP_DOC_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["preop_postop_document_landmarks"]["name"],
@@ -71,18 +72,21 @@ PREOP_POSTOP_DOC_MODEL = OnnxYolov11Detection(
     / MODEL_CONFIG["preop_postop_document_landmarks"]["name"].replace(".onnx", ".json"),
     MODEL_CONFIG["preop_postop_document_landmarks"]["imgsz"],
     MODEL_CONFIG["preop_postop_document_landmarks"]["imgsz"],
+    lazy_loading=True,
 )
 NUMBERS_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["numbers"]["name"],
     PATH_TO_MODEL_METADATA / MODEL_CONFIG["numbers"]["name"].replace(".onnx", ".json"),
     MODEL_CONFIG["numbers"]["imgsz"],
     MODEL_CONFIG["numbers"]["imgsz"],
+    lazy_loading=True,
 )
 SYSTOLIC_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["systolic"]["name"],
     PATH_TO_MODEL_METADATA / MODEL_CONFIG["systolic"]["name"].replace(".onnx", ".json"),
     MODEL_CONFIG["systolic"]["imgsz"],
     MODEL_CONFIG["systolic"]["imgsz"],
+    lazy_loading=True,
 )
 DIASTOLIC_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["diastolic"]["name"],
@@ -90,6 +94,7 @@ DIASTOLIC_MODEL = OnnxYolov11PoseSingle(
     / MODEL_CONFIG["diastolic"]["name"].replace(".onnx", ".json"),
     MODEL_CONFIG["diastolic"]["imgsz"],
     MODEL_CONFIG["diastolic"]["imgsz"],
+    lazy_loading=True,
 )
 HEART_RATE_MODEL = OnnxYolov11PoseSingle(
     PATH_TO_MODELS / MODEL_CONFIG["heart_rate"]["name"],
@@ -97,6 +102,7 @@ HEART_RATE_MODEL = OnnxYolov11PoseSingle(
     / MODEL_CONFIG["heart_rate"]["name"].replace(".onnx", ".json"),
     MODEL_CONFIG["heart_rate"]["imgsz"],
     MODEL_CONFIG["heart_rate"]["imgsz"],
+    lazy_loading=True,
 )
 CHECKBOXES_MODEL = OnnxYolov11Detection(
     PATH_TO_MODELS / MODEL_CONFIG["checkboxes"]["name"],
@@ -104,6 +110,7 @@ CHECKBOXES_MODEL = OnnxYolov11Detection(
     / MODEL_CONFIG["checkboxes"]["name"].replace(".onnx", ".json"),
     MODEL_CONFIG["checkboxes"]["imgsz"],
     MODEL_CONFIG["checkboxes"]["imgsz"],
+    lazy_loading=True
 )
 
 

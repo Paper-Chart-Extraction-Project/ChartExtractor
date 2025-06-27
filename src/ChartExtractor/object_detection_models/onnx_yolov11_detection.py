@@ -48,6 +48,7 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         model_classes_filepath: Path,
         input_im_width: int = 640,
         input_im_height: int = 640,
+        lazy_loading: bool = False
     ):
         """Initializes the onnx model.
 
@@ -62,11 +63,17 @@ class OnnxYolov11Detection(ObjectDetectionModel):
             input_im_height (int):
                 The image height that the model accepts.
                 Defaults to 640.
+            lazy_loading (bool):
+                Whether or not to load the model only when it is called for detection.
+                Defaults to False.
         """
-        self.model = ort.InferenceSession(model_weights_filepath)
+        self.model_weights_filepath = model_weights_filepath
         self.input_im_width = input_im_width
         self.input_im_height = input_im_height
         self.classes = self.load_classes(model_classes_filepath)
+        self.model_is_loaded = False
+        if not lazy_loading:
+            self.load_model()
 
     @staticmethod
     def load_classes(model_metadata_filepath: Path) -> Dict:
@@ -94,6 +101,11 @@ class OnnxYolov11Detection(ObjectDetectionModel):
             print(potential_err_msg)
             print(e)
         return classes
+    
+    def load_model(self):
+        """Loads the model."""
+        self.model = ort.InferenceSession(self.model_weights_filepath)
+        self.model_is_loaded = True
 
     def __call__(
         self,
@@ -116,6 +128,8 @@ class OnnxYolov11Detection(ObjectDetectionModel):
         Returns:
             A list of detections for each image.
         """
+        if not model_is_loaded:
+            self.load_model()
         if not isinstance(images, list):
             images = [images]
         detections: List[List[Detection]] = [
