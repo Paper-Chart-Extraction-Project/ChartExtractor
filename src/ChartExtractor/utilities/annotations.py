@@ -32,12 +32,12 @@ class Point:
     def __repr__(self):
         """Returns a string representation of this `Point` object."""
         return f"Point({self.x}, {self.y})"
-    
+
     @classmethod
     def from_dict(cls, point_dict: Dict[str, float]):
         """Creates a `Point` from a dictionary."""
         return Point(**point_dict)
-    
+
     def to_dict(self) -> str:
         """Returns a json serialized version of the point."""
         return vars(self)
@@ -104,7 +104,7 @@ class BoundingBox:
         self.top = top
         self.right = right
         self.bottom = bottom
-    
+
     @staticmethod
     def from_yolo(
         yolo_line: str,
@@ -173,7 +173,7 @@ class BoundingBox:
                 f"Category {int(coco_annotation['category_id'])} not found in the categories list."
             )
         return BoundingBox(category, left, top, right, bottom)
-    
+
     @staticmethod
     def from_dict(bbox_dict: Dict[str, float]):
         """Constructs a `BoundingBox` from a dictionary of arguments.
@@ -186,7 +186,7 @@ class BoundingBox:
             A `BoundingBox` object containing the data from the dictionary.
         """
         return BoundingBox(**bbox_dict)
-    
+
     @classmethod
     def validate_box_values(
         cls, left: float, top: float, right: float, bottom: float
@@ -254,7 +254,9 @@ class BoundingBox:
         """The area of the box."""
         return (self.right - self.left) * (self.bottom - self.top)
 
-    def set_box(self, new_left: int, new_top: int, new_right: int, new_bottom: int):
+    def set_box(
+        self, new_left: int, new_top: int, new_right: int, new_bottom: int, **kwargs
+    ):
         """Sets this BoundingBox's values for left, top, right, bottom.
 
         Args :
@@ -309,7 +311,7 @@ class BoundingBox:
         return f"{c} {x:.{precision}f} {y:.{precision}f} {w:.{precision}f} {h:.{precision}f}"
 
     def to_dict(self) -> dict:
-        """Returns a dictionary with all the attributes of this """
+        """Returns a dictionary with all the attributes of this"""
         return vars(self)
 
 
@@ -408,7 +410,9 @@ class Keypoint:
         return Keypoint(keypoint, bounding_box, do_keypoint_validation)
 
     @staticmethod
-    def from_dict(keypoint_dict: Dict[str, Dict[str, float]], do_validation: bool = True):
+    def from_dict(
+        keypoint_dict: Dict[str, Dict[str, float]], do_validation: bool = True
+    ):
         """Constructs a `Keypoint` from a dictionary of arguments.
 
         Args:
@@ -657,7 +661,7 @@ class Keypoint:
         else:
             yolo_line += f" {keypoint_x:.{precision}f} {keypoint_y:.{precision}f}"
         return yolo_line
-    
+
     def to_dict(self) -> dict:
         """Converts this keypoint to a dictionary of its variables."""
         return {

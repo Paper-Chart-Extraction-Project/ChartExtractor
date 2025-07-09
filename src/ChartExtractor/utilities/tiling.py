@@ -210,7 +210,7 @@ def tile_annotations(
             min(annotation.box[2], tile[2]),
             min(annotation.box[3], tile[3]),
         ]
-        return annotation.set_box(*new_box)
+        return annotation.set_box(*new_box, do_keypoint_validation=False)
 
     tile_coordinates: List[List[Tuple[int, int, int, int]]] = generate_tile_coordinates(
         image_width,
@@ -324,5 +324,6 @@ def correct_annotation_coords(
             operation(annotation.box[3], tile_top),
             operation(annotation.keypoint.x, tile_left),
             operation(annotation.keypoint.y, tile_top),
+            do_keypoint_validation=False,
         )
     return new_annotation
