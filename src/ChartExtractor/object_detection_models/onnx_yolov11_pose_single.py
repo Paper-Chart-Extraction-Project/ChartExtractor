@@ -133,7 +133,7 @@ class OnnxYolov11PoseSingle(ObjectDetectionModel):
         Returns:
             A list of detections for each image.
         """
-        if not model_is_loaded:
+        if not self.model_is_loaded:
             self.load_model()
         if not isinstance(images, list):
             images = [images]
