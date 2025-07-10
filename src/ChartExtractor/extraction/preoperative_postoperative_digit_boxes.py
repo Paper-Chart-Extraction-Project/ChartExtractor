@@ -233,35 +233,31 @@ def extract_vitals(
     vital_values: Dict[str, int] = get_relevant_boxes(
         number_detections, preop_or_pacu, im_width, im_height
     )
-    vital_dict: Dict[str, int] = dict()
+    vital_dict: Dict[str, str] = dict()
 
     def get_whole_value_from_vital_values(
         vital: str, digit_strs: List[str] = ["hundreds", "tens", "ones"]
-    ) -> Dict[str, int]:
+    ) -> Optional[str]:
         if any(
             [
                 f"{preop_or_pacu}_{vital}_{place}" in vital_values.keys()
                 for place in digit_strs
             ]
         ):
-            return {
-                f"{preop_or_pacu}_{vital}": "".join(
-                    [
-                        get_category_or_space(
-                            vital_values.get(f"{preop_or_pacu}_{vital}_{place}")
-                        )
-                        for place in digit_strs
-                    ]
-                ).strip()
-            }
-        else:
-            return dict()
+            return "".join(
+                [
+                    get_category_or_space(
+                        vital_values.get(f"{preop_or_pacu}_{vital}_{place}")
+                    )
+                    for place in digit_strs
+                ]
+            ).strip()
 
-    vital_dict.update(get_whole_value_from_vital_values("sys"))
-    vital_dict.update(get_whole_value_from_vital_values("dia"))
-    vital_dict.update(get_whole_value_from_vital_values("hr"))
-    vital_dict.update(get_whole_value_from_vital_values("rr"))
-    vital_dict.update(get_whole_value_from_vital_values("ox"))
+    for vital_name in ["sys", "dia", "hr", "rr", "ox"]:
+        whole_value: Optional[str] = get_whole_value_from_vital_values(vital_name)
+        if whole_value:
+            vital_dict[vital_name] = whole_value
+
     return vital_dict
 
 
@@ -359,7 +355,7 @@ def extract_aldrete_score(
     number_detections: List[Detection],
     im_width: int,
     im_height: int,
-) -> Dict[str, int]:
+) -> str:
     """Extracts the aldrete score from the number detections.
 
     Args:
@@ -378,7 +374,7 @@ def extract_aldrete_score(
     )
     tens: str = get_category_or_space(aldrete_values.get("aldrete_tens"))
     ones: str = get_category_or_space(aldrete_values.get("aldrete_ones"))
-    return {"aldrete_score": f"{tens}{ones}".strip()}
+    return f"{tens}{ones}".strip()
 
 
 def extract_preop_postop_digit_data(
@@ -400,25 +396,13 @@ def extract_preop_postop_digit_data(
         A dictionary with all the preoperative and postoperative data.
     """
     data: Dict[str, str] = dict()
-    data.update(
-        {"timing": extract_time_of_assessment(number_detections, im_width, im_height)}
-    )
-    data.update({"demographics": extract_age(number_detections, im_width, im_height)})
-    data.update(
-        {"demographics": extract_height(number_detections, im_width, im_height)}
-    )
-    data.update(
-        {"demographics": extract_weight(number_detections, im_width, im_height)}
-    )
-    data.update(
-        {"vitals": extract_vitals(number_detections, "preop", im_width, im_height)}
-    )
-    data.update(
-        {"vitals": extract_vitals(number_detections, "pacu", im_width, im_height)}
-    )
-    data.update(
-        {"lab_values": extract_lab_results(number_detections, im_width, im_height)}
-    )
-    data.update(extract_aldrete_score(number_detections, im_width, im_height))
+    data["timing"] = extract_time_of_assessment(number_detections, im_width, im_height)
+    data["age"] = extract_age(number_detections, im_width, im_height)
+    data["height"] = extract_height(number_detections, im_width, im_height)
+    data["weight"] = extract_weight(number_detections, im_width, im_height)
+    data["preop_vitals"] = extract_vitals(number_detections, "preop", im_width, im_height)
+    data["pacu_vitals"] = extract_vitals(number_detections, "pacu", im_width, im_height)
+    data["lab_values"] = extract_lab_results(number_detections, im_width, im_height)
+    data["aldrete_score"] = extract_aldrete_score(number_detections, im_width, im_height)
 
     return data
