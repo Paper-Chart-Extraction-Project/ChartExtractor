@@ -403,13 +403,9 @@ def extract_preop_postop_digit_data(
     data.update(
         {"timing": extract_time_of_assessment(number_detections, im_width, im_height)}
     )
-    data.update({"demographics": extract_age(number_detections, im_width, im_height)})
-    data.update(
-        {"demographics": extract_height(number_detections, im_width, im_height)}
-    )
-    data.update(
-        {"demographics": extract_weight(number_detections, im_width, im_height)}
-    )
+    data["age"] = extract_age(number_detections, im_width, im_height)
+    data["height"] = extract_height(number_detections, im_width, im_height)
+    data["weight"] = extract_weight(number_detections, im_width, im_height)
     data.update(
         {"vitals": extract_vitals(number_detections, "preop", im_width, im_height)}
     )
