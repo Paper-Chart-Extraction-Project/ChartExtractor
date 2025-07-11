@@ -95,7 +95,7 @@ def extract_age(
     number_detections: List[Detection],
     im_width: int,
     im_height: int,
-) -> Dict[str, str]:
+) -> Optional[str]:
     """Extracts the age data from the number detections.
 
     Args:
@@ -116,23 +116,19 @@ def extract_age(
     if any(
         [f"age_{place}" in age_values.keys() for place in ["hundreds", "tens", "ones"]]
     ):
-        return {
-            "age": "".join(
-                [
-                    get_category_or_space(age_values.get(f"age_{place}"))
-                    for place in ["hundreds", "tens", "ones"]
-                ]
-            ).strip()
-        }
-    else:
-        return dict()
+        return "".join(
+            [
+                get_category_or_space(age_values.get(f"age_{place}"))
+                for place in ["hundreds", "tens", "ones"]
+            ]
+        ).strip()
 
 
 def extract_height(
     number_detections: List[Detection],
     im_width: int,
     im_height: int,
-) -> Dict[str, str]:
+) -> Optional[str]:
     """Extracts the height data from the number detections.
 
     Args:
@@ -156,23 +152,19 @@ def extract_height(
             for place in ["hundreds", "tens", "ones"]
         ]
     ):
-        return {
-            "height": "".join(
-                [
-                    get_category_or_space(height_values.get(f"height_{place}"))
-                    for place in ["hundreds", "tens", "ones"]
-                ]
-            ).strip()
-        }
-    else:
-        return dict()
+        return "".join(
+            [
+                get_category_or_space(height_values.get(f"height_{place}"))
+                for place in ["hundreds", "tens", "ones"]
+            ]
+        ).strip()
 
 
 def extract_weight(
     number_detections: List[Detection],
     im_width: int,
     im_height: int,
-) -> Dict[str, str]:
+) -> Optional[str]:
     """Extracts the weight data from the number detections.
 
     Args:
@@ -196,16 +188,12 @@ def extract_weight(
             for place in ["hundreds", "tens", "ones"]
         ]
     ):
-        return {
-            "weight": "".join(
-                [
-                    get_category_or_space(weight_values.get(f"weight_{place}"))
-                    for place in ["hundreds", "tens", "ones"]
-                ]
-            ).strip()
-        }
-    else:
-        return dict()
+        return "".join(
+            [
+                get_category_or_space(weight_values.get(f"weight_{place}"))
+                for place in ["hundreds", "tens", "ones"]
+            ]
+        ).strip()
 
 
 def extract_vitals(
