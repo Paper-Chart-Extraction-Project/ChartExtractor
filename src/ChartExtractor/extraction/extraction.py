@@ -581,22 +581,14 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
     codes: Dict = {"codes": extract_drug_codes(digit_detections, *image.size)}
     times: Dict = {"timing": extract_surgical_timing(digit_detections, *image.size)}
     ett_size: Dict = {"ett_size": extract_ett_size(digit_detections, *image.size)}
-
+    
+    # get legend locations
+    legend_locations: Dict[str, Tuple[float, float]] = find_legend(
+        intraop_detections_dict["legend"],
+        **image_size,
+    )
+    
     # extract inhaled volatile drugs
-    time_boxes, mmhg_boxes = isolate_blood_pressure_legend_bounding_boxes(
-        [det.annotation for det in document_landmark_detections], *image.size
-    )
-    time_clusters: List[Cluster] = cluster_boxes(
-        time_boxes, cluster_kmeans, "mins", possible_nclusters=[40, 41, 42]
-    )
-    mmhg_clusters: List[Cluster] = cluster_boxes(
-        mmhg_boxes, cluster_kmeans, "mmhg", possible_nclusters=[18, 19, 20]
-    )
-
-    legend_locations: Dict[str, Tuple[float, float]] = find_legend_locations(
-        time_clusters + mmhg_clusters
-    )
-
     inhaled_volatile: Dict = {
         "inhaled_volatile": extract_inhaled_volatile(
             digit_detections, legend_locations, document_landmark_detections
