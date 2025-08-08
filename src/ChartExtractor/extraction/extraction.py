@@ -911,10 +911,8 @@ def make_bp_and_hr_detections(
     Args:
         `image` (Image.Image):
             The image to detect on.
-        `time_clusters` (List[Cluster]):
-            A list of Cluster objects encoding the location of the time legend.
-        `mmhg_clusters` (List[Cluster]):
-            A list of Cluster objects encoding the location of the mmhg/bpm legend.
+        `legend` (Dict[str, Tuple[float, float]]):
+            The dictionary that maps the name of legend entries to their locations on the image.
 
     Returns:
         A dictionary mapping timestamps to values for systolic, diastolic, and heart rate.
