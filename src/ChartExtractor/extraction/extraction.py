@@ -457,8 +457,7 @@ def assign_meaning_to_intraoperative_detections(
 
     extracted_data["bp_and_hr"] = extract_heart_rate_and_blood_pressure(
         bp_and_hr_dets,
-        time_clusters,
-        mmhg_clusters,
+        legend_locations,
     )
 
     # extract physiological indicators
@@ -583,9 +582,20 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
     ett_size: Dict = {"ett_size": extract_ett_size(digit_detections, *image.size)}
     
     # get legend locations
+    legend_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["whole_number_legend"], image.size
+    )
+    legend_detections = detect_objects_using_tiling(
+        image,
+        LEGEND_MODEL,
+        legend_tile_size,
+        legend_tile_size,
+        MODEL_CONFIG["whole_number_legend"]["horz_overlap_proportion"],
+        MODEL_CONFIG["whole_number_legend"]["vert_overlap_proportion"],
+    )
     legend_locations: Dict[str, Tuple[float, float]] = find_legend(
-        intraop_detections_dict["legend"],
-        **image_size,
+        legend_detections,
+        *image.size,
     )
     
     # extract inhaled volatile drugs
@@ -597,7 +607,7 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
 
     # extract bp and hr
     bp_and_hr: Dict = {
-        "bp_and_hr": make_bp_and_hr_detections(image, time_clusters, mmhg_clusters)
+        "bp_and_hr": make_bp_and_hr_detections(image, legend_locations)
     }
 
     # extract physiological indicators
@@ -894,8 +904,7 @@ def compute_tile_size(model_config: Dict, image_size: Tuple[int, int]) -> int:
 
 def make_bp_and_hr_detections(
     image: Image.Image,
-    time_clusters: List[Cluster],
-    mmhg_clusters: List[Cluster],
+    legend: Dict[str, Tuple[float, float]]
 ) -> Dict:
     """Finds blood pressure symbols and associates a value and timestamp to them.
 
@@ -940,9 +949,7 @@ def make_bp_and_hr_detections(
     )
 
     dets: List[Detection] = sys_dets + dia_dets + hr_dets
-    bp_and_hr = extract_heart_rate_and_blood_pressure(
-        dets, time_clusters, mmhg_clusters
-    )
+    bp_and_hr = extract_heart_rate_and_blood_pressure(dets, legend)
     return bp_and_hr
 
 
