@@ -277,6 +277,19 @@ def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Dete
         MODEL_CONFIG["heart_rate"]["vert_overlap_proportion"],
     )
 
+    # legend
+    legend_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["whole_number_legend"], intraop_image.size
+    )
+    detections_dict["legend"] = detect_objects_using_tiling(
+        intraop_image.copy(),
+        LEGEND_MODEL,
+        legend_tile_size,
+        legend_tile_size,
+        MODEL_CONFIG["whole_number_legend"]["horz_overlap_proportion"],
+        MODEL_CONFIG["whole_number_legend"]["vert_overlap_proportion"],
+    )
+
     return detections_dict
 
 
