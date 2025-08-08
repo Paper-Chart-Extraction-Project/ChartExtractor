@@ -110,7 +110,14 @@ CHECKBOXES_MODEL = OnnxYolov11Detection(
     / MODEL_CONFIG["checkboxes"]["name"].replace(".onnx", ".json"),
     MODEL_CONFIG["checkboxes"]["imgsz"],
     MODEL_CONFIG["checkboxes"]["imgsz"],
-    lazy_loading=True
+    lazy_loading=True,
+)
+LEGEND_MODEL = OnnxYolov11Detection(
+    PATH_TO_MODELS / MODEL_CONFIG["whole_number_legend"]["name"],
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["whole_number_legend"]["name"].replace(".onnx", ".json"),
+    MODEL_CONFIG["whole_number_legend"]["imgsz"],
+    MODEL_CONFIG["whole_number_legend"]["imgsz"],
+    lazy_loading=True,
 )
 
 
