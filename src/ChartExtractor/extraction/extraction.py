@@ -18,6 +18,7 @@ from ..extraction.extraction_utilities import (
     detect_objects_using_tiling,
     label_studio_to_bboxes,
 )
+from ..extraction.find_legend import find_legend
 from ..extraction.inhaled_volatile import extract_inhaled_volatile
 from ..extraction.intraoperative_digit_boxes import (
     extract_drug_codes,
@@ -429,21 +430,14 @@ def assign_meaning_to_intraoperative_detections(
     extracted_data["ett_size"] = extract_ett_size(
         corrected_detections_dict["numbers"], *image_size
     )
+    
+    # get legend locations
+    legend_locations: Dict[str, Tuple[float, float]] = find_legend(
+        intraop_detections_dict["legend"],
+        **image_size,
+    )
 
     # extract inhaled volatile drugs
-    time_boxes, mmhg_boxes = isolate_blood_pressure_legend_bounding_boxes(
-        [det.annotation for det in corrected_detections_dict["landmarks"]], *image_size
-    )
-    time_clusters: List[Cluster] = cluster_boxes(
-        time_boxes, cluster_kmeans, "mins", possible_nclusters=[40, 41, 42]
-    )
-    mmhg_clusters: List[Cluster] = cluster_boxes(
-        mmhg_boxes, cluster_kmeans, "mmhg", possible_nclusters=[18, 19, 20]
-    )
-
-    legend_locations: Dict[str, Tuple[float, float]] = find_legend_locations(
-        time_clusters + mmhg_clusters
-    )
     extracted_data["inhaled_volatile"] = extract_inhaled_volatile(
         corrected_detections_dict["numbers"],
         legend_locations,
