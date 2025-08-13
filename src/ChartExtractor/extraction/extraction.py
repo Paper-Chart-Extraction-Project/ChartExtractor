@@ -230,12 +230,12 @@ def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Dete
     )
 
     # checkboxes
-    tile_size = compute_tile_size(MODEL_CONFIG["checkboxes"], intraop_image.size)
+    ckbx_tile_size = compute_tile_size(MODEL_CONFIG["checkboxes"], intraop_image.size)
     detections_dict["checkboxes"] = detect_objects_using_tiling(
         intraop_image,
         CHECKBOXES_MODEL,
-        tile_size,
-        tile_size,
+        ckbx_tile_size,
+        ckbx_tile_size,
         MODEL_CONFIG["checkboxes"]["horz_overlap_proportion"],
         MODEL_CONFIG["checkboxes"]["vert_overlap_proportion"],
         nms_threshold=0.8,
@@ -434,7 +434,8 @@ def assign_meaning_to_intraoperative_detections(
     # get legend locations
     legend_locations: Dict[str, Tuple[float, float]] = find_legend(
         intraop_detections_dict["legend"],
-        **image_size,
+        image_size[0],
+        image_size[1],
     )
 
     # extract inhaled volatile drugs
