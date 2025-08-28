@@ -384,7 +384,11 @@ def extract_preop_postop_digit_data(
         A dictionary with all the preoperative and postoperative data.
     """
     data: Dict[str, str] = dict()
-    data["timing"] = extract_time_of_assessment(number_detections, im_width, im_height)
+    data["preoperative_postoperative_timing"] = extract_time_of_assessment(
+        number_detections,
+        im_width,
+        im_height
+    )
     data["age"] = extract_age(number_detections, im_width, im_height)
     data["height"] = extract_height(number_detections, im_width, im_height)
     data["weight"] = extract_weight(number_detections, im_width, im_height)

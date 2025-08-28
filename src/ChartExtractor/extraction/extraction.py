@@ -424,7 +424,7 @@ def assign_meaning_to_intraoperative_detections(
     extracted_data["codes"] = extract_drug_codes(
         corrected_detections_dict["numbers"], *image_size
     )
-    extracted_data["timing"] = extract_surgical_timing(
+    extracted_data["intraoperative_timing"] = extract_surgical_timing(
         corrected_detections_dict["numbers"], *image_size
     )
     extracted_data["ett_size"] = extract_ett_size(
