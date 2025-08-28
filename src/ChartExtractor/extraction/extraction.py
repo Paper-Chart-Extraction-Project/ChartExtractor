@@ -579,7 +579,7 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
 
     # extract drug code and surgical timing
     codes: Dict = {"codes": extract_drug_codes(digit_detections, *image.size)}
-    times: Dict = {"timing": extract_surgical_timing(digit_detections, *image.size)}
+    times: Dict = {"intraoperative_timing": extract_surgical_timing(digit_detections, *image.size)}
     ett_size: Dict = {"ett_size": extract_ett_size(digit_detections, *image.size)}
     
     # get legend locations
