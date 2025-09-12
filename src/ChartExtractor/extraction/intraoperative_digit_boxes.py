@@ -143,7 +143,7 @@ def extract_surgical_timing(
         tens_place_val: Optional[int] = surgical_timing_values.get(prefix + "_tens")
         ones_place_val: Optional[int] = surgical_timing_values.get(prefix + "_ones")
         if None not in [tens_place_val, ones_place_val]:
-            surgical_timing[prefix] = str(tens_place_val.category) + str(
-                ones_place_val.category
+            surgical_timing[prefix] = str(
+                int(str(tens_place_val.category) + str(ones_place_val.category))
             )
     return surgical_timing
