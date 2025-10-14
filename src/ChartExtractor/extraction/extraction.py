@@ -18,6 +18,7 @@ from ..extraction.extraction_utilities import (
     detect_objects_using_tiling,
     label_studio_to_bboxes,
 )
+from ..extraction.find_legend import find_legend
 from ..extraction.inhaled_volatile import extract_inhaled_volatile
 from ..extraction.intraoperative_digit_boxes import (
     extract_drug_codes,
@@ -110,7 +111,14 @@ CHECKBOXES_MODEL = OnnxYolov11Detection(
     / MODEL_CONFIG["checkboxes"]["name"].replace(".onnx", ".json"),
     MODEL_CONFIG["checkboxes"]["imgsz"],
     MODEL_CONFIG["checkboxes"]["imgsz"],
-    lazy_loading=True
+    lazy_loading=True,
+)
+LEGEND_MODEL = OnnxYolov11Detection(
+    PATH_TO_MODELS / MODEL_CONFIG["whole_number_legend"]["name"],
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["whole_number_legend"]["name"].replace(".onnx", ".json"),
+    MODEL_CONFIG["whole_number_legend"]["imgsz"],
+    MODEL_CONFIG["whole_number_legend"]["imgsz"],
+    lazy_loading=True,
 )
 
 
@@ -222,12 +230,12 @@ def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Dete
     )
 
     # checkboxes
-    tile_size = compute_tile_size(MODEL_CONFIG["checkboxes"], intraop_image.size)
+    ckbx_tile_size = compute_tile_size(MODEL_CONFIG["checkboxes"], intraop_image.size)
     detections_dict["checkboxes"] = detect_objects_using_tiling(
         intraop_image,
         CHECKBOXES_MODEL,
-        tile_size,
-        tile_size,
+        ckbx_tile_size,
+        ckbx_tile_size,
         MODEL_CONFIG["checkboxes"]["horz_overlap_proportion"],
         MODEL_CONFIG["checkboxes"]["vert_overlap_proportion"],
         nms_threshold=0.8,
@@ -268,6 +276,19 @@ def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Dete
         hr_tile_size,
         MODEL_CONFIG["heart_rate"]["horz_overlap_proportion"],
         MODEL_CONFIG["heart_rate"]["vert_overlap_proportion"],
+    )
+
+    # legend
+    legend_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["whole_number_legend"], intraop_image.size
+    )
+    detections_dict["legend"] = detect_objects_using_tiling(
+        intraop_image.copy(),
+        LEGEND_MODEL,
+        legend_tile_size,
+        legend_tile_size,
+        MODEL_CONFIG["whole_number_legend"]["horz_overlap_proportion"],
+        MODEL_CONFIG["whole_number_legend"]["vert_overlap_proportion"],
     )
 
     return detections_dict
@@ -403,27 +424,21 @@ def assign_meaning_to_intraoperative_detections(
     extracted_data["codes"] = extract_drug_codes(
         corrected_detections_dict["numbers"], *image_size
     )
-    extracted_data["timing"] = extract_surgical_timing(
+    extracted_data["intraoperative_timing"] = extract_surgical_timing(
         corrected_detections_dict["numbers"], *image_size
     )
     extracted_data["ett_size"] = extract_ett_size(
         corrected_detections_dict["numbers"], *image_size
     )
+    
+    # get legend locations
+    legend_locations: Dict[str, Tuple[float, float]] = find_legend(
+        intraop_detections_dict["legend"],
+        image_size[0],
+        image_size[1],
+    )
 
     # extract inhaled volatile drugs
-    time_boxes, mmhg_boxes = isolate_blood_pressure_legend_bounding_boxes(
-        [det.annotation for det in corrected_detections_dict["landmarks"]], *image_size
-    )
-    time_clusters: List[Cluster] = cluster_boxes(
-        time_boxes, cluster_kmeans, "mins", possible_nclusters=[40, 41, 42]
-    )
-    mmhg_clusters: List[Cluster] = cluster_boxes(
-        mmhg_boxes, cluster_kmeans, "mmhg", possible_nclusters=[18, 19, 20]
-    )
-
-    legend_locations: Dict[str, Tuple[float, float]] = find_legend_locations(
-        time_clusters + mmhg_clusters
-    )
     extracted_data["inhaled_volatile"] = extract_inhaled_volatile(
         corrected_detections_dict["numbers"],
         legend_locations,
@@ -443,8 +458,7 @@ def assign_meaning_to_intraoperative_detections(
 
     extracted_data["bp_and_hr"] = extract_heart_rate_and_blood_pressure(
         bp_and_hr_dets,
-        time_clusters,
-        mmhg_clusters,
+        legend_locations,
     )
 
     # extract physiological indicators
@@ -565,24 +579,27 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
 
     # extract drug code and surgical timing
     codes: Dict = {"codes": extract_drug_codes(digit_detections, *image.size)}
-    times: Dict = {"timing": extract_surgical_timing(digit_detections, *image.size)}
+    times: Dict = {"intraoperative_timing": extract_surgical_timing(digit_detections, *image.size)}
     ett_size: Dict = {"ett_size": extract_ett_size(digit_detections, *image.size)}
-
+    
+    # get legend locations
+    legend_tile_size: int = compute_tile_size(
+        MODEL_CONFIG["whole_number_legend"], image.size
+    )
+    legend_detections = detect_objects_using_tiling(
+        image,
+        LEGEND_MODEL,
+        legend_tile_size,
+        legend_tile_size,
+        MODEL_CONFIG["whole_number_legend"]["horz_overlap_proportion"],
+        MODEL_CONFIG["whole_number_legend"]["vert_overlap_proportion"],
+    )
+    legend_locations: Dict[str, Tuple[float, float]] = find_legend(
+        legend_detections,
+        *image.size,
+    )
+    
     # extract inhaled volatile drugs
-    time_boxes, mmhg_boxes = isolate_blood_pressure_legend_bounding_boxes(
-        [det.annotation for det in document_landmark_detections], *image.size
-    )
-    time_clusters: List[Cluster] = cluster_boxes(
-        time_boxes, cluster_kmeans, "mins", possible_nclusters=[40, 41, 42]
-    )
-    mmhg_clusters: List[Cluster] = cluster_boxes(
-        mmhg_boxes, cluster_kmeans, "mmhg", possible_nclusters=[18, 19, 20]
-    )
-
-    legend_locations: Dict[str, Tuple[float, float]] = find_legend_locations(
-        time_clusters + mmhg_clusters
-    )
-
     inhaled_volatile: Dict = {
         "inhaled_volatile": extract_inhaled_volatile(
             digit_detections, legend_locations, document_landmark_detections
@@ -591,7 +608,7 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
 
     # extract bp and hr
     bp_and_hr: Dict = {
-        "bp_and_hr": make_bp_and_hr_detections(image, time_clusters, mmhg_clusters)
+        "bp_and_hr": make_bp_and_hr_detections(image, legend_locations)
     }
 
     # extract physiological indicators
@@ -888,18 +905,15 @@ def compute_tile_size(model_config: Dict, image_size: Tuple[int, int]) -> int:
 
 def make_bp_and_hr_detections(
     image: Image.Image,
-    time_clusters: List[Cluster],
-    mmhg_clusters: List[Cluster],
+    legend: Dict[str, Tuple[float, float]]
 ) -> Dict:
     """Finds blood pressure symbols and associates a value and timestamp to them.
 
     Args:
         `image` (Image.Image):
             The image to detect on.
-        `time_clusters` (List[Cluster]):
-            A list of Cluster objects encoding the location of the time legend.
-        `mmhg_clusters` (List[Cluster]):
-            A list of Cluster objects encoding the location of the mmhg/bpm legend.
+        `legend` (Dict[str, Tuple[float, float]]):
+            The dictionary that maps the name of legend entries to their locations on the image.
 
     Returns:
         A dictionary mapping timestamps to values for systolic, diastolic, and heart rate.
@@ -934,9 +948,7 @@ def make_bp_and_hr_detections(
     )
 
     dets: List[Detection] = sys_dets + dia_dets + hr_dets
-    bp_and_hr = extract_heart_rate_and_blood_pressure(
-        dets, time_clusters, mmhg_clusters
-    )
+    bp_and_hr = extract_heart_rate_and_blood_pressure(dets, legend)
     return bp_and_hr
 
 

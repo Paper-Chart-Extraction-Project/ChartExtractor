@@ -31,7 +31,10 @@ class Detection:
     confidence: float
     
     @staticmethod
-    def from_dict(detection_dict: Dict[str, Any], annotation_type: Union[BoundingBox, Keypoint]):
+    def from_dict(
+        detection_dict: Dict[str, Any],
+        annotation_type: Union[type[BoundingBox], type[Keypoint]]
+    ) -> "Detection":
         """Creates a `Detection` from a dictionary of data.
 
         Args:
