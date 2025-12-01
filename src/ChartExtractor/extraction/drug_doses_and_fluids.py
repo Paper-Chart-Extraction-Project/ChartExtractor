@@ -77,14 +77,10 @@ def get_drug_dosage_digits(
     inhaled_volatile: Optional[Detection] = get_det_by_name("inhaled_volatile")
     inhaled_exhaled: Optional[Detection] = get_det_by_name("inhaled_exhaled")
 
-    if any(
-        [
-            drug_name is None,
-            units is None,
-            inhaled_volatile is None,
-            inhaled_exhaled is None,
-        ]
-    ):
+    any_required_detection_not_found: bool = any(
+        [d is None for d in [drug_name, units, inhaled_exhaled, inhaled_volatile]]
+    )
+    if any_required_detection_not_found:
         raise ValueError("Cannot find all necessary document detections.")
 
     left: float = np.mean(
