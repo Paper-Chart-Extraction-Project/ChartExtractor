@@ -103,6 +103,7 @@ def get_drug_dosage_digits(
 
 def get_fluid_digits(
     digit_detections: List[Detection],
+    legend_locations: Dict[str, Tuple[float, float]],
     document_detections: List[Detection],
 ) -> List[Detection]:
     """Filters for the digit detections that are within the fluid section.
@@ -116,7 +117,33 @@ def get_fluid_digits(
     Returns:
         A filtered list of detections holding only those that are in the fluid section.
     """
-    pass
+    get_det_by_name = partial(get_detection_by_name, detections=document_detections)
+    fluid_blood_product: Optional[Detection] = get_det_by_name("fluid_blood_product")
+    total: Optional[Detection] = get_det_by_name("total")
+    zero_mins: Optional[Detection] = legend_locations.get("0_mins")
+    twohundred_five_mins: Optional[Detection] = legend_locations.get("205_mins")
+
+    any_required_detection_not_found: bool = any(
+        [
+            d is None
+            for d in [fluid_blood_product, total, zero_mins, twohundred_five_mins]
+        ]
+    )
+    if any_required_detection_not_found:
+        raise ValueError("Cannot find all necessary document detections.")
+
+    left: float = np.mean([fluid_blood_product.annotation.right, zero_mins[0]])
+    top: float = np.mean(
+        list(map(attrgetter("annotation.top"), [fluid_blood_product, total]))
+    )
+    right: float = np.mean([total.annotation.left, twohundred_five_mins[0]])
+    bottom: float = np.mean([zero_mins[1], twohundred_five_mins[1]])
+
+    def detection_is_in_region(detection: Detection) -> bool:
+        center = attrgetter("annotation.center")
+        (left < center(detection)[0] < right) and (top < center(detection)[1] < bottom)
+
+    return list(filter(detection_is_in_region, digit_detections))
 
 
 def cluster_digits(
