@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 # Internal imports
+from ..extraction.extraction_utilities import get_detection_by_name
 from ..label_clustering.cluster import Cluster
 from ..utilities.detections import Detection
 
@@ -70,13 +71,11 @@ def get_drug_dosage_digits(
         ValueError:
             If any of the necessary document detections cannot be found.
     """
-    get_detection_by_name = partial(
-        get_detection_by_name, detections=document_detections
-    )
-    drug_name: Optional[Detection] = get_detection_by_name("drug_name")
-    units: Optional[Detection] = get_detection_by_name("units")
-    inhaled_volatile: Optional[Detection] = get_detection_by_name("inhaled_volatile")
-    inhaled_exhaled: Optional[Detection] = get_detection_by_name("inhaled_exhaled")
+    get_det_by_name = partial(get_detection_by_name, detections=document_detections)
+    drug_name: Optional[Detection] = get_det_by_name("drug_name")
+    units: Optional[Detection] = get_det_by_name("units")
+    inhaled_volatile: Optional[Detection] = get_det_by_name("inhaled_volatile")
+    inhaled_exhaled: Optional[Detection] = get_det_by_name("inhaled_exhaled")
 
     if any(
         [
@@ -89,12 +88,14 @@ def get_drug_dosage_digits(
         raise ValueError("Cannot find all necessary document detections.")
 
     left: float = np.mean(
-        list(map([drug_name, inhaled_volatile], attrgetter("annotation")))
+        list(map(attrgetter("annotation.left"), [drug_name, inhaled_volatile]))
     )
-    top: float = np.mean(list(map[drug_name, units]), attrgetter("annotation"))
-    right: float = np.mean(list(map[units, inhaled_exhaled]), attrgetter("annotation"))
+    top: float = np.mean(list(map(attrgetter("annotation.top"), [drug_name, units])))
+    right: float = np.mean(
+        list(map(attrgetter("annotation.right"), [units, inhaled_exhaled]))
+    )
     bottom: float = np.mean(
-        list(map[inhaled_volatile, inhaled_exhaled]), attrgetter("annotation")
+        list(map(attrgetter("annotation.bottom"), [inhaled_volatile, inhaled_exhaled]))
     )
 
     def detection_is_in_region(detection: Detection) -> bool:
