@@ -237,7 +237,7 @@ class BoundingBox:
             )
 
     @property
-    def center(self) -> Tuple[float]:
+    def center(self) -> Tuple[float, float]:
         """This `BoundingBox`'s center."""
         return (
             self.left + (1 / 2) * (self.right - self.left),
