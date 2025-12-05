@@ -6,12 +6,14 @@ build-backend = "setuptools.build_meta"
 name = "ChartExtractor"
 version = "1.0.0a"
 dependencies = [
+    "networkx",
     "numpy",
     "onnxruntime",
     "opencv-python-headless",
+    "pandas",
     "pillow",
     "scikit-learn",
-    "scipy"
+    "scipy",
 ]
 authors = [
     {name = "Ryan Folks", email = "vcz2aj@uvahealth.org"},
@@ -30,5 +32,9 @@ license-files = ["LICENSE"]
 keywords = ["computer vision"]
 classifiers = ["Development Status :: 3 - Alpha"]
 
+[project.optional-dependencies]
+dev = [
+    "ruff"
+]
 [tool.setuptools.packages.find]
 where = ["src"]
