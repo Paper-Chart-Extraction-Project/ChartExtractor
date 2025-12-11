@@ -13,6 +13,7 @@ from ..extraction.blood_pressure_and_heart_rate import (
     extract_heart_rate_and_blood_pressure,
 )
 from ..extraction.checkboxes import extract_checkboxes
+from ..extraction.drug_doses_and_fluids import extract_drug_dosages_and_fluids
 from ..extraction.extraction_utilities import (
     combine_dictionaries,
     detect_objects_using_tiling,
@@ -445,6 +446,15 @@ def assign_meaning_to_intraoperative_detections(
         corrected_detections_dict["landmarks"],
     )
 
+    # extract iv drug and fluid
+    extracted_data["drug_dosages_and_fluids"] = extract_drug_dosages_and_fluids(
+        corrected_detections_dict["numbers"],
+        legend_locations,
+        corrected_detections_dict["landmarks"],
+        image_size[0],
+        image_size[1],
+    )
+
     # extract bp and hr
     bp_and_hr_dets = reduce(
         concat,
@@ -605,6 +615,17 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
             digit_detections, legend_locations, document_landmark_detections
         )
     }
+    
+    # extract iv drug and fluid
+    drug_dosages_and_fluids = {
+        "drug_dosages_and_fluids": extract_drug_dosages_and_fluids(
+            digit_detections,
+            legend_locations,
+            document_landmark_detections,
+            image.size[0],
+            image.size[1],
+        )
+    }
 
     # extract bp and hr
     bp_and_hr: Dict = {
@@ -632,6 +653,7 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
             times,
             ett_size,
             inhaled_volatile,
+            drug_dosages_and_fluids,
             bp_and_hr,
             physiological_indicators,
             checkboxes,
