@@ -115,10 +115,10 @@ CHECKBOXES_MODEL = OnnxYolov11Detection(
     lazy_loading=True,
 )
 LEGEND_MODEL = OnnxYolov11Detection(
-    PATH_TO_MODELS / MODEL_CONFIG["whole_number_legend"]["name"],
-    PATH_TO_MODEL_METADATA / MODEL_CONFIG["whole_number_legend"]["name"].replace(".onnx", ".json"),
-    MODEL_CONFIG["whole_number_legend"]["imgsz"],
-    MODEL_CONFIG["whole_number_legend"]["imgsz"],
+    PATH_TO_MODELS / MODEL_CONFIG["legend"]["name"],
+    PATH_TO_MODEL_METADATA / MODEL_CONFIG["legend"]["name"].replace(".onnx", ".json"),
+    MODEL_CONFIG["legend"]["imgsz"],
+    MODEL_CONFIG["legend"]["imgsz"],
     lazy_loading=True,
 )
 
@@ -281,15 +281,15 @@ def run_intraoperative_models(intraop_image: Image.Image) -> Dict[str, List[Dete
 
     # legend
     legend_tile_size: int = compute_tile_size(
-        MODEL_CONFIG["whole_number_legend"], intraop_image.size
+        MODEL_CONFIG["legend"], intraop_image.size
     )
     detections_dict["legend"] = detect_objects_using_tiling(
         intraop_image.copy(),
         LEGEND_MODEL,
         legend_tile_size,
         legend_tile_size,
-        MODEL_CONFIG["whole_number_legend"]["horz_overlap_proportion"],
-        MODEL_CONFIG["whole_number_legend"]["vert_overlap_proportion"],
+        MODEL_CONFIG["legend"]["horz_overlap_proportion"],
+        MODEL_CONFIG["legend"]["vert_overlap_proportion"],
     )
 
     return detections_dict
@@ -594,15 +594,15 @@ def digitize_intraop_record(image: Image.Image) -> Dict:
     
     # get legend locations
     legend_tile_size: int = compute_tile_size(
-        MODEL_CONFIG["whole_number_legend"], image.size
+        MODEL_CONFIG["legend"], image.size
     )
     legend_detections = detect_objects_using_tiling(
         image,
         LEGEND_MODEL,
         legend_tile_size,
         legend_tile_size,
-        MODEL_CONFIG["whole_number_legend"]["horz_overlap_proportion"],
-        MODEL_CONFIG["whole_number_legend"]["vert_overlap_proportion"],
+        MODEL_CONFIG["legend"]["horz_overlap_proportion"],
+        MODEL_CONFIG["legend"]["vert_overlap_proportion"],
     )
     legend_locations: Dict[str, Tuple[float, float]] = find_legend(
         legend_detections,
