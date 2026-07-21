@@ -1,0 +1,1 @@
+"""Contains the Point class."""
