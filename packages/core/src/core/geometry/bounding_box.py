@@ -53,3 +53,24 @@ class BoundingBox(BaseModel):
             )
 
         return self
+
+    @classmethod
+    def from_center_xywh(
+        cls, x_center: float, y_center: float, width: float, height: float
+    ) -> "BoundingBox":
+        """Creates a BoundingBox from the center, width, and height of the box.
+
+        Args:
+            x_center (float):
+                The x coordinate of the center of the bounding box.
+            y_center (float):
+                The y coordinate of the center of the bounding box.
+            width (float):
+                The width of the bounding box.
+            height (float):
+                The height of the bounding box.
+
+        Returns:
+            A BoundingBox at the location supplied in the arguments.
+        """
+        raise NotImplementedError()
