@@ -34,6 +34,20 @@ class TestPointValidation:
             BoundingBox(top_left=top_left, bottom_right=bottom_right)
 
 
+class TestDegeneracyWarning:
+    def test_warning_left_equals_right(self):
+        """Tests that a warning emits when the box's left equals its right."""
+        raise NotImplementedError()
+
+    def test_warning_top_equals_bottom(self):
+        """Tests that a warning emits when the box's top equals its bottom."""
+        raise NotImplementedError()
+
+    def test_warning_top_equals_bottom_and_left_equals_right(self):
+        """Tests that a warning emits when the box's left equals its right and top equals its bottom."""
+        raise NotImplementedError()
+
+
 def test_from_center_xywh():
     """Tests the from_center_xywh constructor."""
     true_bounding_box: BoundingBox = BoundingBox(
