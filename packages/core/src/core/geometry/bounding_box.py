@@ -11,6 +11,10 @@ class BoundingBox(BaseModel):
     Immutable, should be changed by creating new BoundingBoxes.
 
     Attributes:
+        top_left (Point):
+            The top left point of the bounding box.
+        bottom_right (Point):
+            The top left point of the bounding box.
         left (float):
             The left side of the bounding box.
         top (float):
@@ -27,27 +31,21 @@ class BoundingBox(BaseModel):
             The height of the bounding box.
         area (float):
             The area of the bounding box.
-
-    Private Attributes:
-        _top_left (Point):
-            The top left point of the bounding box.
-        _bottom_right (Point):
-            The top left point of the bounding box.
     """
 
     model_config = ConfigDict(frozen=True)
 
-    _top_left: Point
-    _bottom_right: Point
+    top_left: Point
+    bottom_right: Point
 
     @model_validator(mode="after")
     def check_top_left_higher_and_further_left_of_bottom_right(self) -> Self:
         """Ensures that the top left point is higher and further to the left of the bottom right."""
-        if self._top_left.x > self._bottom_right.x:
+        if self.top_left.x > self.bottom_right.x:
             raise ValueError(
                 f"Top left point of {self} is further right than its bottom right point."
             )
-        if self._top_left.y > self._bottom_right.y:
+        if self.top_left.y > self.bottom_right.y:
             raise ValueError(
                 f"Top left point of {self} is higher than its bottom right point."
             )
@@ -73,4 +71,12 @@ class BoundingBox(BaseModel):
         Returns:
             A BoundingBox at the location supplied in the arguments.
         """
-        raise NotImplementedError()
+        left: float = x_center - (1 / 2) * width
+        top: float = y_center - (1 / 2) * height
+        right: float = x_center + (1 / 2) * width
+        bottom: float = y_center + (1 / 2) * height
+
+        top_left: Point = Point(x=left, y=top)
+        bottom_right: Point = Point(x=right, y=bottom)
+
+        return cls(top_left=top_left, bottom_right=bottom_right)
