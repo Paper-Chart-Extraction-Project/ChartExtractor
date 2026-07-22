@@ -32,3 +32,20 @@ class TestPointValidation:
         bottom_right: Point = Point(x=1.0, y=2.0)
         with pytest.raises(ValueError):
             BoundingBox(top_left=top_left, bottom_right=bottom_right)
+
+
+def test_from_center_xywh():
+    """Tests the from_center_xywh constructor."""
+    true_bounding_box: BoundingBox = BoundingBox(
+        top_left=Point(x=1.0, y=1.0), bottom_right=Point(x=3.0, y=10.0)
+    )
+    center_x: float = 2.0
+    center_y: float = 5.5
+    width: float = 2.0
+    height: float = 9.0
+
+    constructed_bounding_box: BoundingBox = BoundingBox.from_center_xywh(
+        center_x, center_y, width, height
+    )
+
+    assert constructed_bounding_box == true_bounding_box
