@@ -116,3 +116,27 @@ class BoundingBox(BaseModel):
         bottom_right: Point = Point(x=right, y=bottom)
 
         return cls(top_left=top_left, bottom_right=bottom_right)
+
+    @classmethod
+    def from_left_top_right_bottom(
+        cls, left: float, top: float, right: float, bottom: float
+    ) -> "BoundingBox":
+        """Creates a BoundingBox from the left, top, right, and bottom of the box.
+
+        Args:
+            left (float):
+                The x coordinate of the left of the bounding box.
+            top (float):
+                The y coordinate of the top of the bounding box.
+            right (float):
+                The x coordinate of the right of the bounding box.
+            bottom (float):
+                The y coordinate of the bottom of the bounding box.
+
+        Returns:
+            A BoundingBox at the location supplied in the arguments.
+        """
+        top_left: Point = Point(x=left, y=top)
+        bottom_right: Point = Point(x=right, y=bottom)
+
+        return cls(top_left=top_left, bottom_right=bottom_right)
