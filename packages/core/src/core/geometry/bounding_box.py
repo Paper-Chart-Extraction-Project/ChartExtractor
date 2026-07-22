@@ -104,6 +104,18 @@ class BoundingBox(BaseModel):
         """The area of the bounding box."""
         return self.width * self.height
 
+    @computed_field
+    @property
+    def top_right(self) -> Point:
+        """The top right of the bounding box."""
+        return Point(x=self.right, y=self.top)
+
+    @computed_field
+    @property
+    def bottom_left(self) -> Point:
+        """The top right of the bounding box."""
+        return Point(x=self.left, y=self.bottom)
+
     @classmethod
     def from_center_xywh(
         cls, x_center: float, y_center: float, width: float, height: float
