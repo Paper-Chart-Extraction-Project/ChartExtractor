@@ -135,7 +135,7 @@ class BoundingBox(BaseModel):
     @computed_field
     @property
     def bottom_left(self) -> Point:
-        """The top right of the bounding box."""
+        """The bottom left of the bounding box."""
         return Point(x=self.left, y=self.bottom)
 
     @computed_field
