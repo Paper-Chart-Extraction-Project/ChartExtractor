@@ -1,74 +1,66 @@
 """A series of tests for BoundingBox."""
 
 from core.geometry import BoundingBox
-from core.geometry import Point
 import pytest
 
 
 class TestPointValidation:
     def test_top_left_higher_and_further_left_of_bottom_right(self):
         """Tests the normal construction of the BoundingBox with valid points."""
-        top_left: Point = Point(x=1.0, y=2.0)
-        bottom_right: Point = Point(x=3.0, y=4.0)
-        BoundingBox(top_left=top_left, bottom_right=bottom_right)
+        BoundingBox.from_left_top_right_bottom(left=1.0, top=2.0, right=3.0, bottom=4.0)
 
     def test_top_left_lower_than_bottom_right(self):
         """Tests the model validator where the top left is lower than the bottom right."""
-        top_left: Point = Point(x=1.0, y=4.0)
-        bottom_right: Point = Point(x=3.0, y=2.0)
         with pytest.raises(ValueError):
-            BoundingBox(top_left=top_left, bottom_right=bottom_right)
+            BoundingBox.from_left_top_right_bottom(
+                left=1.0, top=4.0, right=3.0, bottom=2.0
+            )
 
     def test_top_left_further_right_than_bottom_right(self):
         """Tests the model validator where the top left is further right than the bottom right."""
-        top_left: Point = Point(x=3.0, y=2.0)
-        bottom_right: Point = Point(x=1.0, y=4.0)
         with pytest.raises(ValueError):
-            BoundingBox(top_left=top_left, bottom_right=bottom_right)
+            BoundingBox.from_left_top_right_bottom(
+                left=3.0, top=2.0, right=1.0, bottom=4.0
+            )
 
     def test_top_left_lower_and_further_right_than_bottom_right(self):
         """Tests the model validator where the top left is lower and further right than the bottom right."""
-        top_left: Point = Point(x=3.0, y=4.0)
-        bottom_right: Point = Point(x=1.0, y=2.0)
         with pytest.raises(ValueError):
-            BoundingBox(top_left=top_left, bottom_right=bottom_right)
+            BoundingBox.from_left_top_right_bottom(
+                left=3.0, top=4.0, right=1.0, bottom=2.0
+            )
 
 
 class TestDegeneracyWarning:
     def test_warning_left_equals_right(self):
         """Tests that a warning emits when the box's left equals its right."""
-        top_left: Point = Point(x=5.0, y=4.0)
-        bottom_right: Point = Point(x=5.0, y=10.0)
         with pytest.warns(UserWarning, match="left-right"):
-            BoundingBox(top_left=top_left, bottom_right=bottom_right)
+            BoundingBox.from_left_top_right_bottom(
+                left=5.0, top=4.0, right=5.0, bottom=10.0
+            )
 
     def test_warning_top_equals_bottom(self):
         """Tests that a warning emits when the box's top equals its bottom."""
-        top_left: Point = Point(x=4.0, y=5.0)
-        bottom_right: Point = Point(x=10.0, y=5.0)
         with pytest.warns(UserWarning, match="top-bottom"):
-            BoundingBox(top_left=top_left, bottom_right=bottom_right)
+            BoundingBox.from_left_top_right_bottom(
+                left=4.0, top=5.0, right=10.0, bottom=5.0
+            )
 
     def test_warning_top_equals_bottom_and_left_equals_right(self):
         """Tests that a warning emits when the box's left equals its right and top equals its bottom."""
-        top_left: Point = Point(x=4.0, y=5.0)
-        bottom_right: Point = Point(x=4.0, y=5.0)
         with pytest.warns(UserWarning, match="completely"):
-            BoundingBox(top_left=top_left, bottom_right=bottom_right)
+            BoundingBox.from_left_top_right_bottom(
+                left=4.0, top=5.0, right=4.0, bottom=5.0
+            )
 
 
 def test_from_center_xywh():
     """Tests the from_center_xywh constructor."""
-    true_bounding_box: BoundingBox = BoundingBox(
-        top_left=Point(x=1.0, y=1.0), bottom_right=Point(x=3.0, y=10.0)
+    true_bounding_box: BoundingBox = BoundingBox.from_left_top_right_bottom(
+        left=1.0, top=1.0, right=3.0, bottom=10.0
     )
-    center_x: float = 2.0
-    center_y: float = 5.5
-    width: float = 2.0
-    height: float = 9.0
-
     constructed_bounding_box: BoundingBox = BoundingBox.from_center_xywh(
-        center_x, center_y, width, height
+        x_center=2.0, y_center=5.5, width=2.0, height=9.0
     )
 
     assert constructed_bounding_box == true_bounding_box
