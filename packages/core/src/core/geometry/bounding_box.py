@@ -116,6 +116,14 @@ class BoundingBox(BaseModel):
         """The top right of the bounding box."""
         return Point(x=self.left, y=self.bottom)
 
+    @computed_field
+    @property
+    def center(self) -> Point:
+        """The center of the bounding box."""
+        return Point(
+            x=(1 / 2) * (self.left + self.right), y=(1 / 2) * (self.top + self.bottom)
+        )
+
     @classmethod
     def from_center_xywh(
         cls, x_center: float, y_center: float, width: float, height: float
