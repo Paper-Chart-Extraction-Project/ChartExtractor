@@ -11,21 +11,21 @@ class TestPointValidation:
 
     def test_top_left_lower_than_bottom_right(self):
         """Tests the model validator where the top left is lower than the bottom right."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="is lower than"):
             BoundingBox.from_left_top_right_bottom(
                 left=1.0, top=4.0, right=3.0, bottom=2.0
             )
 
     def test_top_left_further_right_than_bottom_right(self):
         """Tests the model validator where the top left is further right than the bottom right."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="is further right than"):
             BoundingBox.from_left_top_right_bottom(
                 left=3.0, top=2.0, right=1.0, bottom=4.0
             )
 
     def test_top_left_lower_and_further_right_than_bottom_right(self):
         """Tests the model validator where the top left is lower and further right than the bottom right."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="is lower and further right than"):
             BoundingBox.from_left_top_right_bottom(
                 left=3.0, top=4.0, right=1.0, bottom=2.0
             )
