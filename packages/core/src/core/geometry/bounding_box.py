@@ -1,6 +1,6 @@
 """Contains the BoundingBox class."""
 
-from core.geometry.point import Point
+from core.geometry import Point
 from pydantic import BaseModel, computed_field, ConfigDict, model_validator
 from typing import Optional
 from typing_extensions import Dict, Self, Tuple

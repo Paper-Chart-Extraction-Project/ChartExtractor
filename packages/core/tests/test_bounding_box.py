@@ -1,7 +1,7 @@
 """A series of tests for BoundingBox."""
 
-from core.geometry.bounding_box import BoundingBox
-from core.geometry.point import Point
+from core.geometry import BoundingBox
+from core.geometry import Point
 import pytest
 
 
