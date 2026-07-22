@@ -54,6 +54,25 @@ class TestDegeneracyWarning:
             )
 
 
+class TestNegativeWidthHeightFromTopLeftXYWH:
+    """A group of tests that ensures the width/height validation in the from_top_left_xywh constructor."""
+
+    def test_from_top_left_xywh_negative_width(self):
+        """Tests that negative width raises ValueError."""
+        with pytest.raises(ValueError, match="non-negative"):
+            BoundingBox.from_top_left_xywh(left=0, top=0, width=-5, height=10)
+
+    def test_from_top_left_xywh_negative_height(self):
+        """Tests that negative height raises ValueError."""
+        with pytest.raises(ValueError, match="non-negative"):
+            BoundingBox.from_top_left_xywh(left=0, top=0, width=5, height=-10)
+
+    def test_from_top_left_xywh_both_negative(self):
+        """Tests that both negative dimensions raise ValueError."""
+        with pytest.raises(ValueError, match="non-negative"):
+            BoundingBox.from_top_left_xywh(left=0, top=0, width=-5, height=-10)
+
+
 def test_from_center_xywh():
     """Tests the from_center_xywh constructor."""
     true_bounding_box: BoundingBox = BoundingBox.from_left_top_right_bottom(
