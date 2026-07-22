@@ -101,3 +101,25 @@ def test_computed_properties():
     assert bbox.center == Point(x=5.0, y=7.0)
     assert bbox.top_right == Point(x=8.0, y=3.0)
     assert bbox.bottom_left == Point(x=2.0, y=11.0)
+
+
+def test_all_constructors_produce_same_result():
+    """Tests that all constructors create the same BoundingBox.
+
+    Tests that the constructors all create the same BoundingBox when supplied with parameters
+    that *ought* to create the same BoundingBox internally.
+    """
+    # Direct construction
+    bbox1 = BoundingBox.from_left_top_right_bottom(
+        left=2.0, top=3.0, right=8.0, bottom=11.0
+    )
+
+    # From top-left
+    bbox2 = BoundingBox.from_top_left_xywh(left=2.0, top=3.0, width=6.0, height=8.0)
+
+    # From center
+    bbox3 = BoundingBox.from_center_xywh(
+        x_center=5.0, y_center=7.0, width=6.0, height=8.0
+    )
+
+    assert bbox1 == bbox2 == bbox3
