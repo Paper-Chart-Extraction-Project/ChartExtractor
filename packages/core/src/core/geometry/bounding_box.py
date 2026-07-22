@@ -2,7 +2,8 @@
 
 from core.geometry.point import Point
 from pydantic import BaseModel, ConfigDict, model_validator
-from typing_extensions import Self
+from typing import Optional
+from typing_extensions import Dict, Self
 
 
 class BoundingBox(BaseModel):
@@ -140,3 +141,29 @@ class BoundingBox(BaseModel):
         bottom_right: Point = Point(x=right, y=bottom)
 
         return cls(top_left=top_left, bottom_right=bottom_right)
+
+    @classmethod
+    def from_yolo(
+        cls,
+        yolo_line: str,
+        image_width: Optional[int],
+        image_height: Optional[int],
+        id_to_category_map: Optional[Dict[int, str]],
+    ) -> "BoundingBox":
+        """Creates a BoundingBox from a line in a yolo labels file.
+
+        Args:
+            yolo_line (str):
+                A single line from a yolo labels file.
+            image_width (Optional[int]):
+                The image's width that the label is for. If not supplied, the values are left as
+                the image-normalized values.
+            image_height (Optional[int]):
+                The image's height that the label is for. If not supplied, the values are left as
+                the image-normalized values.
+            id_to_category_map (Optional[Dict[int, str]]):
+                The mapping from the numbered category to the name of the category. If not
+                supplied, the number category is converted directly to a string
+                (eg: 5 -> "5").
+        """
+        raise NotImplementedError()
