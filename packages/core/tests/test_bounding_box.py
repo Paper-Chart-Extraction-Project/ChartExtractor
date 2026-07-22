@@ -163,3 +163,17 @@ def test_all_constructors_produce_same_result():
     )
 
     assert bbox1 == bbox2 == bbox3
+
+
+def test_negative_coordinates_allowed():
+    """Tests that bounding boxes *can* have negative coordinates.
+
+    Supposing an attempt to change this happens later, this will serve as a reminder that, by the
+    definitions, this is allowed, and can in some datasets be relied upon.
+    """
+    bbox = BoundingBox.from_left_top_right_bottom(
+        left=-5.0, top=-3.0, right=2.0, bottom=4.0
+    )
+    assert bbox.left == -5.0
+    assert bbox.top == -3.0
+    assert bbox.width == 7.0
