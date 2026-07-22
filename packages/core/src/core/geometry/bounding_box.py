@@ -1,6 +1,7 @@
 """Contains the BoundingBox class."""
 
 from core.geometry import Point
+import math
 from pydantic import BaseModel, computed_field, ConfigDict, model_validator
 from typing import Optional
 from typing_extensions import Dict, Self, Tuple
@@ -66,18 +67,18 @@ class BoundingBox(BaseModel):
     @model_validator(mode="after")
     def warn_on_degenerate_bounding_box(self) -> Self:
         """Warns the user if the BoundingBox is degenerate (has an area of 0)."""
-        is_left_right_degenerate: bool = self.left == self.right
-        is_top_bottom_degenerate: bool = self.top == self.bottom
+        left_right_degen: bool = math.isclose(self.left, self.right, rel_tol=1e-9)
+        top_bottom_degen: bool = math.isclose(self.top, self.bottom, rel_tol=1e-9)
 
-        if is_left_right_degenerate and is_top_bottom_degenerate:
+        if left_right_degen and top_bottom_degen:
             warnings.warn(
                 f"{self} is a completely degenerate (area=0) BoundingBox.", UserWarning
             )
-        elif is_left_right_degenerate:
+        elif left_right_degen:
             warnings.warn(
                 f"{self} is a left-right degenerate (area=0) BoundingBox.", UserWarning
             )
-        elif is_top_bottom_degenerate:
+        elif top_bottom_degen:
             warnings.warn(
                 f"{self} is a top-bottom degenerate (area=0) BoundingBox.", UserWarning
             )
