@@ -50,7 +50,7 @@ class BoundingBox(BaseModel):
 
         if not top_left_is_further_left and not top_left_is_higher:
             raise ValueError(
-                f"Top left point of {self} is higher and further right of its bottom right point."
+                f"Top left point of {self} is lower and further right of its bottom right point."
             )
         if not top_left_is_further_left:
             raise ValueError(
@@ -58,7 +58,7 @@ class BoundingBox(BaseModel):
             )
         if not top_left_is_higher:
             raise ValueError(
-                f"Top left point of {self} is higher than its bottom right point."
+                f"Top left point of {self} is lower than its bottom right point."
             )
 
         return self
