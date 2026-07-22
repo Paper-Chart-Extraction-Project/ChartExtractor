@@ -1,11 +1,14 @@
 """Contains the BoundingBox class."""
 
-from ChartExtractor.core.geometry import point
-from pydantic import BaseModel, ConfigDict
+from core.geometry.point import Point
+from pydantic import BaseModel, ConfigDict, model_validator
+from typing_extensions import Self
 
 
 class BoundingBox(BaseModel):
     """Represents a rectangle drawn around an object on an image.
+
+    Immutable, should be changed by creating new BoundingBoxes.
 
     Attributes:
         left (float):
@@ -31,3 +34,8 @@ class BoundingBox(BaseModel):
         _bottom_right (Point):
             The top left point of the bounding box.
     """
+
+    model_config = ConfigDict(frozen=True)
+
+    _top_left: Point
+    _bottom_right: Point
