@@ -73,6 +73,35 @@ class TestNegativeWidthHeightFromTopLeftXYWH:
             BoundingBox.from_top_left_xywh(left=0, top=0, width=-5, height=-10)
 
 
+class TestConstructorRoundTrips:
+    """A series of sanity-check tests that ensure going to and from BoundingBox 'encodings' works."""
+
+    ORIGINAL_BBOX: BoundingBox = BoundingBox.from_left_top_right_bottom(
+        left=2.0, top=3.0, right=8.0, bottom=11.0
+    )
+
+    def test_to_center_xywh_round_trip(self):
+        """Tests that converting to center+width/height format and back works."""
+        x_center, y_center, width, height = self.ORIGINAL_BBOX.to_center_xywh()
+        reconstructed = BoundingBox.from_center_xywh(x_center, y_center, width, height)
+
+        assert reconstructed == self.ORIGINAL_BBOX
+
+    def test_to_top_left_xywh_round_trip(self):
+        """Tests that converting to top-left format and back works."""
+        left, top, width, height = self.ORIGINAL_BBOX.to_top_left_xywh()
+        reconstructed = BoundingBox.from_top_left_xywh(left, top, width, height)
+
+        assert reconstructed == self.ORIGINAL_BBOX
+
+    def test_to_left_top_right_bottom_round_trip(self):
+        """Tests that converting to ltrb format and back works."""
+        left, top, right, bottom = self.ORIGINAL_BBOX.to_left_top_right_bottom()
+        reconstructed = BoundingBox.from_left_top_right_bottom(left, top, right, bottom)
+
+        assert reconstructed == self.ORIGINAL_BBOX
+
+
 def test_from_center_xywh():
     """Tests the from_center_xywh constructor."""
     true_bounding_box: BoundingBox = BoundingBox.from_left_top_right_bottom(
