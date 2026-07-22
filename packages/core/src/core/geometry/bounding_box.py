@@ -39,3 +39,17 @@ class BoundingBox(BaseModel):
 
     _top_left: Point
     _bottom_right: Point
+
+    @model_validator(mode="after")
+    def check_top_left_higher_and_further_left_of_bottom_right(self) -> Self:
+        """Ensures that the top left point is higher and further to the left of the bottom right."""
+        if self._top_left.x > self._bottom_right.x:
+            raise ValueError(
+                f"Top left point of {self} is further right than its bottom right point."
+            )
+        if self._top_left.y > self._bottom_right.y:
+            raise ValueError(
+                f"Top left point of {self} is higher than its bottom right point."
+            )
+
+        return self
