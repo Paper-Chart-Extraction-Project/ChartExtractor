@@ -259,6 +259,13 @@ class BoundingBox(BaseModel):
                 The mapping from the numbered category to the name of the category. If not
                 supplied, the number category is converted directly to a string
                 (eg: 5 -> "5").
+
+        Returns:
+            A BoundingBox with the data from the yolo line.
+
+        Raises:
+            ValueError:
+                If there is an issue with the formatting of the yolo line.
         """
         raise NotImplementedError()
 
