@@ -8,7 +8,9 @@ from typing_extensions import Self
 class BoundingBox(BaseModel):
     """Represents a rectangle drawn around an object on an image.
 
-    Immutable, should be changed by creating new BoundingBoxes.
+    Assumes that the top left of the image is the (0, 0) coordinate. Or, in other words, that
+    the x axis runs from left to right, and the y axis runs from top to bottom.
+    Immutable, must be changed by creating new BoundingBoxes.
 
     Attributes:
         top_left (Point):
@@ -41,11 +43,18 @@ class BoundingBox(BaseModel):
     @model_validator(mode="after")
     def check_top_left_higher_and_further_left_of_bottom_right(self) -> Self:
         """Ensures that the top left point is higher and further to the left of the bottom right."""
-        if self.top_left.x > self.bottom_right.x:
+        top_left_is_further_left: bool = self.top_left.x <= self.bottom_right.x
+        top_left_is_higher: bool = self.top_left.y <= self.bottom_right.y
+
+        if not top_left_is_further_left and not top_left_is_higher:
+            raise ValueError(
+                f"Top left point of {self} is higher and further right of its bottom right point."
+            )
+        if not top_left_is_further_left:
             raise ValueError(
                 f"Top left point of {self} is further right than its bottom right point."
             )
-        if self.top_left.y > self.bottom_right.y:
+        if not top_left_is_higher:
             raise ValueError(
                 f"Top left point of {self} is higher than its bottom right point."
             )
