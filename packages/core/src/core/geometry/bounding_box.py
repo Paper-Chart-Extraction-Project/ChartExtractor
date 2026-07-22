@@ -3,7 +3,7 @@
 from core.geometry.point import Point
 from pydantic import BaseModel, computed_field, ConfigDict, model_validator
 from typing import Optional
-from typing_extensions import Dict, Self
+from typing_extensions import Dict, Self, Tuple
 
 
 class BoundingBox(BaseModel):
@@ -159,6 +159,8 @@ class BoundingBox(BaseModel):
     ) -> "BoundingBox":
         """Creates a BoundingBox from the top, left, width, and height of the box.
 
+        Note the order of the arguments.
+
         Args:
             left (float):
                 The x coordinate of the left of the bounding box.
@@ -229,3 +231,29 @@ class BoundingBox(BaseModel):
                 (eg: 5 -> "5").
         """
         raise NotImplementedError()
+
+    def to_center_xywh(self) -> Tuple[float, float, float, float]:
+        """Returns this BoundingBox as a tuple containing the center, width, and height.
+
+        Returns:
+            A tuple containing the bbox's (x center, y center, width, height).
+        """
+        return (self.center.x, self.center.y, self.width, self.height)
+
+    def to_top_left_xywh(self) -> Tuple[float, float, float, float]:
+        """Returns this BoundingBox as a tuple containing the left, top, width, and height.
+
+        Note the order of the return is left, top, width, height, not top, left ...
+
+        Returns:
+            A tuple containing the bbox's (left, top, width, the height).
+        """
+        return (self.left, self.top, self.width, self.height)
+
+    def to_left_top_right_bottom(self) -> Tuple[float, float, float, float]:
+        """Returns this BoundingBox as a tuple containing the left, top, right, bottom.
+
+        Returns:
+            A tuple containing the bbox's (left, top, right, bottom).
+        """
+        return (self.left, self.top, self.right, self.bottom)
