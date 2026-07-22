@@ -109,4 +109,10 @@ class BoundingBox(BaseModel):
         Returns:
             A BoundingBox at the location supplied in the arguments.
         """
-        raise NotImplementedError()
+        right: float = left + width
+        bottom: float = top + height
+
+        top_left: Point = Point(x=left, y=top)
+        bottom_right: Point = Point(x=right, y=bottom)
+
+        return cls(top_left=top_left, bottom_right=bottom_right)
