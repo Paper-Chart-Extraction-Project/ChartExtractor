@@ -1,1 +1,34 @@
 """A series of tests for BoundingBox."""
+
+from core.geometry.bounding_box import BoundingBox
+from core.geometry.point import Point
+import pytest
+
+
+class TestPointValidation:
+    def test_top_left_higher_and_further_left_of_bottom_right(self):
+        """Tests the normal construction of the BoundingBox with valid points."""
+        top_left: Point = Point(x=1.0, y=2.0)
+        bottom_right: Point = Point(x=3.0, y=4.0)
+        BoundingBox(top_left=top_left, bottom_right=bottom_right)
+
+    def test_top_left_lower_than_bottom_right(self):
+        """Tests the model validator where the top left is lower than the bottom right."""
+        top_left: Point = Point(x=1.0, y=4.0)
+        bottom_right: Point = Point(x=3.0, y=2.0)
+        with pytest.raises(ValueError):
+            BoundingBox(top_left=top_left, bottom_right=bottom_right)
+
+    def test_top_left_further_right_than_bottom_right(self):
+        """Tests the model validator where the top left is further right than the bottom right."""
+        top_left: Point = Point(x=3.0, y=2.0)
+        bottom_right: Point = Point(x=1.0, y=4.0)
+        with pytest.raises(ValueError):
+            BoundingBox(top_left=top_left, bottom_right=bottom_right)
+
+    def test_top_left_lower_and_further_right_than_bottom_right(self):
+        """Tests the model validator where the top left is lower and further right than the bottom right."""
+        top_left: Point = Point(x=3.0, y=4.0)
+        bottom_right: Point = Point(x=1.0, y=2.0)
+        with pytest.raises(ValueError):
+            BoundingBox(top_left=top_left, bottom_right=bottom_right)
