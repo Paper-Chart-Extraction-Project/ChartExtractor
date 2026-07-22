@@ -4,6 +4,7 @@ from core.geometry import Point
 from pydantic import BaseModel, computed_field, ConfigDict, model_validator
 from typing import Optional
 from typing_extensions import Dict, Self, Tuple
+import warnings
 
 
 class BoundingBox(BaseModel):
@@ -58,6 +59,27 @@ class BoundingBox(BaseModel):
         if not top_left_is_higher:
             raise ValueError(
                 f"Top left point of {self} is higher than its bottom right point."
+            )
+
+        return self
+
+    @model_validator(mode="after")
+    def warn_on_degenerate_bounding_box(self) -> Self:
+        """Warns the user if the BoundingBox is degenerate (has an area of 0)."""
+        is_left_right_degenerate: bool = self.left == self.right
+        is_top_bottom_degenerate: bool = self.top == self.bottom
+
+        if is_left_right_degenerate and is_top_bottom_degenerate:
+            warnings.warn(
+                f"{self} is a completely degenerate (area=0) BoundingBox.", UserWarning
+            )
+        elif is_left_right_degenerate:
+            warnings.warn(
+                f"{self} is a left-right degenerate (area=0) BoundingBox.", UserWarning
+            )
+        elif is_top_bottom_degenerate:
+            warnings.warn(
+                f"{self} is a top-bottom degenerate (area=0) BoundingBox.", UserWarning
             )
 
         return self
