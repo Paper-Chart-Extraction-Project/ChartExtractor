@@ -18,7 +18,7 @@ class BoundingBox(BaseModel):
         top_left (Point):
             The top left point of the bounding box.
         bottom_right (Point):
-            The top left point of the bounding box.
+            The bottom right point of the bounding box.
         left (float):
             The left side of the bounding box.
         top (float):
