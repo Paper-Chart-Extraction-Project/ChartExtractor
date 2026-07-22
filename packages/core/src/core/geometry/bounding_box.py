@@ -195,7 +195,15 @@ class BoundingBox(BaseModel):
 
         Returns:
             A BoundingBox at the location supplied in the arguments.
+
+        Raises:
+            ValueError:
+                If width or height is negative.
         """
+        if width < 0 or height < 0:
+            raise ValueError(
+                f"Width and height must be non-negative (width={width}, height={height})."
+            )
         right: float = left + width
         bottom: float = top + height
 
