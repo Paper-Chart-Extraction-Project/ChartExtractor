@@ -1,7 +1,7 @@
 """Contains the BoundingBox class."""
 
 from core.geometry.point import Point
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, computed_field, ConfigDict, model_validator
 from typing import Optional
 from typing_extensions import Dict, Self
 
@@ -61,6 +61,30 @@ class BoundingBox(BaseModel):
             )
 
         return self
+
+    @computed_field
+    @property
+    def left(self) -> float:
+        """The left of the bounding box."""
+        return self.top_left.x
+
+    @computed_field
+    @property
+    def top(self) -> float:
+        """The top of the bounding box."""
+        return self.top_left.y
+
+    @computed_field
+    @property
+    def right(self) -> float:
+        """The right of the bounding box."""
+        return self.bottom_right.x
+
+    @computed_field
+    @property
+    def bottom(self) -> float:
+        """The bottom of the bounding box."""
+        return self.bottom_right.y
 
     @classmethod
     def from_center_xywh(
