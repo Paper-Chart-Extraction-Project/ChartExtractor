@@ -37,15 +37,24 @@ class TestPointValidation:
 class TestDegeneracyWarning:
     def test_warning_left_equals_right(self):
         """Tests that a warning emits when the box's left equals its right."""
-        raise NotImplementedError()
+        top_left: Point = Point(x=5.0, y=4.0)
+        bottom_right: Point = Point(x=5.0, y=10.0)
+        with pytest.warns(UserWarning, match="left-right"):
+            BoundingBox(top_left=top_left, bottom_right=bottom_right)
 
     def test_warning_top_equals_bottom(self):
         """Tests that a warning emits when the box's top equals its bottom."""
-        raise NotImplementedError()
+        top_left: Point = Point(x=4.0, y=5.0)
+        bottom_right: Point = Point(x=10.0, y=5.0)
+        with pytest.warns(UserWarning, match="top-bottom"):
+            BoundingBox(top_left=top_left, bottom_right=bottom_right)
 
     def test_warning_top_equals_bottom_and_left_equals_right(self):
         """Tests that a warning emits when the box's left equals its right and top equals its bottom."""
-        raise NotImplementedError()
+        top_left: Point = Point(x=4.0, y=5.0)
+        bottom_right: Point = Point(x=4.0, y=5.0)
+        with pytest.warns(UserWarning, match="completely"):
+            BoundingBox(top_left=top_left, bottom_right=bottom_right)
 
 
 def test_from_center_xywh():
