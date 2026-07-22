@@ -2,6 +2,7 @@
 
 from core.geometry import BoundingBox, Point
 import pytest
+import warnings
 
 
 class TestPointValidation:
@@ -51,6 +52,16 @@ class TestDegeneracyWarning:
         with pytest.warns(UserWarning, match="completely"):
             BoundingBox.from_left_top_right_bottom(
                 left=4.0, top=5.0, right=4.0, bottom=5.0
+            )
+
+    def test_nearly_degenerate(self):
+        """Tests that boxes very close to degenerate don't falsely warn."""
+        # This should NOT warn (difference is larger than the hard-coded rel_tol=1e-9)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+
+            BoundingBox.from_left_top_right_bottom(
+                left=1.0, top=2.0, right=1.0 + 1e-8, bottom=10.0
             )
 
 
