@@ -1,6 +1,6 @@
 """A series of tests for BoundingBox."""
 
-from core.geometry import BoundingBox
+from core.geometry import BoundingBox, Point
 import pytest
 
 
@@ -83,3 +83,21 @@ def test_from_center_xywh():
     )
 
     assert constructed_bounding_box == true_bounding_box
+
+
+def test_computed_properties():
+    """Tests that all computed properties return expected values."""
+    bbox = BoundingBox.from_left_top_right_bottom(
+        left=2.0, top=3.0, right=8.0, bottom=11.0
+    )
+
+    assert bbox.left == 2.0
+    assert bbox.top == 3.0
+    assert bbox.right == 8.0
+    assert bbox.bottom == 11.0
+    assert bbox.width == 6.0
+    assert bbox.height == 8.0
+    assert bbox.area == 48.0
+    assert bbox.center == Point(x=5.0, y=7.0)
+    assert bbox.top_right == Point(x=8.0, y=3.0)
+    assert bbox.bottom_left == Point(x=2.0, y=11.0)
