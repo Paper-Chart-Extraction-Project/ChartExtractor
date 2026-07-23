@@ -3,7 +3,7 @@
 from core.geometry import Point
 import math
 from pydantic import BaseModel, computed_field, ConfigDict, model_validator
-from typing_extensions import Dict, Self, Tuple
+from typing_extensions import Self, Tuple
 import warnings
 
 
