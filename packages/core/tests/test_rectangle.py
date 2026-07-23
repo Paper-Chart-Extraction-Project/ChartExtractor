@@ -177,3 +177,67 @@ def test_negative_coordinates_allowed():
     assert rect.left == -5.0
     assert rect.top == -3.0
     assert rect.width == 7.0
+
+
+class TestContainsPoint:
+    """A test class containing tests for the contains_point method."""
+
+    test_rectangle: Rectangle = Rectangle.from_left_top_right_bottom(
+        left=1.0, top=0.0, right=4.0, bottom=3.0
+    )
+
+    def test_contains_point_full_inside(self):
+        """Tests the contains_point method for a point that is fully inside the rectangle."""
+        test_point: Point = Point(x=2.5, y=1.0)
+        assert self.test_rectangle.contains_point(test_point)
+
+    def test_contains_point_on_left_border(self):
+        """Tests the contains_point method for a point that lies on the left border."""
+        test_point: Point = Point(x=1.0, y=1.0)
+        assert self.test_rectangle.contains_point(test_point)
+
+    def test_contains_point_on_top_border(self):
+        """Tests the contains_point method for a point that lies on the top border."""
+        test_point: Point = Point(x=2.5, y=0.0)
+        assert self.test_rectangle.contains_point(test_point)
+
+    def test_contains_point_on_right_border(self):
+        """Tests the contains_point method for a point that lies on the right border."""
+        test_point: Point = Point(x=4.0, y=1.0)
+        assert self.test_rectangle.contains_point(test_point)
+
+    def test_contains_point_on_bottom_border(self):
+        """Tests the contains_point method for a point that lies on the bottom border."""
+        test_point: Point = Point(x=2.5, y=3.0)
+        assert self.test_rectangle.contains_point(test_point)
+
+    def test_contains_point_on_top_left(self):
+        """Tests the contains_point method for a point that lies exactly at the top left."""
+        assert self.test_rectangle.contains_point(self.test_rectangle.top_left)
+
+    def test_contains_point_on_top_right(self):
+        """Tests the contains_point method for a point that lies exactly at the top right."""
+        assert self.test_rectangle.contains_point(self.test_rectangle.top_right)
+
+    def test_contains_point_on_bottom_left(self):
+        """Tests the contains_point method for a point that lies exactly at the bottom left."""
+        assert self.test_rectangle.contains_point(self.test_rectangle.bottom_left)
+
+    def test_contains_point_on_bottom_right(self):
+        """Tests the contains_point method for a point that lies exactly at the bottom right."""
+        assert self.test_rectangle.contains_point(self.test_rectangle.bottom_right)
+
+    def test_contains_point_outside_x_in_range_y_not_in_range(self):
+        """Tests the contains_point method for a point that lies outside the rectangle."""
+        test_point: Point = Point(x=2.5, y=-1.0)
+        assert not self.test_rectangle.contains_point(test_point)
+
+    def test_contains_point_outside_y_in_range_x_not_in_range(self):
+        """Tests the contains_point method for a point that lies outside the rectangle."""
+        test_point: Point = Point(x=5.0, y=1.0)
+        assert not self.test_rectangle.contains_point(test_point)
+
+    def test_contains_point_outside_x_and_y_not_in_range(self):
+        """Tests the contains_point method for a point that lies outside the rectangle."""
+        test_point: Point = Point(x=5.0, y=-1.0)
+        assert not self.test_rectangle.contains_point(test_point)

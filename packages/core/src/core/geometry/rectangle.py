@@ -3,7 +3,8 @@
 from core.geometry import Point
 import math
 from pydantic import BaseModel, computed_field, ConfigDict, model_validator
-from typing_extensions import Self, Tuple
+from typing import Tuple
+from typing_extensions import Self
 import warnings
 
 
@@ -261,3 +262,20 @@ class Rectangle(BaseModel):
             A tuple containing the rectangle's (left, top, right, bottom).
         """
         return (self.left, self.top, self.right, self.bottom)
+
+    def contains_point(self, p: Point) -> bool:
+        """Whether or not this rectangle contains the point p.
+
+        If a point lies on the border of a bounding box, it is considered inside.
+
+        Args:
+            p (Point):
+                The point in question.
+
+        Returns:
+            Whether or not this rectangle contains the point p, or whether p is on the border
+            of this rectangle.
+        """
+        return all(
+            [self.left <= p.x, self.right >= p.x, self.top <= p.y, self.bottom >= p.y]
+        )
