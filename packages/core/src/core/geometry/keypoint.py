@@ -1,7 +1,7 @@
 """Contains the Keypoint class."""
 
 from core.geometry import Point
-from pydantic import ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field
 from enum import StrEnum
 
 
@@ -13,10 +13,12 @@ class VisibilityStatus(StrEnum):
     MISSING = "missing"
 
 
-class Keypoint(Point):
+class Keypoint(BaseModel):
     """A point with a classification.
 
     Attributes:
+        point (Point):
+            The point on the image for this keypoint.
         category (str):
             The keypoint's category. Cannot be empty.
         visibility (VisibilityStatus):
@@ -25,5 +27,6 @@ class Keypoint(Point):
 
     model_config = ConfigDict(frozen=True)
 
+    point: Point
     category: str = Field(min_length=1)
     visibility: VisibilityStatus
