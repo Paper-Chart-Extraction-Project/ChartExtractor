@@ -1,6 +1,6 @@
 """Contains the BoundingBoxWithKeypoints class."""
 
-from core.geometry import BoundingBox, Keypoint
+from core.annotations import BoundingBox, Keypoint
 from pydantic import BaseModel, ConfigDict, model_validator
 from typing import List
 from typing_extensions import Self

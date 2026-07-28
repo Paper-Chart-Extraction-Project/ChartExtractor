@@ -15,5 +15,6 @@ class BoundingBox(BaseModel):
     """
 
     model_config = ConfigDict(frozen=True)
+
     rectangle: Rectangle
     category: str = Field(min_length=1)

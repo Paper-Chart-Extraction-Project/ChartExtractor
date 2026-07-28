@@ -1,13 +1,12 @@
 """A series of tests for BoundingBoxWithKeypoints."""
 
-from core.geometry import (
+from core.annotations import (
     BoundingBox,
     BoundingBoxWithKeypoints,
     Keypoint,
-    Point,
-    Rectangle,
     VisibilityStatus,
 )
+from core.geometry import Point, Rectangle
 import pytest
 from typing import List
 import warnings
