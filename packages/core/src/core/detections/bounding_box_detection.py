@@ -1,7 +1,8 @@
 """Contains the BoundingBoxDetection class."""
 
 from core.geometry import Rectangle
-from pydantic import BaseModel, ConfigDict
+from functools import cached_property
+from pydantic import BaseModel, ConfigDict, computed_field
 
 
 class BoundingBoxDetection(BaseModel):
@@ -24,3 +25,26 @@ class BoundingBoxDetection(BaseModel):
 
     rectangle: Rectangle
     category_scores: list[float]
+
+    @computed_field
+    @cached_property
+    def confidence(self) -> float:
+        """The highest confidence probability among all the category confidences.
+
+        Returns:
+            The confidence probability associated with the category of highest confidence.
+            Typically this is considered what the model 'classifies' this detection as.
+        """
+        return max(self.category_scores)
+
+    @computed_field
+    @cached_property
+    def top_category_id(self) -> int:
+        """The index of the category with the highest confidence.
+
+        Breaks ties by selecting the first occurance of the id with maximum confidence.
+
+        Returns:
+            The index of the category with the highest confidence.
+        """
+        return self.category_scores.index(self.confidence)
