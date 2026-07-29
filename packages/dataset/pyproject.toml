@@ -1,18 +1,20 @@
 [project]
-name = "core"
+name = "dataset"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 authors = [
     { name = "RyanDoesMath", email = "rfolks92@gmail.com" }
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 dependencies = [
+    "core",
+    "image",
     "pydantic>=2.13.4",
 ]
 
 [project.scripts]
-core = "core:main"
+dataset = "dataset:main"
 
 [build-system]
 requires = ["uv_build>=0.11.29,<0.12.0"]
@@ -21,5 +23,9 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
-    "ruff>=0.15.22",
+    "ruff>=0.16.0",
 ]
+
+[tool.uv.sources]
+core = { path = "../core" }
+image = { path = "../image" }
