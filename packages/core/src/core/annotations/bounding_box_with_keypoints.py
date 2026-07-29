@@ -1,9 +1,10 @@
 """Contains the BoundingBoxWithKeypoints class."""
 
-from core.annotations import BoundingBox, Keypoint
-from pydantic import BaseModel, ConfigDict, model_validator
+from core.annotations import AnnotationId, BoundingBox, Keypoint
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing import List
 from typing_extensions import Self
+from uuid import uuid4
 import warnings
 
 
@@ -15,12 +16,15 @@ class BoundingBoxWithKeypoints(BaseModel):
             The bounding box.
         keypoints (List[Keypoint]):
             One or more keypoints associated with the box.
+        annotation_id (AnnotationId):
+            The annotations unique identifier.
     """
 
     model_config = ConfigDict(frozen=True)
 
     bounding_box: BoundingBox
     keypoints: List[Keypoint]
+    annotation_id: AnnotationId = Field(default_factory=uuid4)
 
     @model_validator(mode="after")
     def warn_keypoints_not_contained_in_box(self) -> Self:
