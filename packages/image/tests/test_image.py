@@ -1,14 +1,14 @@
 """A series of tests for the Image class."""
 
+import os
+import sys
 from pathlib import Path
 
 import cv2
 import numpy as np
 import pytest
 from conftest import TEST_DATA_DIR
-import os
 from PIL import Image as PILImage
-import sys
 
 from image import Image, ImageMetadata, UnloadedImage
 

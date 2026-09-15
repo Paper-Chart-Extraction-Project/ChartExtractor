@@ -21,10 +21,28 @@ wheels = [
 ]
 
 [[package]]
+name = "core"
+version = "0.1.0"
+source = { directory = "../core" }
+dependencies = [
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pydantic", specifier = ">=2.13.4" }]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=9.1.1" },
+    { name = "ruff", specifier = ">=0.15.22" },
+]
+
+[[package]]
 name = "image"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "core" },
     { name = "numpy" },
     { name = "opencv-python" },
     { name = "pillow" },
@@ -39,6 +57,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "core", directory = "../core" },
     { name = "numpy", specifier = ">=2.5.1" },
     { name = "opencv-python", specifier = ">=5.0.0.93" },
     { name = "pillow", specifier = ">=12.3.0" },
