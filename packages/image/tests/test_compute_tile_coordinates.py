@@ -4,10 +4,10 @@ import pytest
 from core.geometry import Rectangle
 from tile.compute_tile_coordinates import (
     TilingStrategy,
+    _compute_clamp_tile_coordinates,
+    _compute_exact_tile_coordinates,
     _get_clamp_offsets,
     _TilingContext,
-    compute_clamp_tile_coordinates,
-    compute_exact_tile_coordinates,
 )
 
 
@@ -133,7 +133,7 @@ def test_compute_exact_tile_coordinates():
     tiling_context: _TilingContext = generate_tiling_context(
         tile_width=50, tile_height=100, x_pixel_overlap=25, y_pixel_overlap=50
     )
-    tile_coords: list[Rectangle] = compute_exact_tile_coordinates(tiling_context)
+    tile_coords: list[Rectangle] = _compute_exact_tile_coordinates(tiling_context)
     true_tile_coords: list[Rectangle] = [
         [
             Rectangle.from_left_top_right_bottom(
@@ -185,7 +185,7 @@ class TestComputeClampTileCoordinates:
             y_pixel_overlap=50,
             tiling_strategy=TilingStrategy.CLAMP,
         )
-        tile_coords: list[Rectangle] = compute_clamp_tile_coordinates(tiling_context)
+        tile_coords: list[Rectangle] = _compute_clamp_tile_coordinates(tiling_context)
         true_tile_coords: list[Rectangle] = [
             [
                 Rectangle.from_left_top_right_bottom(

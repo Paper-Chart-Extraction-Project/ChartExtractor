@@ -141,16 +141,16 @@ def compute_tile_coordinates(
 
     match tiling_strategy:
         case TilingStrategy.EXACT:
-            return compute_exact_tile_coordinates(tiling_context)
+            return _compute_exact_tile_coordinates(tiling_context)
         case TilingStrategy.CLAMP:
-            return compute_clamp_tile_coordinates(tiling_context)
+            return _compute_clamp_tile_coordinates(tiling_context)
         case _:
             raise ValueError(
                 f"No implementation yet for tiling under the {tiling_strategy} strategy."
             )
 
 
-def compute_exact_tile_coordinates(tiling_context: _TilingContext) -> list[Rectangle]:
+def _compute_exact_tile_coordinates(tiling_context: _TilingContext) -> list[Rectangle]:
     """Computes the coordinates for tiles on an image under the EXACT tiling strategy.
 
     Args:
@@ -227,7 +227,7 @@ def _compute_clamp_tile_top_sides(tiling_context: _TilingContext) -> list[int]:
     )
 
 
-def compute_clamp_tile_coordinates(tiling_context: _TilingContext) -> list[Rectangle]:
+def _compute_clamp_tile_coordinates(tiling_context: _TilingContext) -> list[Rectangle]:
     """Computes the coordinates for tiles on an image under the EXACT tiling strategy.
 
     Args:
