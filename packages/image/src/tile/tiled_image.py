@@ -43,7 +43,7 @@ class TiledImage:
         ]
 
     @classmethod
-    def from_tile_size_pixel_overlap(
+    def from_image_and_tiling_parameters(
         cls,
         image: Image,
         tile_width: int,

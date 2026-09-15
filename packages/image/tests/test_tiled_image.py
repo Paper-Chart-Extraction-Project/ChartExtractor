@@ -29,7 +29,7 @@ def test_tiled_image():
         [[pix * power for pix in [0, 1, 2, 3, 4, 5]] for power in range(6)]
     )
     im: Image = Image.from_cv2(im_data, convert_bgr_to_rgb=False)
-    tiled_im: TiledImage = TiledImage.from_tile_size_pixel_overlap(
+    tiled_im: TiledImage = TiledImage.from_image_and_tiling_parameters(
         image=im,
         tile_width=4,
         tile_height=4,
