@@ -6,7 +6,7 @@ import numpy as np
 from core.geometry import Rectangle
 
 from image import Image
-from tile import TilingStrategy, compute_tile_coordinates
+from image.tile import TilingStrategy, compute_tile_coordinates
 
 
 @dataclass(slots=True)
