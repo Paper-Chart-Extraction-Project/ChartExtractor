@@ -222,6 +222,8 @@ class Image:
         Returns:
             An Image from the image path supplied.
         """
+        if isinstance(path, str):
+            path: Path = Path(path)
         return cls._from_metadata(ImageMetadata(path=path))
 
     @classmethod
@@ -325,6 +327,8 @@ class Image:
             ValueError:
                 If force_overwrite is False, and a file exists at output_path.
         """
+        if isinstance(output_path, str):
+            output_path: Path = Path(output_path)
         if output_path.is_dir():
             raise IsADirectoryError(
                 f"The output path ({output_path.resolve()}) to save the image to is a directory, "
