@@ -4,7 +4,7 @@ import numpy as np
 from core.geometry import Rectangle
 
 from image import Image
-from tile import TiledImage, TilingStrategy
+from image.tile import TiledImage, TilingStrategy
 
 
 def test_create_tile():

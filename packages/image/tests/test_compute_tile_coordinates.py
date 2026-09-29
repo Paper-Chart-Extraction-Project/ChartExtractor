@@ -3,7 +3,7 @@
 import pytest
 from core.geometry import Rectangle
 
-from tile.compute_tile_coordinates import (
+from image.tile.compute_tile_coordinates import (
     TilingStrategy,
     _compute_clamp_tile_coordinates,
     _compute_exact_tile_coordinates,
