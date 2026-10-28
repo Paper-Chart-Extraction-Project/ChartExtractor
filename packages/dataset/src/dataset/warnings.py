@@ -5,6 +5,10 @@ class DatasetWarning(UserWarning):
     """A generic warning regarding dataset issues."""
 
 
+class EmptyDatasetWarning(UserWarning):
+    """A warning issued when a dataset is totally empty."""
+
+
 class EmptyEvaluationSetWarning(DatasetWarning):
     """A warning issued when a dataset's optional evaluation set is empty."""
 
