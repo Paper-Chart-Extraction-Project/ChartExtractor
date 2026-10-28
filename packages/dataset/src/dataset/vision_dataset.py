@@ -11,7 +11,7 @@ from typing_extensions import Self
 from .annotated_image import AnnotatedImage
 from .exceptions import DatasetError, OverlappingSplitsError
 from .types import ImageId
-from .warnings import EmptyDatasetWarning, EmptySplitWarning
+from .warnings import EmptyDatasetWarning, EmptyEvaluationSetWarning, EmptySplitWarning
 
 
 class _Splits(TypedDict):
@@ -30,9 +30,16 @@ class VisionDataset(BaseModel):
             The images with annotations that form the dataset.
         dataset_metadata (dict[str, Any]):
             The datasets metadata, if it has any.
-        splits (Splits):
+        splits (_Splits):
             The splits for the dataset. Must include splits for 'train' and 'val'. May optionally
             include a 'test' split.
+        evaluation_sets (dict[str, set[ImageId]]):
+            A dictionary mapping the name of optional "evaluation" sets to a list of image ids in
+            that evaluation set.
+            The purpose of these sets are to organize optional testing sets that may be useful.
+            For example, all 'background' images could be put into an evaluation set, or all
+            images with a density of a certain class over a particular value.
+            These sets can be named anything *except* 'train', 'val', or 'test'.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -40,6 +47,7 @@ class VisionDataset(BaseModel):
     annotated_images: list[AnnotatedImage] = Field(default_factory=list)
     dataset_metadata: dict[str, Any] = Field(default_factory=dict)
     splits: _Splits
+    evaluation_sets: dict[str, set[ImageId]] = Field(default_factory=dict)
 
     @field_validator("annotated_images")
     @classmethod
@@ -119,11 +127,112 @@ class VisionDataset(BaseModel):
 
         return self
 
+    @model_validator(mode="before")
+    @classmethod
+    def check_all_image_ids_in_splits_exist(cls, data: Any) -> Any:
+        """Ensures that every image id in every split belongs to a real image in the dataset."""
+        all_image_ids: set[ImageId] = {img.image_id for img in data["annotated_images"]}
+        image_ids_in_splits_not_in_images: dict[str, set[ImageId]] = {
+            split_name: split_image_ids - all_image_ids
+            for split_name, split_image_ids in data["splits"].items()
+        }
+
+        all_image_ids_in_splits_in_images: bool = all(
+            not images_in_split_not_in_images
+            for images_in_split_not_in_images in image_ids_in_splits_not_in_images.values()
+        )
+
+        if all_image_ids_in_splits_in_images:
+            return data
+
+        err_msg: str = (
+            "Images were found in evaluation sets that don't exist in the dataset.\n"
+        )
+
+        for (
+            split_name,
+            split_image_ids_not_in_images,
+        ) in image_ids_in_splits_not_in_images.items():
+            err_msg += f"Image ids in {split_name} "
+            err_msg += f"not in dataset: {split_image_ids_not_in_images}.\n"
+
+        raise DatasetError(err_msg)
+
+    @field_validator("splits", mode="before")
+    def check_extra_splits_do_not_exist(cls, splits: _Splits) -> _Splits:
+        """Ensures that splits outside of 'train', 'val', and 'test' do not appear in the splits."""
+        extra_keys: set[str] = set(splits.keys()) - {"train", "val", "test"}
+
+        if extra_keys:
+            raise DatasetError(
+                f"Extra keys found in splits dictionary: {', '.join(extra_keys)}."
+            )
+
+        return splits
+
+    @model_validator(mode="after")
+    def check_evaluation_sets_arent_named_after_splits(self) -> Self:
+        """Ensures that the named evaluation sets aren't named 'train', 'val', or 'test'."""
+        restricted_names: set[str] = {"train", "val", "test"}
+        offending_evaluation_set_names: set[str] = restricted_names.intersection(
+            set(self.evaluation_sets.keys())
+        )
+
+        if not offending_evaluation_set_names:
+            return self
+
+        err_msg: str = "Evaluation sets may not be named 'train', 'val', or 'test'. "
+        err_msg += "Found the following evaluation set names: "
+        err_msg += f"{', '.join(offending_evaluation_set_names)}."
+
+        raise DatasetError(err_msg)
+
+    @model_validator(mode="after")
+    def check_evaluation_sets_arent_named_empty_strings(self) -> Self:
+        """Ensures that none of the evaluation sets are named the empty string."""
+        if "" in self.evaluation_sets:
+            raise DatasetError(
+                'The empty string "" may not be the name of an evaluation set.'
+            )
+
+        return self
+
+    @model_validator(mode="after")
+    def check_all_image_ids_in_evaluation_sets_exist(self) -> Self:
+        """Ensures that all the image ids in the evaluation sets actually exist in the dataset."""
+        all_image_ids: set[ImageId] = {img.image_id for img in self.annotated_images}
+        image_ids_in_eval_sets_not_in_images: dict[str, set[ImageId]] = {
+            eval_set_name: eval_set_image_ids - all_image_ids
+            for eval_set_name, eval_set_image_ids in self.evaluation_sets.items()
+        }
+
+        all_image_ids_in_eval_sets_in_images: bool = all(
+            not images_in_eval_set_not_in_images
+            for images_in_eval_set_not_in_images in image_ids_in_eval_sets_not_in_images.values()
+        )
+
+        if all_image_ids_in_eval_sets_in_images:
+            return self
+
+        err_msg: str = (
+            "Images were found in evaluation sets that don't exist in the dataset.\n"
+        )
+        for (
+            eval_set_name,
+            eval_set_image_ids_not_in_images,
+        ) in image_ids_in_eval_sets_not_in_images.items():
+            if not eval_set_image_ids_not_in_images:
+                continue
+            err_msg += f"Image ids in {eval_set_name} "
+            err_msg += f"not in dataset: {eval_set_image_ids_not_in_images}.\n"
+
+        raise DatasetError(err_msg)
+
     @model_validator(mode="after")
     def warn_if_dataset_is_empty(self) -> Self:
         """Warns the user if the dataset is empty."""
         if self.annotated_images == []:
-            warnings.warn("Dataset is empty.", EmptyDatasetWarning)
+            warnings.warn("Dataset is empty.", EmptyDatasetWarning, stacklevel=2)
 
         return self
 
@@ -137,6 +246,25 @@ class VisionDataset(BaseModel):
         for split_name, images_in_split in self.splits.items():
             if images_in_split:
                 continue
-            warnings.warn(f"{split_name} exists but is empty.", EmptySplitWarning)
+            warnings.warn(
+                f"{split_name} exists but is empty.", EmptySplitWarning, stacklevel=2
+            )
+
+        return self
+
+    @model_validator(mode="after")
+    def warn_if_evaluation_sets_are_empty(self) -> Self:
+        """Warns the user if an evaluation set is empty."""
+        for (
+            evaluation_set_name,
+            images_in_evaluation_set,
+        ) in self.evaluation_sets.items():
+            if images_in_evaluation_set:
+                continue
+            warnings.warn(
+                f"{evaluation_set_name} exists but is empty.",
+                EmptyEvaluationSetWarning,
+                stacklevel=2,
+            )
 
         return self
