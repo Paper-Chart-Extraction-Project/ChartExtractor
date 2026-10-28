@@ -1,12 +1,14 @@
 """Contains the AnnotatedImage class."""
 
-from dataset.types import ImageId
+import warnings
+from typing import Any
+from uuid import uuid4
+
 from core.annotations import Annotation
 from image import Image, ImageMetadata
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Any
-from uuid import uuid4
-import warnings
+
+from dataset.types import ImageId
 
 
 class AnnotatedImage(BaseModel):

@@ -1,9 +1,10 @@
 """A collection of series of tests for AnnotatedImage."""
 
+import warnings
+
+import pytest
 from dataset import AnnotatedImage
 from image import ImageMetadata
-import pytest
-import warnings
 
 
 @pytest.fixture
