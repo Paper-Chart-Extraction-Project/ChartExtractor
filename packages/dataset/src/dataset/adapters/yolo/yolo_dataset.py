@@ -1,14 +1,22 @@
 """A module that reads and writes yolo datasets to the intermediate VisionDataset representation."""
 
+import warnings
 from enum import StrEnum
 from functools import cached_property
 from pathlib import Path
 from typing import Any, NotRequired, Required, TypedDict
 
 import yaml
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 from .exceptions import YoloDatasetError
+from .warnings import YoloDatasetWarning
 
 
 class _YoloDatasetType(StrEnum):
@@ -66,9 +74,9 @@ class _YoloDatasetConfig(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    _raw_yaml_data: _RawYamlData
+    raw_yaml_data: _RawYamlData
 
-    @field_validator("_raw_yaml_data", mode="before")
+    @field_validator("raw_yaml_data", mode="before")
     @classmethod
     def necessary_keys_exist_in_raw_yaml_data(
         cls, raw_yaml_data: _RawYamlData
@@ -82,45 +90,112 @@ class _YoloDatasetConfig(BaseModel):
 
         if not all_necessary_keys_exist:
             keys_that_dont_exist: set[str] = necessary_keys - overlapping_keys
-            err_msg: str = "Not all necessary keys exist in the dataset yaml file.\n"
-            err_msg += f"Keys that don't exist in the yaml file: {keys_that_dont_exist}"
+            err_msg: str = (
+                "Not all necessary keys exist in the dataset yaml file.\nKeys that don't exist "
+                + f"in the yaml file: {', '.join(sorted(keys_that_dont_exist))}."
+            )
 
             raise YoloDatasetError(err_msg)
 
-    @field_validator("_raw_paths")
-    @classmethod
-    def all_path_parent_dirs_is_image(
-        cls, raw_paths: _YoloDatasetPaths
-    ) -> _YoloDatasetPaths:
+        return raw_yaml_data
+
+    @model_validator(mode="after")
+    def all_path_parent_dirs_is_image(self) -> _YoloDatasetConfig:
         """Ensures that the parent directory of all the image paths is 'images'."""
-        for split in ["train", "val", "test"]:
-            if raw_paths.get(split) is None:
+        for split in ["train_images", "val_images", "test_images"]:
+            if self._raw_paths.get(split) is None:
                 continue
-            full_folderpath: Path = raw_paths[split]
+            full_folderpath: Path = self._raw_paths[split]
             if full_folderpath.parent.name != "images":
                 raise YoloDatasetError(
                     f"The parent directory of split path {full_folderpath} is not 'images'."
                 )
 
-        return raw_paths
+        return self
+
+    @model_validator(mode="after")
+    def warn_if_relative_path_used_for_base_path(self) -> _YoloDatasetConfig:
+        """Warns the user if they supply a yaml file where the base path is relative."""
+        base_path: Path | None = self._raw_paths.get("base")
+        if base_path is None:
+            return self
+
+        if base_path.is_absolute():
+            return self
+
+        warnings.warn(
+            "Base path is a relative path, which may lead to issues.",
+            YoloDatasetWarning,
+        )
+        return self
 
     @cached_property
     def _raw_paths(self) -> _YoloDatasetPaths:
         """A typed dictionary of paths to the dataset's image folders."""
-        raise NotImplementedError()
+
+        yolo_dataset_paths: _YoloDatasetPaths = {}
+
+        def add_raw_path_to_dict(
+            value_to_get: str, rename_to: str
+        ) -> _YoloDatasetPaths:
+            if value_to_get not in self.raw_yaml_data:
+                return yolo_dataset_paths
+
+            raw_value: Any = self.raw_yaml_data[value_to_get]
+
+            if isinstance(raw_value, str):
+                yolo_dataset_paths[rename_to] = Path(raw_value)
+            else:
+                raise ValidationError(
+                    f"The value for '{value_to_get}' in the yaml data was expected to be a "
+                    + f"string, but was {type(raw_value)}."
+                )
+
+            return yolo_dataset_paths
+
+        pathes: dict[str, str] = {
+            "path": "base",
+            "train": "train_images",
+            "val": "val_images",
+            "test": "test_images",
+        }
+        for yaml_key, dataset_path_key in pathes.items():
+            yolo_dataset_paths: _YoloDatasetPaths = add_raw_path_to_dict(
+                yaml_key, dataset_path_key
+            )
+
+        return yolo_dataset_paths
 
     @cached_property
     def dataset_type(self) -> _YoloDatasetType:
         """Determines and returns the type of the yolo dataset."""
-        raise NotImplementedError()
+        keys_in_raw_yaml_data: set[str] = set(self.raw_yaml_data.keys())
+        pose_specific_keys: set[str] = {"kpt_shape", "kpt_names"}
+        pose_specific_keys_in_raw_yaml_data: set[str] = (
+            pose_specific_keys & keys_in_raw_yaml_data
+        )
+
+        match sorted(pose_specific_keys_in_raw_yaml_data):
+            case ["kpt_names", "kpt_shape"]:
+                return _YoloDatasetType.POSE
+            case []:
+                return _YoloDatasetType.DETECT
+            case ["kpt_names"]:
+                raise KeyError(
+                    "Yaml data contained a value for 'kpt_names' but not 'kpt_shape'."
+                )
+            case ["kpt_shape"]:
+                raise KeyError(
+                    "Yaml data contained a value for 'kpt_shape' but not 'kpt_names'."
+                )
 
     @cached_property
     def train_images_path(self) -> Path:
         """The path to the training images directory."""
         train_image_path: Path = self._raw_paths["train_images"]
 
-        if "base_path" in self._raw_paths:
-            base_path: Path = self._raw_paths["base_path"]
+        if "base" in self._raw_paths:
+            base_path: Path = self._raw_paths["base"]
             return base_path / train_image_path
 
         return train_image_path
@@ -130,8 +205,8 @@ class _YoloDatasetConfig(BaseModel):
         """The full path to the validation images directory."""
         val_image_path: Path = self._raw_paths["val_images"]
 
-        if "base_path" in self._raw_paths:
-            base_path: Path = self._raw_paths["base_path"]
+        if "base" in self._raw_paths:
+            base_path: Path = self._raw_paths["base"]
             return base_path / val_image_path
 
         return val_image_path
@@ -144,8 +219,8 @@ class _YoloDatasetConfig(BaseModel):
 
         test_image_path: Path = self._raw_paths["test_images"]
 
-        if "base_path" in self._raw_paths:
-            base_path: Path = self._raw_paths["base_path"]
+        if "base" in self._raw_paths:
+            base_path: Path = self._raw_paths["base"]
             return base_path / test_image_path
 
         return test_image_path
