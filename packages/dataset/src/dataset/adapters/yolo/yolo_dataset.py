@@ -1,12 +1,15 @@
 """A module that reads and writes yolo datasets to the intermediate VisionDataset representation."""
 
+import os
 import warnings
 from enum import StrEnum
 from functools import cached_property
+from operator import attrgetter
 from pathlib import Path
 from typing import Any, NotRequired, Required, TypedDict
 
 import yaml
+from core.annotations import Annotation, BoundingBox, BoundingBoxWithKeypoints
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -14,6 +17,8 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+
+from dataset import VisionDataset
 
 from .exceptions import YoloDatasetError
 from .warnings import YoloDatasetWarning
@@ -100,7 +105,7 @@ class _YoloDatasetConfig(BaseModel):
         return raw_yaml_data
 
     @model_validator(mode="after")
-    def all_path_parent_dirs_is_image(self) -> _YoloDatasetConfig:
+    def all_path_parent_dirs_is_image(self) -> "_YoloDatasetConfig":
         """Ensures that the parent directory of all the image paths is 'images'."""
         for split in ["train_images", "val_images", "test_images"]:
             if self._raw_paths.get(split) is None:
@@ -114,7 +119,7 @@ class _YoloDatasetConfig(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def warn_if_relative_path_used_for_base_path(self) -> _YoloDatasetConfig:
+    def warn_if_relative_path_used_for_base_path(self) -> "_YoloDatasetConfig":
         """Warns the user if they supply a yaml file where the base path is relative."""
         base_path: Path | None = self._raw_paths.get("base")
         if base_path is None:
@@ -153,13 +158,13 @@ class _YoloDatasetConfig(BaseModel):
 
             return yolo_dataset_paths
 
-        pathes: dict[str, str] = {
+        paths: dict[str, str] = {
             "path": "base",
             "train": "train_images",
             "val": "val_images",
             "test": "test_images",
         }
-        for yaml_key, dataset_path_key in pathes.items():
+        for yaml_key, dataset_path_key in paths.items():
             yolo_dataset_paths: _YoloDatasetPaths = add_raw_path_to_dict(
                 yaml_key, dataset_path_key
             )
@@ -214,7 +219,7 @@ class _YoloDatasetConfig(BaseModel):
     @cached_property
     def test_images_path(self) -> Path | None:
         """The full path to the test images directory, if it exists."""
-        if "test_path" not in self._raw_paths:
+        if "test_images" not in self._raw_paths:
             return None
 
         test_image_path: Path = self._raw_paths["test_images"]
@@ -224,6 +229,41 @@ class _YoloDatasetConfig(BaseModel):
             return base_path / test_image_path
 
         return test_image_path
+
+    @cached_property
+    def validation_set_image_paths(self) -> dict[str, Path]:
+        """A dictionary of image paths to the extra validation sets."""
+        match self.dataset_type:
+            case _YoloDatasetType.DETECT:
+                reserved_keys: set[str] = {
+                    "path",
+                    "train",
+                    "val",
+                    "test",
+                    "names",
+                }
+            case _YoloDatasetType.POSE:
+                reserved_keys: set[str] = {
+                    "path",
+                    "train",
+                    "val",
+                    "test",
+                    "names",
+                    "kpt_shape",
+                    "kpt_names",
+                }
+
+        validation_set_keys: set[str] = set(self.raw_yaml_data.keys()) - reserved_keys
+
+        validation_set_img_paths: dict[str, Path] = {}
+        for k in validation_set_keys:
+            if "base" in self._raw_paths:
+                base_path: Path = self._raw_paths["base"]
+                validation_set_img_paths[k] = base_path / Path(self.raw_yaml_data[k])
+            else:
+                validation_set_img_paths[k] = Path(self.raw_yaml_data[k])
+
+        return validation_set_img_paths
 
     @cached_property
     def train_labels_path(self) -> Path:
@@ -249,8 +289,16 @@ class _YoloDatasetConfig(BaseModel):
 
         return self.test_images_path.parent.parent / "labels" / test_folder_name
 
+    @cached_property
+    def validation_set_label_paths(self) -> dict[str, Path]:
+        """A dictionary of extra validation set paths."""
+        return {
+            k: p.parent.parent / "labels" / p.name
+            for (k, p) in self.validation_set_image_paths.items()
+        }
+
     @classmethod
-    def from_path(cls, path_to_dataset_yaml: Path) -> _YoloDatasetConfig:
+    def from_path(cls, path_to_dataset_yaml: Path) -> "_YoloDatasetConfig":
         """Creates a _YoloDatasetConfig object by reading data from a yaml file.
 
         Args:
@@ -260,4 +308,224 @@ class _YoloDatasetConfig(BaseModel):
         Returns:
             A _YoloDatasetConfig object storing validated data from the dataset yaml file.
         """
+        with open(path_to_dataset_yaml, "r") as f:
+            data: dict[str, Any] = yaml.safe_load(f)
+
+        return _YoloDatasetConfig(raw_yaml_data=data)
+
+
+class _YoloDataset(BaseModel):
+    """A class that reads a yolo dataset from disk into a VisionDataset.
+
+    Attributes:
+        config (_YoloDatasetConfig):
+            The configuration for the yolo dataset.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    path_to_dataset: Path
+    dataset_config: _YoloDatasetConfig
+
+    @model_validator(mode="after")
+    def validate_all_paths_exist(self) -> "_YoloDataset":
+        """Validates that all the folder paths the should exist, do."""
+        attributes_to_check: list[str] = [
+            "train_images_path",
+            "val_images_path",
+            "train_labels_path",
+            "val_labels_path",
+        ]
+        if self.dataset_config._raw_paths["test_images"] is not None:
+            attributes_to_check += [
+                "test_images_path",
+                "test_labels_path",
+            ]
+
+        for attribute in attributes_to_check:
+            path: Path = attrgetter(attribute)(self.dataset_config)
+            if not path.exists():
+                raise YoloDatasetError(
+                    f'The "{attribute.replace("_", " ")}" is specified in the YOLO config file, '
+                    + f"but doesn't exist. (path specified: {path})"
+                )
+
+        for (
+            validation_set_image_path
+        ) in self.dataset_config.validation_set_image_paths.values():
+            if not validation_set_image_path.exists():
+                raise YoloDatasetError(
+                    f'The validation set path "images/{validation_set_image_path.name}" is '
+                    f"specified in the YOLO config file, but doesn't exist. (path specified: {path})"
+                )
+
+        for (
+            validation_set_label_path
+        ) in self.dataset_config.validation_set_label_paths.values():
+            if not validation_set_label_path.exists():
+                raise YoloDatasetError(
+                    f'The validation set path "labels/{validation_set_label_path.name}" is '
+                    f"specified in the YOLO config file, but doesn't exist. (path specified: {path})"
+                )
+        return self
+
+    @model_validator(mode="after")
+    def validate_image_exists_for_all_annotations(self) -> "_YoloDataset":
+        """Validates that for each"""
+        return self
+
+    @model_validator(mode="after")
+    def warn_if_extra_dir_exists_in_images(self) -> "_YoloDatasetConfig":
+        """Warns the user if an extra directory exists in the images folder not accounted for in the config."""
+        dirs_accounted_for: set[str] = {"train", "val"} | set(
+            self.dataset_config.validation_set_image_paths.keys()
+        )
+        if self.dataset_config.test_images_path is not None:
+            dirs_accounted_for = dirs_accounted_for | {"test"}
+        all_dirs_in_images_directory: set[str] = set(
+            os.listdir(self.path_to_dataset / "images")
+        )
+
+        dirs_not_accounted_for: set[str] = (
+            all_dirs_in_images_directory - dirs_accounted_for
+        )
+
+        if dirs_not_accounted_for:
+            warnings.warn(
+                (
+                    "Directories exist in the dataset images directory not accounted for in the "
+                    "dataset yaml config file.\n"
+                    f"Directories not accounted for: {', '.join(sorted(dirs_not_accounted_for))}."
+                ),
+                YoloDatasetWarning,
+            )
+
+        return self
+
+    @model_validator(mode="after")
+    def warn_if_extra_dir_exists_in_labels(self) -> "_YoloDatasetConfig":
+        """Warns the user if an extra directory exists in the labels folder not accounted for in the config."""
+        dirs_accounted_for: set[str] = {"train", "val"} | set(
+            self.dataset_config.validation_set_label_paths.keys()
+        )
+        if self.dataset_config.test_labels_path is not None:
+            dirs_accounted_for = dirs_accounted_for | {"test"}
+
+        all_dirs_in_labels_directory: set[str] = set(
+            os.listdir(self.path_to_dataset / "labels")
+        )
+
+        dirs_not_accounted_for: set[str] = (
+            all_dirs_in_labels_directory - dirs_accounted_for
+        )
+
+        if dirs_not_accounted_for:
+            warnings.warn(
+                (
+                    "Directories exist in the dataset labels directory not accounted for in the "
+                    "dataset yaml config file.\n"
+                    f"Directories not accounted for: {', '.join(sorted(dirs_not_accounted_for))}."
+                ),
+                YoloDatasetWarning,
+            )
+
+        return self
+
+    @classmethod
+    def read_yolo_annotation_file(
+        self, path_to_yolo_annotation_file: Path
+    ) -> list[Annotation]:
+        """Reads a YOLO annotation file from disk.
+
+        Args:
+            path_to_yolo_annotation_file (Path):
+                The path to the yolo annotation file on disk.
+
+        Returns:
+            The contents of the yolo annotation file as Annotation objects (Bounding boxes for
+            detect datasets and bounding boxes with keypoints for pose datasets).
+        """
+        with open(path_to_yolo_annotation_file, "r") as f:
+            lines: list[str] = f.readlines()
+
+        match self.dataset_config.dataset_type:
+            case _YoloDatasetType.DETECT:
+                return self.read_yolo_detect_file(lines)
+            case _YoloDatasetType.POSE:
+                return self.read_yolo_pose_file(lines)
+
+    @classmethod
+    def read_yolo_detect_file(
+        cls, yolo_detect_file_contents: list[str]
+    ) -> list[BoundingBox]:
+        """Reads a YOLO detect formatted annotations file."""
+        return [
+            cls.read_yolo_detect_annotation(ann) for ann in yolo_detect_file_contents
+        ]
+
+    @classmethod
+    def read_yolo_detect_annotation(cls, yolo_detect_annotation_line) -> BoundingBox:
+        """Reads a YOLO detect formatted annotation line."""
         raise NotImplementedError()
+
+    @classmethod
+    def read_yolo_pose_file(
+        cls, yolo_pose_file_contents: list[str]
+    ) -> list[BoundingBoxWithKeypoints]:
+        """Reads a YOLO pose formatted annotations file."""
+        return [cls.read_yolo_pose_annotation(ann) for ann in yolo_pose_file_contents]
+
+    @classmethod
+    def read_yolo_pose_annotation(
+        cls, yolo_pose_annotation_line: str
+    ) -> BoundingBoxWithKeypoints:
+        """Reads a YOLO pose formatted annotation line."""
+        raise NotImplementedError()
+
+    @classmethod
+    def from_folderpath(
+        cls,
+        folderpath: Path,
+        yaml_file_name: str = "dataset.yaml",
+    ) -> "_YoloDataset":
+        """Creates a _YoloDataset from a folderpath.
+
+        Args:
+            folderpath (Path):
+                The path to the root of the yolo dataset's folder.
+            yaml_file_name (str):
+                The filename of the dataset yaml config file.
+                Defaults to 'dataset.yaml'.
+
+        Returns:
+            A _YoloDataset pointing to the yolo dataset on disk.
+        """
+        dataset_config: _YoloDatasetConfig = _YoloDatasetConfig.from_path(
+            path_to_dataset_yaml=folderpath / yaml_file_name
+        )
+        yolo_dataset: _YoloDataset = _YoloDataset(
+            path_to_dataset=folderpath,
+            dataset_config=dataset_config,
+        )
+        return yolo_dataset
+
+
+def read_yolo_dataset(
+    folderpath: Path,
+    yaml_file_name: str = "dataset.yaml",
+) -> VisionDataset:
+    """Reads a YOLO dataset from a path to the dataset's root folder.
+
+    Args:
+        folderpath (Path):
+            The path to the root of the yolo dataset's folder.
+        yaml_file_name (str):
+            The filename of the dataset yaml config file.
+
+    Returns:
+        A VisionDataset containing the contents of the yolo dataset.
+    """
+    yolo_dataset: _YoloDataset = _YoloDataset.from_folderpath(
+        folderpath=folderpath,
+        yaml_file_name=yaml_file_name,
+    )
