@@ -2,6 +2,7 @@
 
 import os
 import warnings
+from collections.abc import Callable
 from enum import StrEnum
 from functools import cached_property
 from operator import attrgetter
@@ -10,6 +11,7 @@ from typing import Any, NotRequired, Required, TypedDict
 
 import yaml
 from core.annotations import Annotation, BoundingBox, BoundingBoxWithKeypoints
+from core.geometry import Point, Rectangle
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -75,6 +77,14 @@ class _YoloDatasetConfig(BaseModel):
         evaluation_set_label_paths (dict[str, Path]):
             A dictionary mapping the name of evaluation sets to the folderpath that contains
             their labels.
+        names (list[str]):
+            The names of the bounding boxes in the dataset.
+            Each annotation will have an index as the first entry that maps to an entry in this
+            list.
+        kpt_names (list[str]):
+            The names of the keypoints in the dataset.
+            Each keypoint annotation will have ordered keypoints. The position in that ordering
+            will map to the name of the keypoint in this list.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -103,6 +113,16 @@ class _YoloDatasetConfig(BaseModel):
             raise YoloDatasetError(err_msg)
 
         return raw_yaml_data
+
+    @model_validator(mode="after")
+    def all_keypoint_keys_exist(self) -> "_YoloDatasetConfig":
+        """Ensures all the keypoint keys exist if the config is for a pose dataset."""
+        try:
+            _ = self.dataset_type
+        except KeyError as ke:
+            raise YoloDatasetError(f"Error parsing pose dataset yaml file.\n{ke}")
+
+        return self
 
     @model_validator(mode="after")
     def all_path_parent_dirs_is_image(self) -> "_YoloDatasetConfig":
@@ -297,6 +317,24 @@ class _YoloDatasetConfig(BaseModel):
             for (k, p) in self.validation_set_image_paths.items()
         }
 
+    @cached_property
+    def names(self) -> list[str]:
+        """A list of the names of bounding boxes."""
+        return [
+            self.raw_yaml_data["names"][sk]
+            for sk in sorted(self.raw_yaml_data["names"].keys())
+        ]
+
+    @cached_property
+    def kpt_names(self) -> list[str] | None:
+        """A list of the names of keypoints."""
+        if self.dataset_type != _YoloDatasetType.POSE:
+            return None
+        return [
+            self.raw_yaml_data["kpt_names"][sk]
+            for sk in sorted(self.raw_yaml_data["kpt_names"].keys())
+        ]
+
     @classmethod
     def from_path(cls, path_to_dataset_yaml: Path) -> "_YoloDatasetConfig":
         """Creates a _YoloDatasetConfig object by reading data from a yaml file.
@@ -431,7 +469,6 @@ class _YoloDataset(BaseModel):
 
         return self
 
-    @classmethod
     def read_yolo_annotation_file(
         self, path_to_yolo_annotation_file: Path
     ) -> list[Annotation]:
@@ -450,34 +487,100 @@ class _YoloDataset(BaseModel):
 
         match self.dataset_config.dataset_type:
             case _YoloDatasetType.DETECT:
-                return self.read_yolo_detect_file(lines)
-            case _YoloDatasetType.POSE:
-                return self.read_yolo_pose_file(lines)
+                file_reading_fn: Callable[[list[str]], list[Annotation]] = (
+                    self.read_yolo_detect_file
+                )
 
-    @classmethod
+            case _YoloDatasetType.POSE:
+                file_reading_fn: Callable[[list[str]], list[Annotation]] = (
+                    self.read_yolo_pose_file
+                )
+
+        try:
+            return file_reading_fn(lines)
+        except YoloDatasetError as yde:
+            raise YoloDatasetError(
+                "An exception has occured while reading file "
+                f"{path_to_yolo_annotation_file.resolve()}.\n"
+                f"{yde}"
+            )
+
     def read_yolo_detect_file(
-        cls, yolo_detect_file_contents: list[str]
+        self, yolo_detect_file_contents: list[str]
     ) -> list[BoundingBox]:
         """Reads a YOLO detect formatted annotations file."""
-        return [
-            cls.read_yolo_detect_annotation(ann) for ann in yolo_detect_file_contents
-        ]
+        bbox_annotations: list[BoundingBox] = []
+        for line_ix, ann_line in enumerate(yolo_detect_file_contents):
+            try:
+                new_ann: BoundingBox = self.read_yolo_detect_annotation(ann_line)
+                bbox_annotations.append(new_ann)
+            except YoloDatasetError as yde:
+                raise YoloDatasetError(
+                    f"An exception has occured while reading line {line_ix + 1}.\n{yde}"
+                )
 
-    @classmethod
-    def read_yolo_detect_annotation(cls, yolo_detect_annotation_line) -> BoundingBox:
+        return bbox_annotations
+
+    def read_yolo_detect_annotation(self, yolo_detect_annotation_line) -> BoundingBox:
         """Reads a YOLO detect formatted annotation line."""
-        raise NotImplementedError()
+        line_entries: list[str] = yolo_detect_annotation_line.strip().split(" ")
+        if len(line_entries) < 5:
+            raise YoloDatasetError(
+                "Too few entries in detect annotation line. "
+                f"Got {len(line_entries)} when 5 were expected.\n"
+                f"Full line: '{yolo_detect_annotation_line}'."
+            )
+        if len(line_entries) > 5:
+            raise YoloDatasetError(
+                "Too many entries in detect annotation line. "
+                f"Got {len(line_entries)} when 5 were expected.\n"
+                f"Full line: '{yolo_detect_annotation_line}'."
+            )
 
-    @classmethod
+        class_index: int = int(line_entries[0])
+        x_center: float = float(line_entries[1])
+        y_center: float = float(line_entries[2])
+        width: float = float(line_entries[3])
+        height: float = float(line_entries[4])
+
+        rect: Rectangle = Rectangle.from_center_xywh(x_center, y_center, width, height)
+
+        if rect.left < 0:
+            warnings.warn(
+                f"Annotation left side is out of bounds: {rect}", YoloDatasetWarning
+            )
+        if rect.right > 1:
+            warnings.warn(
+                f"Annotation right side is out of bounds: {rect}", YoloDatasetWarning
+            )
+        if rect.top < 0:
+            warnings.warn(
+                f"Annotation top side is out of bounds: {rect}", YoloDatasetWarning
+            )
+        if rect.bottom > 1:
+            warnings.warn(
+                f"Annotation bottom side is out of bounds: {rect}", YoloDatasetWarning
+            )
+
+        if class_index < 0 or class_index > len(self.dataset_config.names) - 1:
+            raise YoloDatasetError(
+                "Class index is out of range for this dataset.\n"
+                f"Class index read: {class_index}. Number of classes from the config "
+                f"{len(self.dataset_config.names)}."
+            )
+
+        class_name: str = self.dataset_config.names[class_index]
+
+        return BoundingBox(rectangle=rect, category=class_name)
+
     def read_yolo_pose_file(
-        cls, yolo_pose_file_contents: list[str]
+        self, yolo_pose_file_contents: list[str]
     ) -> list[BoundingBoxWithKeypoints]:
         """Reads a YOLO pose formatted annotations file."""
-        return [cls.read_yolo_pose_annotation(ann) for ann in yolo_pose_file_contents]
+        return [self.read_yolo_pose_annotation(ann) for ann in yolo_pose_file_contents]
 
-    @classmethod
     def read_yolo_pose_annotation(
-        cls, yolo_pose_annotation_line: str
+        self, yolo_pose_annotation_line: str
     ) -> BoundingBoxWithKeypoints:
         """Reads a YOLO pose formatted annotation line."""
         raise NotImplementedError()
