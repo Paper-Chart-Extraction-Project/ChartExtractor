@@ -657,6 +657,365 @@ class TestYoloDatasetFolderStructure:
             )
 
 
+class TestYoloDatasetImageAndAnnotationFinding:
+    """A collection of tests for the _YoloDataset class' images and annotations properties."""
+
+    def test_no_images_or_annotations(self, tmp_path: Path):
+        """Tests the properties when there are no files."""
+        dirs_to_create: list[Path] = [
+            Path("test_dataset_valid_folder_structure"),
+            Path("test_dataset_valid_folder_structure") / "images",
+            Path("test_dataset_valid_folder_structure") / "labels",
+            Path("test_dataset_valid_folder_structure") / "images" / "train",
+            Path("test_dataset_valid_folder_structure") / "labels" / "train",
+            Path("test_dataset_valid_folder_structure") / "images" / "val",
+            Path("test_dataset_valid_folder_structure") / "labels" / "val",
+            Path("test_dataset_valid_folder_structure") / "images" / "test",
+            Path("test_dataset_valid_folder_structure") / "labels" / "test",
+        ]
+        yaml_data: str = textwrap.dedent(f"""
+            path: {(tmp_path / "test_dataset_valid_folder_structure").resolve()}
+            train: images/train
+            val: images/val
+            test: images/test
+
+            names:
+                0: test_0
+                1: test_1       
+        """).strip()
+        for dir in dirs_to_create:
+            (tmp_path / dir).mkdir()
+        dataset_yaml: Path = (
+            tmp_path / "test_dataset_valid_folder_structure" / "dataset.yaml"
+        )
+        dataset_yaml.write_text(yaml_data)
+
+        yds: _YoloDataset = _YoloDataset.from_folderpath(
+            tmp_path / "test_dataset_valid_folder_structure"
+        )
+
+        assert yds.images == {"train": [], "val": [], "test": []}
+        assert yds.annotations == {"train": [], "val": [], "test": []}
+
+    def test_images_and_annotations(self, tmp_path: Path):
+        """Tests the properties when there are regular files in the appropriate structure."""
+        dirs_to_create: list[Path] = [
+            Path("test_dataset_valid_folder_structure"),
+            Path("test_dataset_valid_folder_structure") / "images",
+            Path("test_dataset_valid_folder_structure") / "labels",
+            Path("test_dataset_valid_folder_structure") / "images" / "train",
+            Path("test_dataset_valid_folder_structure") / "labels" / "train",
+            Path("test_dataset_valid_folder_structure") / "images" / "val",
+            Path("test_dataset_valid_folder_structure") / "labels" / "val",
+            Path("test_dataset_valid_folder_structure") / "images" / "test",
+            Path("test_dataset_valid_folder_structure") / "labels" / "test",
+        ]
+        im_1_image_path: Path = (
+            Path("test_dataset_valid_folder_structure")
+            / "images"
+            / "train"
+            / "im_1.png"
+        )
+        im_1_label_path: Path = (
+            Path("test_dataset_valid_folder_structure")
+            / "labels"
+            / "train"
+            / "im_1.txt"
+        )
+        im_2_image_path: Path = (
+            Path("test_dataset_valid_folder_structure")
+            / "images"
+            / "train"
+            / "im_2.jpg"
+        )
+        im_2_label_path: Path = (
+            Path("test_dataset_valid_folder_structure")
+            / "labels"
+            / "train"
+            / "im_2.txt"
+        )
+        im_3_image_path: Path = (
+            Path("test_dataset_valid_folder_structure") / "images" / "val" / "im_3.jpeg"
+        )
+        im_3_label_path: Path = (
+            Path("test_dataset_valid_folder_structure") / "labels" / "val" / "im_3.txt"
+        )
+        files_to_create: list[Path] = [
+            im_1_image_path,
+            im_1_label_path,
+            im_2_image_path,
+            im_2_label_path,
+            im_3_image_path,
+            im_3_label_path,
+        ]
+        yaml_data: str = textwrap.dedent(f"""
+            path: {(tmp_path / "test_dataset_valid_folder_structure").resolve()}
+            train: images/train
+            val: images/val
+            test: images/test
+
+            names:
+                0: test_0
+                1: test_1       
+        """).strip()
+        for dir in dirs_to_create + files_to_create:
+            (tmp_path / dir).mkdir()
+        dataset_yaml: Path = (
+            tmp_path / "test_dataset_valid_folder_structure" / "dataset.yaml"
+        )
+        dataset_yaml.write_text(yaml_data)
+
+        yds: _YoloDataset = _YoloDataset.from_folderpath(
+            tmp_path / "test_dataset_valid_folder_structure"
+        )
+
+        assert yds.images == {
+            "train": [tmp_path / im_1_image_path, tmp_path / im_2_image_path],
+            "val": [tmp_path / im_3_image_path],
+            "test": [],
+        }
+        assert yds.annotations == {
+            "train": [tmp_path / im_1_label_path, tmp_path / im_2_label_path],
+            "val": [tmp_path / im_3_label_path],
+            "test": [],
+        }
+
+    def test_extra_validation_set(self, tmp_path: Path):
+        """Tests the properties when there is an extra validation set."""
+        dirs_to_create: list[Path] = [
+            Path("test_dataset_valid_folder_structure"),
+            Path("test_dataset_valid_folder_structure") / "images",
+            Path("test_dataset_valid_folder_structure") / "labels",
+            Path("test_dataset_valid_folder_structure") / "images" / "train",
+            Path("test_dataset_valid_folder_structure") / "labels" / "train",
+            Path("test_dataset_valid_folder_structure") / "images" / "val",
+            Path("test_dataset_valid_folder_structure") / "labels" / "val",
+            Path("test_dataset_valid_folder_structure") / "images" / "test",
+            Path("test_dataset_valid_folder_structure") / "labels" / "test",
+            Path("test_dataset_valid_folder_structure") / "images" / "test2",
+            Path("test_dataset_valid_folder_structure") / "labels" / "test2",
+        ]
+        im_1_image_path: Path = (
+            Path("test_dataset_valid_folder_structure")
+            / "images"
+            / "test2"
+            / "im_1.png"
+        )
+        im_1_label_path: Path = (
+            Path("test_dataset_valid_folder_structure")
+            / "labels"
+            / "test2"
+            / "im_1.txt"
+        )
+        files_to_create: list[Path] = [
+            im_1_image_path,
+            im_1_label_path,
+        ]
+        yaml_data: str = textwrap.dedent(f"""
+            path: {(tmp_path / "test_dataset_valid_folder_structure").resolve()}
+            train: images/train
+            val: images/val
+            test: images/test
+            test2: images/test2
+
+            names:
+                0: test_0
+                1: test_1       
+        """).strip()
+        for dir in dirs_to_create + files_to_create:
+            (tmp_path / dir).mkdir()
+        dataset_yaml: Path = (
+            tmp_path / "test_dataset_valid_folder_structure" / "dataset.yaml"
+        )
+        dataset_yaml.write_text(yaml_data)
+
+        yds: _YoloDataset = _YoloDataset.from_folderpath(
+            tmp_path / "test_dataset_valid_folder_structure"
+        )
+
+        assert yds.images == {
+            "train": [],
+            "val": [],
+            "test": [],
+            "test2": [tmp_path / im_1_image_path],
+        }
+        assert yds.annotations == {
+            "train": [],
+            "val": [],
+            "test": [],
+            "test2": [tmp_path / im_1_label_path],
+        }
+
+    def test_background_images_exist(self, tmp_path: Path):
+        """Tests validation when all the annotations have a corresponding image, and there are extra background images."""
+        dirs_to_create: list[Path] = [
+            Path("test_dataset_valid_folder_structure"),
+            Path("test_dataset_valid_folder_structure") / "images",
+            Path("test_dataset_valid_folder_structure") / "labels",
+            Path("test_dataset_valid_folder_structure") / "images" / "train",
+            Path("test_dataset_valid_folder_structure") / "labels" / "train",
+            Path("test_dataset_valid_folder_structure") / "images" / "val",
+            Path("test_dataset_valid_folder_structure") / "labels" / "val",
+            Path("test_dataset_valid_folder_structure") / "images" / "test",
+            Path("test_dataset_valid_folder_structure") / "labels" / "test",
+            Path("test_dataset_valid_folder_structure") / "images" / "backgrounds",
+            Path("test_dataset_valid_folder_structure") / "labels" / "backgrounds",
+        ]
+        background_1_image_path: Path = (
+            Path("test_dataset_valid_folder_structure")
+            / "images"
+            / "backgrounds"
+            / "background_1.png"
+        )
+        files_to_create: list[Path] = [
+            background_1_image_path,
+        ]
+        yaml_data: str = textwrap.dedent(f"""
+            path: {(tmp_path / "test_dataset_valid_folder_structure").resolve()}
+            train: images/train
+            val: images/val
+            test: images/test
+            backgrounds: images/backgrounds
+
+            names:
+                0: test_0
+                1: test_1       
+        """).strip()
+        for dir in dirs_to_create + files_to_create:
+            (tmp_path / dir).mkdir()
+        dataset_yaml: Path = (
+            tmp_path / "test_dataset_valid_folder_structure" / "dataset.yaml"
+        )
+        dataset_yaml.write_text(yaml_data)
+
+        _YoloDataset.from_folderpath(tmp_path / "test_dataset_valid_folder_structure")
+
+    def test_no_images_exist(self, tmp_path: Path):
+        """Tests validation when no images exist for any annotation."""
+        dirs_to_create: list[Path] = [
+            Path("test_dataset_valid_folder_structure"),
+            Path("test_dataset_valid_folder_structure") / "images",
+            Path("test_dataset_valid_folder_structure") / "labels",
+            Path("test_dataset_valid_folder_structure") / "images" / "train",
+            Path("test_dataset_valid_folder_structure") / "labels" / "train",
+            Path("test_dataset_valid_folder_structure") / "images" / "val",
+            Path("test_dataset_valid_folder_structure") / "labels" / "val",
+            Path("test_dataset_valid_folder_structure") / "images" / "test",
+            Path("test_dataset_valid_folder_structure") / "labels" / "test",
+        ]
+        im_1_label_path: Path = (
+            Path("test_dataset_valid_folder_structure")
+            / "labels"
+            / "train"
+            / "im_1.txt"
+        )
+
+        im_2_label_path: Path = (
+            Path("test_dataset_valid_folder_structure")
+            / "labels"
+            / "train"
+            / "im_2.txt"
+        )
+        im_3_label_path: Path = (
+            Path("test_dataset_valid_folder_structure") / "labels" / "val" / "im_3.txt"
+        )
+        files_to_create: list[Path] = [
+            im_1_label_path,
+            im_2_label_path,
+            im_3_label_path,
+        ]
+        yaml_data: str = textwrap.dedent(f"""
+            path: {(tmp_path / "test_dataset_valid_folder_structure").resolve()}
+            train: images/train
+            val: images/val
+            test: images/test
+
+            names:
+                0: test_0
+                1: test_1       
+        """).strip()
+        for dir in dirs_to_create + files_to_create:
+            (tmp_path / dir).mkdir()
+        dataset_yaml: Path = (
+            tmp_path / "test_dataset_valid_folder_structure" / "dataset.yaml"
+        )
+        dataset_yaml.write_text(yaml_data)
+
+        with pytest.raises(YoloDatasetError, match="without a corresponding image"):
+            _: _YoloDataset = _YoloDataset.from_folderpath(
+                tmp_path / "test_dataset_valid_folder_structure"
+            )
+
+    def test_an_images_doesnt_exist_for_an_annotation(self, tmp_path: Path):
+        """Tests validation when one annotation does not have a corresponding image."""
+        dirs_to_create: list[Path] = [
+            Path("test_dataset_valid_folder_structure"),
+            Path("test_dataset_valid_folder_structure") / "images",
+            Path("test_dataset_valid_folder_structure") / "labels",
+            Path("test_dataset_valid_folder_structure") / "images" / "train",
+            Path("test_dataset_valid_folder_structure") / "labels" / "train",
+            Path("test_dataset_valid_folder_structure") / "images" / "val",
+            Path("test_dataset_valid_folder_structure") / "labels" / "val",
+            Path("test_dataset_valid_folder_structure") / "images" / "test",
+            Path("test_dataset_valid_folder_structure") / "labels" / "test",
+        ]
+        im_1_image_path: Path = (
+            Path("test_dataset_valid_folder_structure")
+            / "images"
+            / "train"
+            / "im_1.png"
+        )
+        im_1_label_path: Path = (
+            Path("test_dataset_valid_folder_structure")
+            / "labels"
+            / "train"
+            / "im_1.txt"
+        )
+        im_2_image_path: Path = (
+            Path("test_dataset_valid_folder_structure")
+            / "images"
+            / "train"
+            / "im_2.jpg"
+        )
+        im_2_label_path: Path = (
+            Path("test_dataset_valid_folder_structure")
+            / "labels"
+            / "train"
+            / "im_2.txt"
+        )
+        im_3_label_path: Path = (
+            Path("test_dataset_valid_folder_structure") / "labels" / "val" / "im_3.txt"
+        )
+        files_to_create: list[Path] = [
+            im_1_image_path,
+            im_1_label_path,
+            im_2_image_path,
+            im_2_label_path,
+            im_3_label_path,
+        ]
+        yaml_data: str = textwrap.dedent(f"""
+            path: {(tmp_path / "test_dataset_valid_folder_structure").resolve()}
+            train: images/train
+            val: images/val
+            test: images/test
+
+            names:
+                0: test_0
+                1: test_1       
+        """).strip()
+        for dir in dirs_to_create + files_to_create:
+            (tmp_path / dir).mkdir()
+        dataset_yaml: Path = (
+            tmp_path / "test_dataset_valid_folder_structure" / "dataset.yaml"
+        )
+        dataset_yaml.write_text(yaml_data)
+
+        with pytest.raises(YoloDatasetError, match="without a corresponding image"):
+            _: _YoloDataset = _YoloDataset.from_folderpath(
+                tmp_path / "test_dataset_valid_folder_structure"
+            )
+
+
 class TestYoloDatasetDetectAnnotationReading:
     """A collection of tests for the _YoloDataset class' detect annotation reading."""
 

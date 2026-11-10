@@ -457,6 +457,16 @@ class _YoloDataset(BaseModel):
     @model_validator(mode="after")
     def validate_image_exists_for_all_annotations(self) -> "_YoloDataset":
         """Validates that for each"""
+        for split, annotations_in_split in self.annotations.items():
+            image_stems_in_split: list[Path] = [i.stem for i in self.images[split]]
+
+            for ann in annotations_in_split:
+                if ann.stem not in image_stems_in_split:
+                    raise YoloDatasetError(
+                        "Annotation exists without a corresponding image.\n"
+                        f"Path to annotation: {ann}"
+                    )
+
         return self
 
     @model_validator(mode="after")
@@ -515,6 +525,46 @@ class _YoloDataset(BaseModel):
             )
 
         return self
+
+    @cached_property
+    def images(self) -> dict[str, list[Path]]:
+        """The path to every image in the dataset organized by split."""
+        img_extensions: list[str] = [".jpg", ".jpeg", ".png"]
+        folders: dict[str, Path] = {
+            "train": self.dataset_config.train_images_path,
+            "val": self.dataset_config.val_images_path,
+            "test": self.dataset_config.test_images_path,
+        }
+        folders.update(self.dataset_config.validation_set_image_paths)
+        folders = {k: v for (k, v) in folders.items() if v is not None}
+        images: dict[str, list[Path]] = {}
+        for split_or_val_set_name, folderpath in folders.items():
+            images_in_folder: list[Path] = [
+                im_path
+                for im_path in folderpath.glob("*")
+                if im_path.suffix.lower() in img_extensions
+            ]
+            images[split_or_val_set_name] = images_in_folder
+
+        return images
+
+    @cached_property
+    def annotations(self) -> dict[str, list[Path]]:
+        """The path to every annotation txt file in the dataset organized by split."""
+        folders: dict[str, Path] = {
+            "train": self.dataset_config.train_labels_path,
+            "val": self.dataset_config.val_labels_path,
+            "test": self.dataset_config.test_labels_path,
+        }
+        folders.update(self.dataset_config.validation_set_label_paths)
+        folders = {k: v for (k, v) in folders.items() if v is not None}
+
+        annotations: dict[str, list[Path]] = {}
+        for split_or_val_set_name, folderpath in folders.items():
+            annotations_in_folder: list[Path] = list(folderpath.glob("*.txt"))
+            annotations[split_or_val_set_name] = annotations_in_folder
+
+        return annotations
 
     def read_yolo_annotation_file(
         self, path_to_yolo_annotation_file: Path
