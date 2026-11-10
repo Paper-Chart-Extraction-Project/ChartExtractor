@@ -2,6 +2,7 @@
 
 import os
 import warnings
+from collections import namedtuple
 from collections.abc import Callable
 from enum import StrEnum
 from functools import cached_property
@@ -34,6 +35,9 @@ class _YoloDatasetType(StrEnum):
 
 
 type _RawYamlData = dict[str, Any]
+
+
+KeypointShape = namedtuple("KeypointShape", ["num_keypoints", "num_dimensions"])
 
 
 class _YoloDatasetPaths(TypedDict):
@@ -85,6 +89,12 @@ class _YoloDatasetConfig(BaseModel):
             The names of the keypoints in the dataset.
             Each keypoint annotation will have ordered keypoints. The position in that ordering
             will map to the name of the keypoint in this list.
+        kpt_shape (KeypointShape):
+            A namedtuple containing the (0) number of keypoints for each annotation and (1) the
+            'dimensions' of each keypoint. The dimension can be either 2 or 3 where the first
+            dimension is the x location of the keypoint, the second dimension is the y location
+            of the keypoint, and the optional third is the 'visibility' of the keypoint. The
+            visisbility can be either 0='Missing/Out of view', 1='Occluded', or 2='Visible'.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -335,6 +345,43 @@ class _YoloDatasetConfig(BaseModel):
             for sk in sorted(self.raw_yaml_data["kpt_names"].keys())
         ]
 
+    @cached_property
+    def kpt_shape(self) -> KeypointShape | None:
+        """A tuple containing the number of keypoints and 'dimensions' of each keypoint."""
+        if self.dataset_type != _YoloDatasetType.POSE:
+            return None
+
+        if len(self.raw_yaml_data["kpt_shape"]) != 2:
+            raise YoloDatasetError(
+                "The shape of the 'kpt_shape' parameter in the yolo config is not 2. "
+                f"Expected [num_keypoints, num_dimensions], got {self.raw_yaml_data['kpt_shape']}."
+            )
+
+        num_keypoints: int = self.raw_yaml_data["kpt_shape"][0]
+        num_dimensions: int = self.raw_yaml_data["kpt_shape"][1]
+
+        if not isinstance(num_keypoints, int):
+            raise YoloDatasetError(
+                f"Expected number of keypoints to be an integer, got {type(num_keypoints)!s}."
+            )
+        if not isinstance(num_dimensions, int):
+            raise YoloDatasetError(
+                "Expected number of keypoint dimensions to be an integer, got "
+                f"{type(num_dimensions)!s}."
+            )
+        if num_dimensions not in [2, 3]:
+            raise YoloDatasetError(
+                f"Expected number of keypoint dimensions is 2 or 3, got {num_dimensions}."
+            )
+
+        if num_keypoints != len(self.kpt_names):
+            raise YoloDatasetError(
+                f"Number of keypoints in kpt_shape ({num_keypoints}) does not equal the number "
+                f"of keypoints indicated by kpt_names ({len(self.kpt_names)})."
+            )
+
+        return KeypointShape(num_keypoints=num_keypoints, num_dimensions=num_dimensions)
+
     @classmethod
     def from_path(cls, path_to_dataset_yaml: Path) -> "_YoloDatasetConfig":
         """Creates a _YoloDatasetConfig object by reading data from a yaml file.
@@ -577,12 +624,45 @@ class _YoloDataset(BaseModel):
         self, yolo_pose_file_contents: list[str]
     ) -> list[BoundingBoxWithKeypoints]:
         """Reads a YOLO pose formatted annotations file."""
-        return [self.read_yolo_pose_annotation(ann) for ann in yolo_pose_file_contents]
+        bbox_w_kpts_annotations: list[BoundingBoxWithKeypoints] = []
+        for line_ix, ann_line in enumerate(yolo_pose_file_contents):
+            try:
+                new_ann: BoundingBoxWithKeypoints = self.read_yolo_pose_annotation(
+                    ann_line
+                )
+                bbox_w_kpts_annotations.append(new_ann)
+            except YoloDatasetError as yde:
+                raise YoloDatasetError(
+                    f"An exception has occured while reading line {line_ix + 1}.\n{yde}"
+                )
+
+        return bbox_w_kpts_annotations
 
     def read_yolo_pose_annotation(
         self, yolo_pose_annotation_line: str
     ) -> BoundingBoxWithKeypoints:
         """Reads a YOLO pose formatted annotation line."""
+        line_entries: list[str] = yolo_pose_annotation_line.strip().split(" ")
+
+        expected_number_of_line_entries: int = 5 + self.dataset_config.kpt_shape
+        if len(line_entries) < 5:
+            raise YoloDatasetError(
+                "Too few entries in detect annotation line. "
+                f"Got {len(line_entries)} when 5 were expected.\n"
+                f"Full line: '{yolo_detect_annotation_line}'."
+            )
+        if len(line_entries) > 5:
+            raise YoloDatasetError(
+                "Too many entries in detect annotation line. "
+                f"Got {len(line_entries)} when 5 were expected.\n"
+                f"Full line: '{yolo_detect_annotation_line}'."
+            )
+
+        class_index: int = int(line_entries[0])
+        x_center: float = float(line_entries[1])
+        y_center: float = float(line_entries[2])
+        width: float = float(line_entries[3])
+        height: float = float(line_entries[4])
         raise NotImplementedError()
 
     @classmethod

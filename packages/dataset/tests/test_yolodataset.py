@@ -42,7 +42,7 @@ def yaml_pose_data(tmp_path: Path) -> _RawYamlData:
         "val": "images/val",
         "test": "images/test",
         "names": {0: "test_0", 1: "test_1", 2: "test_2"},
-        "kpt_shape": ["2", "2"],
+        "kpt_shape": [2, 2],
         "kpt_names": {0: "left", 1: "right"},
     }
 
@@ -216,6 +216,64 @@ class TestYoloDatasetConfig:
         """Tests that the names list is created from the dictionary and sorts properly."""
         config: _YoloDatasetConfig = _YoloDatasetConfig(raw_yaml_data=yaml_pose_data)
         assert config.kpt_names == ["left", "right"]
+
+    def test_kpt_shape_valid(self, yaml_pose_data: _RawYamlData):
+        """Tests the kpt_shape property with valid yaml data."""
+        config: _YoloDatasetConfig = _YoloDatasetConfig(raw_yaml_data=yaml_pose_data)
+        assert config.kpt_shape == (2, 2)
+
+    def test_kpt_shape_for_detect_dataset(self, yaml_detect_data: _RawYamlData):
+        """Tests the kpt_shape property is None with detect yaml data."""
+        config: _YoloDatasetConfig = _YoloDatasetConfig(raw_yaml_data=yaml_detect_data)
+        assert config.kpt_shape is None
+
+    def test_kpt_shape_too_few_elements(self, yaml_pose_data: _RawYamlData):
+        """Tests the kpt_shape property with missing elements of the tuple."""
+        altered_yaml_data: _RawYamlData = yaml_pose_data
+        altered_yaml_data["kpt_shape"] = (2,)
+
+        with pytest.raises(
+            YoloDatasetError, match="shape of the 'kpt_shape' parameter"
+        ):
+            _ = _YoloDatasetConfig(raw_yaml_data=altered_yaml_data).kpt_shape
+
+    def test_kpt_shape_too_many_elements(self, yaml_pose_data: _RawYamlData):
+        """Tests the kpt_shape property with extra elements of the tuple."""
+        altered_yaml_data: _RawYamlData = yaml_pose_data
+        altered_yaml_data["kpt_shape"] = (2, 3, 2)
+
+        with pytest.raises(
+            YoloDatasetError, match="shape of the 'kpt_shape' parameter"
+        ):
+            _ = _YoloDatasetConfig(raw_yaml_data=altered_yaml_data).kpt_shape
+
+    def test_kpt_shape_num_dimensions_not_2_or_3(self, yaml_pose_data: _RawYamlData):
+        """Tests the kpt_shape property when num_dimensions is not 2 or 3."""
+        altered_yaml_data: _RawYamlData = yaml_pose_data
+        altered_yaml_data["kpt_shape"] = (2, 1)
+
+        with pytest.raises(YoloDatasetError, match="2 or 3, got 1."):
+            _ = _YoloDatasetConfig(raw_yaml_data=altered_yaml_data).kpt_shape
+
+    def test_kpt_shape_non_integer_entries(self, yaml_pose_data: _RawYamlData):
+        """Tests the kpt_shape property when one or both entries is not an integer."""
+        altered_yaml_data: _RawYamlData = yaml_pose_data
+        altered_yaml_data["kpt_shape"] = (2, "1")
+
+        with pytest.raises(YoloDatasetError, match="to be an integer, got"):
+            _ = _YoloDatasetConfig(raw_yaml_data=altered_yaml_data).kpt_shape
+
+    def test_kpt_shape_num_keypoints_not_eq_to_length_of_kpt_names(
+        self, yaml_pose_data: _RawYamlData
+    ):
+        """Tests the kpt_shape property when the num_keypoints entry is not equal to the length of kpt_names."""
+        altered_yaml_data: _RawYamlData = yaml_pose_data
+        altered_yaml_data["kpt_shape"] = (5, 2)
+
+        with pytest.raises(
+            YoloDatasetError, match="does not equal the number of keypoints"
+        ):
+            _ = _YoloDatasetConfig(raw_yaml_data=altered_yaml_data).kpt_shape
 
 
 class TestYoloDatasetFolderStructure:
