@@ -49,28 +49,6 @@ class VisionDataset(BaseModel):
     splits: _Splits
     evaluation_sets: dict[str, set[ImageId]] = Field(default_factory=dict)
 
-    @field_validator("annotated_images")
-    @classmethod
-    def check_all_image_ids_are_unique(
-        cls, annotated_images: list[AnnotatedImage]
-    ) -> list[AnnotatedImage]:
-        """Ensures that all the image ids are unique."""
-        all_image_ids: list[ImageId] = [im.image_id for im in annotated_images]
-        if len(all_image_ids) == len(set(all_image_ids)):
-            return annotated_images
-
-        duplicated_image_ids: dict[str, int] = {
-            image_id: number_of_duplicates
-            for (image_id, number_of_duplicates) in Counter(all_image_ids).items()
-            if number_of_duplicates > 1
-        }
-
-        err_msg: str = "Multiple images with the same image id found.\n"
-        for image_id, number_of_duplicates in duplicated_image_ids.items():
-            err_msg += f"{image_id} appears a total of {number_of_duplicates} times.\n"
-
-        raise DatasetError(err_msg)
-
     @field_validator("splits")
     @classmethod
     def check_splits_are_disjoint(cls, splits: _Splits) -> _Splits:

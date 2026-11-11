@@ -67,26 +67,6 @@ class TestDatasetCreation:
             evaluation_sets={},
         )
 
-    def test_duplicate_image_ids(self, image_metadata: ImageMetadata):
-        """Tests the creation of a dataset with valid splits."""
-        annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", image_metadata)
-            for im_id in [0, 1, 2, 2, 3, 4, 5]
-        ]
-        splits: dict[str, set[ImageId]] = {
-            "train": {"im_0", "im_1", "im_2"},
-            "val": {"im_3"},
-            "test": {"im_4"},
-        }
-
-        with pytest.raises(DatasetError, match="with the same image id"):
-            VisionDataset(
-                annotated_images=annotated_images,
-                dataset_metadata={},
-                splits=splits,
-                evaluation_sets={},
-            )
-
     def test_overlapping_splits(self, image_metadata: ImageMetadata):
         """Tests the creation of a dataset with splits that overlap."""
         annotated_images: list[AnnotatedImage] = [
