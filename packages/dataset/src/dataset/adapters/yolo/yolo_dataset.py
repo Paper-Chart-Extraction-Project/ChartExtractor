@@ -6,12 +6,19 @@ from collections import namedtuple
 from collections.abc import Callable
 from enum import StrEnum
 from functools import cached_property
+from itertools import batched
 from operator import attrgetter
 from pathlib import Path
 from typing import Any, NotRequired, Required, TypedDict
 
 import yaml
-from core.annotations import Annotation, BoundingBox, BoundingBoxWithKeypoints
+from core.annotations import (
+    Annotation,
+    BoundingBox,
+    BoundingBoxWithKeypoints,
+    Keypoint,
+    VisibilityStatus,
+)
 from core.geometry import Point, Rectangle
 from pydantic import (
     BaseModel,
@@ -336,7 +343,7 @@ class _YoloDatasetConfig(BaseModel):
         ]
 
     @cached_property
-    def kpt_names(self) -> list[str] | None:
+    def kpt_names(self) -> list[list[str]] | None:
         """A list of the names of keypoints."""
         if self.dataset_type != _YoloDatasetType.POSE:
             return None
@@ -694,18 +701,21 @@ class _YoloDataset(BaseModel):
         """Reads a YOLO pose formatted annotation line."""
         line_entries: list[str] = yolo_pose_annotation_line.strip().split(" ")
 
-        expected_number_of_line_entries: int = 5 + self.dataset_config.kpt_shape
-        if len(line_entries) < 5:
+        expected_number_of_line_entries: int = 5 + (
+            self.dataset_config.kpt_shape.num_keypoints
+            * self.dataset_config.kpt_shape.num_dimensions
+        )
+        if len(line_entries) < expected_number_of_line_entries:
             raise YoloDatasetError(
                 "Too few entries in detect annotation line. "
                 f"Got {len(line_entries)} when 5 were expected.\n"
-                f"Full line: '{yolo_detect_annotation_line}'."
+                f"Full line: '{yolo_pose_annotation_line}'."
             )
-        if len(line_entries) > 5:
+        if len(line_entries) > expected_number_of_line_entries:
             raise YoloDatasetError(
                 "Too many entries in detect annotation line. "
                 f"Got {len(line_entries)} when 5 were expected.\n"
-                f"Full line: '{yolo_detect_annotation_line}'."
+                f"Full line: '{yolo_pose_annotation_line}'."
             )
 
         class_index: int = int(line_entries[0])
@@ -713,7 +723,49 @@ class _YoloDataset(BaseModel):
         y_center: float = float(line_entries[2])
         width: float = float(line_entries[3])
         height: float = float(line_entries[4])
-        raise NotImplementedError()
+
+        bbox: BoundingBox = self.read_yolo_detect_annotation(
+            f"{class_index} {x_center} {y_center} {width} {height}"
+        )
+
+        keypoints: list[Keypoint] = []
+        if self.dataset_config.kpt_shape.num_dimensions == 2:
+            for kpt_ix, (kpt_x, kpt_y) in enumerate(batched(line_entries[5:], 2)):
+                vis_status: VisibilityStatus = VisibilityStatus.VISIBLE
+                kpt_name: str = self.dataset_config.kpt_names[class_index][kpt_ix]
+                keypoint: Keypoint = Keypoint(
+                    point=Point(x=float(kpt_x), y=float(kpt_y)),
+                    category=kpt_name,
+                    visibility=vis_status,
+                )
+                keypoints.append(keypoint)
+
+        else:
+            for kpt_ix, (kpt_x, kpt_y, visibility) in enumerate(
+                batched(line_entries[5:], 3)
+            ):
+                match visibility:
+                    case "0":
+                        vis_status: VisibilityStatus = VisibilityStatus.MISSING
+                    case "1":
+                        vis_status: VisibilityStatus = VisibilityStatus.OCCLUDED
+                    case "2":
+                        vis_status: VisibilityStatus = VisibilityStatus.VISIBLE
+                    case _:
+                        raise YoloDatasetError(
+                            f"Visibility status ({visibility}) for keypoint {kpt_ix} is not in "
+                            "[0, 1, 2]."
+                        )
+                kpt_name: str = self.dataset_config.kpt_names[class_index][kpt_ix]
+                print(f"Keypoint name: {kpt_name}")
+                keypoint: Keypoint = Keypoint(
+                    point=Point(x=float(kpt_x), y=float(kpt_y)),
+                    category=kpt_name,
+                    visibility=vis_status,
+                )
+                keypoints.append(keypoint)
+
+        return BoundingBoxWithKeypoints(bounding_box=bbox, keypoints=keypoints)
 
     @classmethod
     def from_folderpath(

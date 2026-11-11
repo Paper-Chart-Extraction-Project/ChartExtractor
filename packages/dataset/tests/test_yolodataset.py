@@ -4,8 +4,13 @@ import textwrap
 from pathlib import Path
 
 import pytest
-from core.annotations import BoundingBox
-from core.geometry import Rectangle
+from core.annotations import (
+    BoundingBox,
+    BoundingBoxWithKeypoints,
+    Keypoint,
+    VisibilityStatus,
+)
+from core.geometry import Point, Rectangle
 from dataset.adapters.yolo import YoloDatasetError, YoloDatasetWarning
 from dataset.adapters.yolo.yolo_dataset import (
     _RawYamlData,
@@ -43,7 +48,7 @@ def yaml_pose_data(tmp_path: Path) -> _RawYamlData:
         "test": "images/test",
         "names": {0: "test_0", 1: "test_1", 2: "test_2"},
         "kpt_shape": [2, 2],
-        "kpt_names": {0: "left", 1: "right"},
+        "kpt_names": {0: ["left", "right"], 1: ["one", "two"]},
     }
 
 
@@ -70,6 +75,98 @@ def yolo_detect_dataset(tmp_path: Path) -> _YoloDataset:
         names:
             0: test_0
             1: test_1       
+    """).strip()
+    for dir in dirs_to_create:
+        (tmp_path / dir).mkdir()
+    dataset_yaml: Path = (
+        tmp_path / "test_dataset_valid_folder_structure" / "dataset.yaml"
+    )
+    dataset_yaml.write_text(yaml_data)
+
+    return _YoloDataset.from_folderpath(
+        tmp_path / "test_dataset_valid_folder_structure"
+    )
+
+
+@pytest.fixture
+def yolo_pose_dataset_no_vis(tmp_path: Path) -> _YoloDataset:
+    """A dummy pose dataset."""
+    dirs_to_create: list[Path] = [
+        Path("test_dataset_valid_folder_structure"),
+        Path("test_dataset_valid_folder_structure") / "images",
+        Path("test_dataset_valid_folder_structure") / "labels",
+        Path("test_dataset_valid_folder_structure") / "images" / "train",
+        Path("test_dataset_valid_folder_structure") / "labels" / "train",
+        Path("test_dataset_valid_folder_structure") / "images" / "val",
+        Path("test_dataset_valid_folder_structure") / "labels" / "val",
+        Path("test_dataset_valid_folder_structure") / "images" / "test",
+        Path("test_dataset_valid_folder_structure") / "labels" / "test",
+    ]
+    yaml_data: str = textwrap.dedent(f"""
+        path: {(tmp_path / "test_dataset_valid_folder_structure").resolve()}
+        train: images/train
+        val: images/val
+        test: images/test
+
+        kpt_shape: [2, 2]
+
+        kpt_names:
+            0:
+                - kpt_1
+                - kpt_2
+            1:
+                - kpt_a
+                - kpt_b
+        
+        names:
+            0: test_0
+            1: test_1
+    """).strip()
+    for dir in dirs_to_create:
+        (tmp_path / dir).mkdir()
+    dataset_yaml: Path = (
+        tmp_path / "test_dataset_valid_folder_structure" / "dataset.yaml"
+    )
+    dataset_yaml.write_text(yaml_data)
+
+    return _YoloDataset.from_folderpath(
+        tmp_path / "test_dataset_valid_folder_structure"
+    )
+
+
+@pytest.fixture
+def yolo_pose_dataset_with_vis(tmp_path: Path) -> _YoloDataset:
+    """A dummy pose dataset."""
+    dirs_to_create: list[Path] = [
+        Path("test_dataset_valid_folder_structure"),
+        Path("test_dataset_valid_folder_structure") / "images",
+        Path("test_dataset_valid_folder_structure") / "labels",
+        Path("test_dataset_valid_folder_structure") / "images" / "train",
+        Path("test_dataset_valid_folder_structure") / "labels" / "train",
+        Path("test_dataset_valid_folder_structure") / "images" / "val",
+        Path("test_dataset_valid_folder_structure") / "labels" / "val",
+        Path("test_dataset_valid_folder_structure") / "images" / "test",
+        Path("test_dataset_valid_folder_structure") / "labels" / "test",
+    ]
+    yaml_data: str = textwrap.dedent(f"""
+        path: {(tmp_path / "test_dataset_valid_folder_structure").resolve()}
+        train: images/train
+        val: images/val
+        test: images/test
+
+        kpt_shape: [2, 3]
+
+        kpt_names:
+            0:
+                - kpt_1
+                - kpt_2
+            1:
+                - kpt_a
+                - kpt_b
+        
+        names:
+            0: test_0
+            1: test_1
     """).strip()
     for dir in dirs_to_create:
         (tmp_path / dir).mkdir()
@@ -215,7 +312,7 @@ class TestYoloDatasetConfig:
     def test_kpt_names_is_a_sorted_list(self, yaml_pose_data: _RawYamlData):
         """Tests that the names list is created from the dictionary and sorts properly."""
         config: _YoloDatasetConfig = _YoloDatasetConfig(raw_yaml_data=yaml_pose_data)
-        assert config.kpt_names == ["left", "right"]
+        assert config.kpt_names == [["left", "right"], ["one", "two"]]
 
     def test_kpt_shape_valid(self, yaml_pose_data: _RawYamlData):
         """Tests the kpt_shape property with valid yaml data."""
@@ -1022,7 +1119,7 @@ class TestYoloDatasetDetectAnnotationReading:
     def test_read_detect_annotation_line_valid_annotation(
         self, yolo_detect_dataset: _YoloDataset
     ):
-        """Tests the read_yolo_detect_annotation method with a valid line."""
+        """Tests detect annotation reading with a valid line."""
         valid_line: str = "1 0.55 0.44 0.17 0.05\n"
         true_annotation: BoundingBox = BoundingBox(
             rectangle=Rectangle.from_center_xywh(0.55, 0.44, 0.17, 0.05),
@@ -1037,7 +1134,7 @@ class TestYoloDatasetDetectAnnotationReading:
     def test_read_detect_annotation_line_class_id_out_of_bounds(
         self, yolo_detect_dataset: _YoloDataset
     ):
-        """Tests the read_yolo_detect_annotation method with a class id that is out of bounds."""
+        """Tests that an error is raised with a class id that is out of bounds."""
         invalid_line: str = "-1 0.55 0.44 0.17 0.05\n"
         with pytest.raises(YoloDatasetError, match="Class index is out of range"):
             yolo_detect_dataset.read_yolo_detect_annotation(invalid_line)
@@ -1049,7 +1146,7 @@ class TestYoloDatasetDetectAnnotationReading:
     def test_read_detect_annotation_line_left_out_of_bounds(
         self, yolo_detect_dataset: _YoloDataset
     ):
-        """Tests the read_yolo_detect_annotation method warns when a bounding box left side is out of bounds."""
+        """Tests that a warning is emitted when a bounding box left side is out of bounds."""
         valid_line: str = "1 0.05 0.44 0.24 0.05\n"
         with pytest.warns(YoloDatasetWarning, match="left side is out of bounds"):
             yolo_detect_dataset.read_yolo_detect_annotation(valid_line)
@@ -1057,7 +1154,7 @@ class TestYoloDatasetDetectAnnotationReading:
     def test_read_detect_annotation_line_top_out_of_bounds(
         self, yolo_detect_dataset: _YoloDataset
     ):
-        """Tests the read_yolo_detect_annotation method warns when a bounding box top side is out of bounds."""
+        """Tests that a warning is emitted when a bounding box top side is out of bounds."""
         valid_line: str = "1 0.55 0.02 0.24 0.05\n"
         with pytest.warns(YoloDatasetWarning, match="top side is out of bounds"):
             yolo_detect_dataset.read_yolo_detect_annotation(valid_line)
@@ -1065,7 +1162,7 @@ class TestYoloDatasetDetectAnnotationReading:
     def test_read_detect_annotation_line_right_out_of_bounds(
         self, yolo_detect_dataset: _YoloDataset
     ):
-        """Tests the read_yolo_detect_annotation method warns when a bounding box right side is out of bounds."""
+        """Tests that a warning is emitted when a bounding box right side is out of bounds."""
         valid_line: str = "1 0.95 0.26 0.24 0.17\n"
         with pytest.warns(YoloDatasetWarning, match="right side is out of bounds"):
             yolo_detect_dataset.read_yolo_detect_annotation(valid_line)
@@ -1073,7 +1170,7 @@ class TestYoloDatasetDetectAnnotationReading:
     def test_read_detect_annotation_line_bottom_out_of_bounds(
         self, yolo_detect_dataset: _YoloDataset
     ):
-        """Tests the read_yolo_detect_annotation method warns when a bounding box right side is out of bounds."""
+        """Tests that a warning is emitted when a bounding box right side is out of bounds."""
         valid_line: str = "1 0.46 0.96 0.14 0.17\n"
         with pytest.warns(YoloDatasetWarning, match="bottom side is out of bounds"):
             yolo_detect_dataset.read_yolo_detect_annotation(valid_line)
@@ -1081,7 +1178,7 @@ class TestYoloDatasetDetectAnnotationReading:
     def test_read_detect_annotation_line_too_many_entries(
         self, yolo_detect_dataset: _YoloDataset
     ):
-        """Tests the read_yolo_detect_annotation method errors when there are too many items in the line."""
+        """Tests that an exception is raised when there are too many items in the line."""
         invalid_line: str = "1 0.46 0.96 0.14 0.17 0.44\n"
         with pytest.raises(
             YoloDatasetError, match="Too many entries in detect annotation line."
@@ -1091,17 +1188,17 @@ class TestYoloDatasetDetectAnnotationReading:
     def test_read_detect_annotation_line_too_few_entries(
         self, yolo_detect_dataset: _YoloDataset
     ):
-        """Tests the read_yolo_detect_annotation method errors when there are too few items in the line."""
+        """Tests that an exception is raised when there are too few items in the line."""
         invalid_line: str = "1 0.46 0.96 0.14\n"
         with pytest.raises(
             YoloDatasetError, match="Too few entries in detect annotation line."
         ):
             yolo_detect_dataset.read_yolo_detect_annotation(invalid_line)
 
-    def test_read_detect_annotation_pose_file_valid(
+    def test_read_detect_annotation_valid_file(
         self, tmp_path: Path, yolo_detect_dataset: _YoloDataset
     ):
-        """Tests the ability of the read_yolo_annotation_file to read a file of annotations from disk."""
+        """Tests reading a valid file of annotations from disk."""
         file_contents: str = textwrap.dedent("""
         0 0.5 0.5 0.1 0.1
         1 0.2 0.8 0.05 0.15
@@ -1112,10 +1209,10 @@ class TestYoloDatasetDetectAnnotationReading:
 
         yolo_detect_dataset.read_yolo_annotation_file(temp_detect_annotation_filepath)
 
-    def test_read_detect_annotation_pose_file_invalid(
+    def test_read_detect_annotation_invalid_file(
         self, tmp_path: Path, yolo_detect_dataset: _YoloDataset
     ):
-        """Tests the ability of the read_yolo_annotation_file to read a file of annotations from disk."""
+        """Tests that the line an error occurs on is put into the exception when it occurs."""
         file_contents: str = textwrap.dedent("""
         0 0.5 0.5 0.1 0.1
         1 0.2 0.8 0.05
@@ -1126,5 +1223,151 @@ class TestYoloDatasetDetectAnnotationReading:
 
         with pytest.raises(YoloDatasetError, match="while reading line 2"):
             yolo_detect_dataset.read_yolo_annotation_file(
+                temp_detect_annotation_filepath
+            )
+
+    def test_read_pose_annotation_line_valid(
+        self, yolo_pose_dataset_no_vis: _YoloDataset
+    ):
+        """Tests that a valid pose annotation line can be read."""
+        valid_line: str = "0 0.5 0.55 0.1 0.2 0.5 0.57 0.48 0.54\n"
+        read_annotation: BoundingBoxWithKeypoints = (
+            yolo_pose_dataset_no_vis.read_yolo_pose_annotation(valid_line)
+        )
+        true_bounding_box: BoundingBox = BoundingBox(
+            rectangle=Rectangle.from_center_xywh(0.5, 0.55, 0.1, 0.2), category="test_0"
+        )
+        true_keypoints: list[Keypoint] = [
+            Keypoint(
+                point=Point(x=0.5, y=0.57),
+                category="kpt_1",
+                visibility=VisibilityStatus.VISIBLE,
+            ),
+            Keypoint(
+                point=Point(x=0.48, y=0.54),
+                category="kpt_2",
+                visibility=VisibilityStatus.VISIBLE,
+            ),
+        ]
+        true_annotation: BoundingBoxWithKeypoints = BoundingBoxWithKeypoints(
+            bounding_box=true_bounding_box, keypoints=true_keypoints
+        )
+
+        assert (
+            true_annotation.bounding_box.rectangle
+            == read_annotation.bounding_box.rectangle
+        )
+        assert (
+            true_annotation.bounding_box.category
+            == read_annotation.bounding_box.category
+        )
+        for read_kpt, true_kpt in zip(
+            read_annotation.keypoints, true_annotation.keypoints
+        ):
+            assert read_kpt.point.x == true_kpt.point.x
+            assert read_kpt.point.y == true_kpt.point.y
+            assert read_kpt.category == true_kpt.category
+
+    def test_read_pose_annotation_line_too_many_entries(
+        self, yolo_pose_dataset_no_vis: _YoloDataset
+    ):
+        """Tests that an exception is raised when there are too many items in the line."""
+        invalid_line: str = "0 0.5 0.55 0.1 0.2 0.5 0.57 2 0.48 0.54 2\n"
+
+        with pytest.raises(YoloDatasetError, match="Too many entries"):
+            yolo_pose_dataset_no_vis.read_yolo_pose_annotation(invalid_line)
+
+    def test_read_pose_annotation_line_too_few_entries(
+        self, yolo_pose_dataset_no_vis: _YoloDataset
+    ):
+        """Tests that an exception is raised when there are too few items in the line."""
+        invalid_line: str = "0 0.5 0.55 0.1 0.2 0.5 0.57\n"
+
+        with pytest.raises(YoloDatasetError, match="Too few entries"):
+            yolo_pose_dataset_no_vis.read_yolo_pose_annotation(invalid_line)
+
+    def test_read_pose_annotation_line_with_visibility_data(
+        self, yolo_pose_dataset_with_vis: _YoloDataset
+    ):
+        """Tests reading an annotation that contains visibility data."""
+        valid_line: str = "0 0.5 0.55 0.1 0.2 0.5 0.57 0 0.48 0.54 1\n"
+
+        read_annotation: BoundingBoxWithKeypoints = (
+            yolo_pose_dataset_with_vis.read_yolo_pose_annotation(valid_line)
+        )
+        true_bounding_box: BoundingBox = BoundingBox(
+            rectangle=Rectangle.from_center_xywh(0.5, 0.55, 0.1, 0.2), category="test_0"
+        )
+        true_keypoints: list[Keypoint] = [
+            Keypoint(
+                point=Point(x=0.5, y=0.57),
+                category="kpt_1",
+                visibility=VisibilityStatus.MISSING,
+            ),
+            Keypoint(
+                point=Point(x=0.48, y=0.54),
+                category="kpt_2",
+                visibility=VisibilityStatus.OCCLUDED,
+            ),
+        ]
+        true_annotation: BoundingBoxWithKeypoints = BoundingBoxWithKeypoints(
+            bounding_box=true_bounding_box, keypoints=true_keypoints
+        )
+
+        assert (
+            true_annotation.bounding_box.rectangle
+            == read_annotation.bounding_box.rectangle
+        )
+        assert (
+            true_annotation.bounding_box.category
+            == read_annotation.bounding_box.category
+        )
+        for read_kpt, true_kpt in zip(
+            read_annotation.keypoints, true_annotation.keypoints
+        ):
+            assert read_kpt.point.x == true_kpt.point.x
+            assert read_kpt.point.y == true_kpt.point.y
+            assert read_kpt.category == true_kpt.category
+            assert read_kpt.visibility == true_kpt.visibility
+
+    def test_read_pose_annotation_line_with_erronous_visibility_data(
+        self, yolo_pose_dataset_with_vis: _YoloDataset
+    ):
+        """Tests reading an annotation that contains visibility data that is not in [0, 1, 2]."""
+        invalid_line: str = "0 0.5 0.55 0.1 0.2 0.5 0.57 2 0.48 0.54 4\n"
+
+        with pytest.raises(YoloDatasetError, match="is not in \\[0, 1, 2\\]."):
+            yolo_pose_dataset_with_vis.read_yolo_pose_annotation(invalid_line)
+
+    def test_read_pose_annotation_valid_file(
+        self, tmp_path: Path, yolo_pose_dataset_with_vis: _YoloDataset
+    ):
+        """Tests reading a valid file of pose annotations from disk."""
+        file_contents: str = textwrap.dedent("""
+        0 0.5 0.5 0.1 0.1 0.49 0.51 2 0.46 0.54 1
+        1 0.2 0.8 0.05 0.15 0.22 0.87 2 0.19 0.79 2
+        0 0.03 0.88 0.03 0.11 0.029 0.888 2 0.02 0.85 0
+        """).strip("\n")
+        temp_detect_annotation_filepath: Path = tmp_path / "temp_detect_annotation.txt"
+        temp_detect_annotation_filepath.write_text(file_contents)
+
+        yolo_pose_dataset_with_vis.read_yolo_annotation_file(
+            temp_detect_annotation_filepath
+        )
+
+    def test_read_pose_annotation_invalid_file(
+        self, tmp_path: Path, yolo_pose_dataset_with_vis: _YoloDataset
+    ):
+        """Tests that the line an error occurs on is put into the exception when it occurs."""
+        file_contents: str = textwrap.dedent("""
+        0 0.5 0.5 0.1 0.1 0.49 0.51 2 0.46 0.54 1
+        1 0.2 0.8 0.05 0.15 0.22 0.87 2 0.19 0.79 2
+        0 0.03 0.88 0.03 0.11 0.029 0.888 2 0.02 0.85
+        """).strip("\n")
+        temp_detect_annotation_filepath: Path = tmp_path / "temp_detect_annotation.txt"
+        temp_detect_annotation_filepath.write_text(file_contents)
+
+        with pytest.raises(YoloDatasetError, match="while reading line 3."):
+            yolo_pose_dataset_with_vis.read_yolo_annotation_file(
                 temp_detect_annotation_filepath
             )
