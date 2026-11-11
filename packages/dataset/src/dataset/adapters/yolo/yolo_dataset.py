@@ -20,6 +20,7 @@ from core.annotations import (
     VisibilityStatus,
 )
 from core.geometry import Point, Rectangle
+from image import Image, ImageMetadata
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -28,7 +29,7 @@ from pydantic import (
     model_validator,
 )
 
-from dataset import VisionDataset
+from dataset import AnnotatedImage, ImageId, VisionDataset
 
 from .exceptions import YoloDatasetError
 from .warnings import YoloDatasetWarning
@@ -794,6 +795,56 @@ class _YoloDataset(BaseModel):
         )
         return yolo_dataset
 
+    def read_to_vision_dataset(self) -> VisionDataset:
+        """Reads a yolo dataset from disk into a VisionDataset.
+
+        Returns:
+            A VisionDataset with the contents of the yolo dataset from disk.
+        """
+        images: dict[str, dict[ImageId, ImageMetadata]] = {
+            split: {
+                im_path.stem: ImageMetadata(path=im_path)
+                for im_path in split_image_paths
+            }
+            for split, split_image_paths in self.images.items()
+        }
+        annotations: dict[str, dict[ImageId, list[Annotation]]] = {
+            split: {
+                ann_path.stem: self.read_yolo_annotation_file(
+                    path_to_yolo_annotation_file=ann_path
+                )
+                for ann_path in split_annotation_paths
+            }
+            for split, split_annotation_paths in self.annotations.items()
+        }
+
+        annotated_images: list[AnnotatedImage] = []
+        for split, image_id_to_image_metadata_map in images.items():
+            for img_id, image_metadata in image_id_to_image_metadata_map.items():
+                annotated_image: AnnotatedImage = AnnotatedImage(
+                    image=image_metadata,
+                    annotations=annotations[split][img_id],
+                    image_id=img_id,
+                )
+                annotated_images.append(annotated_image)
+
+        splits: dict[str, set[ImageId]] = {
+            split: set(images[split].keys())
+            for split in ("train", "val", "test")
+            if split in images
+        }
+        extra_val_sets: dict[str, set[ImageId]] = {
+            split: set(images[split].keys())
+            for split in sorted(set(images.keys()) - {"train", "val", "test"})
+        }
+
+        return VisionDataset(
+            annotated_images=annotated_images,
+            dataset_metadata={},  # todo: dump the config to a dictionary.
+            splits=splits,
+            evaluation_sets=extra_val_sets,
+        )
+
 
 def read_yolo_dataset(
     folderpath: Path,
@@ -814,3 +865,4 @@ def read_yolo_dataset(
         folderpath=folderpath,
         yaml_file_name=yaml_file_name,
     )
+    return yolo_dataset.read_to_vision_dataset()
