@@ -1,7 +1,6 @@
 """Contains the VisionDataset class."""
 
 import warnings
-from collections import Counter
 from functools import reduce
 from typing import Any, NotRequired, Required, TypedDict
 
