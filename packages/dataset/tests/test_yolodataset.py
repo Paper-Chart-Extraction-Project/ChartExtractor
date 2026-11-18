@@ -11,6 +11,7 @@ from core.annotations import (
     VisibilityStatus,
 )
 from core.geometry import Point, Rectangle
+
 from dataset.adapters.yolo import YoloDatasetError, YoloDatasetWarning
 from dataset.adapters.yolo.yolo_dataset import (
     _RawYamlData,

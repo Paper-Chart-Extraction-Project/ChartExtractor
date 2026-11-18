@@ -3,8 +3,9 @@
 import warnings
 
 import pytest
-from dataset import AnnotatedImage
 from image import ImageMetadata
+
+from dataset import AnnotatedImage
 
 
 @pytest.fixture

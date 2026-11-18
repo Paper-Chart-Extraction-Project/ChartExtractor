@@ -1,7 +1,6 @@
 """A module with test fixtures shared between files."""
 
 import pytest
-
 from image import ImageMetadata
 
 
