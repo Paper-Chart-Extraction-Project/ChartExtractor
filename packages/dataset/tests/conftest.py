@@ -8,3 +8,4 @@ from image import ImageMetadata
 def dummy_image_metadata() -> ImageMetadata:
     """An ImageMetadata object for testing."""
     return ImageMetadata(path=None)
+
