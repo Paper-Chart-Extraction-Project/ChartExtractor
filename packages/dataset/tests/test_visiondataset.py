@@ -1,6 +1,9 @@
 """A test module that tests the VisionDataset class."""
 
 import pytest
+from image import ImageMetadata
+from pydantic import ValidationError
+
 from dataset import (
     AnnotatedImage,
     DatasetError,
@@ -9,10 +12,9 @@ from dataset import (
     EmptySplitWarning,
     ImageId,
     OverlappingSplitsError,
+    Splits,
     VisionDataset,
 )
-from image import ImageMetadata
-from pydantic import ValidationError
 
 
 def generate_annotated_image(
@@ -48,7 +50,7 @@ class TestDatasetCreation:
             generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
-        splits: dict[str, set[ImageId]] = {
+        splits: Splits = {
             "train": {"im_0", "im_1", "im_2"},
             "val": {"im_3"},
             "test": {"im_4"},
@@ -67,7 +69,7 @@ class TestDatasetCreation:
             generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
-        splits: dict[str, set[ImageId]] = {
+        splits: Splits = {
             "train": {"im_0", "im_1", "im_2"},
             "val": {"im_3"},
             "test": {"im_4", "im_2"},
@@ -87,7 +89,7 @@ class TestDatasetCreation:
             generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
-        splits: dict[str, set[ImageId]] = {
+        splits: Splits = {
             "train": {"im_1", "im_2"},
             "val": {"im_3"},
             "test": {"im_4"},
@@ -116,7 +118,7 @@ class TestDatasetCreation:
             VisionDataset(
                 annotated_images=annotated_images,
                 dataset_metadata={},
-                splits=splits,
+                splits=splits,  # pyright: ignore
                 evaluation_sets={},
             )
 
@@ -126,7 +128,7 @@ class TestDatasetCreation:
             generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
-        splits: dict[str, set[ImageId]] = {
+        splits: Splits = {
             "train": {"im_0", "im_1", "im_2", "im_3"},
             "val": {"im_4"},
         }
@@ -144,7 +146,7 @@ class TestDatasetCreation:
             generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
-        splits: dict[str, set[ImageId]] = {
+        splits: Splits = {
             "train": {"im_0", "im_1", "im_2", "im_3"},
             "val": {"im_4"},
             "test": set(),
@@ -175,7 +177,7 @@ class TestDatasetCreation:
             VisionDataset(
                 annotated_images=annotated_images,
                 dataset_metadata={},
-                splits=splits,
+                splits=splits,  # pyright: ignore
                 evaluation_sets={},
             )
 
@@ -185,7 +187,7 @@ class TestDatasetCreation:
             generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
-        splits: dict[str, set[ImageId]] = {
+        splits: Splits = {
             "train": {"im_0", "im_1", "im_2", "im_3"},
             "val": {"im_4"},
         }
@@ -206,7 +208,7 @@ class TestDatasetCreation:
             generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
-        splits: dict[str, set[ImageId]] = {
+        splits: Splits = {
             "train": {"im_0", "im_1", "im_2", "im_3"},
             "val": {"im_4"},
         }
@@ -239,7 +241,7 @@ class TestDatasetCreation:
             generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
-        splits: dict[str, set[ImageId]] = {
+        splits: Splits = {
             "train": {"im_0", "im_1", "im_2", "im_3"},
             "val": {"im_4"},
         }
@@ -261,7 +263,7 @@ class TestDatasetCreation:
             generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
-        splits: dict[str, set[ImageId]] = {
+        splits: Splits = {
             "train": {"im_0", "im_1", "im_2", "im_3"},
             "val": {"im_4"},
             "test": {"im_6"},
@@ -284,7 +286,7 @@ class TestDatasetCreation:
             generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
-        splits: dict[str, set[ImageId]] = {
+        splits: Splits = {
             "train": {"im_0", "im_1", "im_2", "im_3"},
             "val": {"im_4"},
         }
@@ -307,7 +309,7 @@ class TestDatasetCreation:
             generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
-        splits: dict[str, set[ImageId]] = {
+        splits: Splits = {
             "train": {"im_0", "im_1", "im_2", "im_3"},
             "val": {"im_4"},
         }
@@ -329,7 +331,7 @@ class TestDatasetCreation:
             generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
-        splits: dict[str, set[ImageId]] = {
+        splits: Splits = {
             "train": {"im_0", "im_1", "im_2", "im_3"},
             "val": {"im_4"},
         }

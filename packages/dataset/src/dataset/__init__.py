@@ -1,7 +1,7 @@
 from .annotated_image import AnnotatedImage
 from .exceptions import DatasetError, OverlappingSplitsError
 from .types import ImageId
-from .vision_dataset import VisionDataset
+from .vision_dataset import Splits, VisionDataset
 from .warnings import (
     DatasetWarning,
     EmptyDatasetWarning,
@@ -18,5 +18,6 @@ __all__: list[str] = [
     "EmptySplitWarning",
     "ImageId",
     "OverlappingSplitsError",
+    "Splits",
     "VisionDataset",
 ]
