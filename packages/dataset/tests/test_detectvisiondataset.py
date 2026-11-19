@@ -9,10 +9,10 @@ from core.annotations import (
 )
 from core.geometry import Point, Rectangle
 from image import ImageMetadata
+from pydantic import ValidationError
 
 from dataset import DetectVisionDataset, Splits
 from dataset.annotated_image import AnnotatedImage
-from dataset.exceptions import DatasetError
 
 from .helpers import generate_annotated_image
 
@@ -74,7 +74,7 @@ class TestDetectDatasetCreation:
         ]
         splits: Splits = {"train": {"1", "2"}, "val": {"3"}}
 
-        with pytest.raises(DatasetError, match="must be of type BoundingBox."):
+        with pytest.raises(ValidationError):
             DetectVisionDataset(annotated_images=ann_ims, splits=splits)
 
     def test_no_bounding_boxes(self, dummy_image_metadata: ImageMetadata):
@@ -140,5 +140,5 @@ class TestDetectDatasetCreation:
         ]
         splits: Splits = {"train": {"1", "2"}, "val": {"3"}}
 
-        with pytest.raises(DatasetError, match="must be of type BoundingBox."):
+        with pytest.raises(ValidationError):
             DetectVisionDataset(annotated_images=ann_ims, splits=splits)

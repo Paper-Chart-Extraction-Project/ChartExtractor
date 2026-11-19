@@ -1,33 +1,28 @@
 """Contains the DetectVisionDataset class, a child of VisionDataset."""
 
+from functools import cached_property
+
 from core.annotations import BoundingBox
-from pydantic import field_validator
+from pydantic import Field
 
 from .annotated_image import AnnotatedImage
-from .exceptions import DatasetError
 from .vision_dataset import VisionDataset
 
 
 class DetectVisionDataset(VisionDataset):
     """A vision dataset for detecting bounding boxes."""
 
-    @field_validator("annotated_images")
-    @classmethod
-    def check_all_annotations_are_bounding_boxes(
-        cls, annotated_images: list[AnnotatedImage]
-    ):
-        """Checks to make sure that all the annotations in the vision dataset are BoundingBoxes."""
-        non_bounding_box_annotations: list[tuple[str, str]] = []
-        for annotated_image in annotated_images:
-            for annotation in annotated_image.annotations:
-                if not isinstance(annotation, BoundingBox):
-                    non_bounding_box_annotations.append(
-                        (str(type(annotation)), annotated_image.image_id)
-                    )
-        if non_bounding_box_annotations:
-            err_msg: list[str] = ["All annotations in a DetectVisionDataset must be of type BoundingBox."]
-            for non_bb_type, image_id in non_bounding_box_annotations:
-                err_msg.append(f"Found: {non_bb_type} on image {image_id}.")
-            raise DatasetError("\n".join(err_msg))
+    annotated_images: list[AnnotatedImage[BoundingBox]] = Field(default_factory=list)
 
-        return annotated_images
+    @cached_property
+    def names(self) -> list[str]:
+        """A sorted list of the bounding box categories/names."""
+        all_bbox_names: list[list[str]] = [
+            [annotation.category for annotation in annotated_image.annotations]
+            for annotated_image in self.annotated_images
+        ]
+        sorted_unique_names: list[str] = sorted(
+            {item for sublist in all_bbox_names for item in sublist}
+        )
+
+        return sorted_unique_names
