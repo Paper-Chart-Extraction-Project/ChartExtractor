@@ -3,13 +3,12 @@
 import os
 import warnings
 from collections import namedtuple
-from collections.abc import Callable
 from enum import StrEnum
 from functools import cached_property
 from itertools import batched
 from operator import attrgetter
 from pathlib import Path
-from typing import Any, NotRequired, Required, TypedDict
+from typing import Any, NotRequired, Required, Self, TypedDict, cast
 
 import yaml
 from core.annotations import (
@@ -176,25 +175,21 @@ class _YoloDatasetConfig(BaseModel):
     def _raw_paths(self) -> _YoloDatasetPaths:
         """A typed dictionary of paths to the dataset's image folders."""
 
-        yolo_dataset_paths: _YoloDatasetPaths = {}
+        yolo_dataset_paths: dict[str, Path] = {}
 
-        def add_raw_path_to_dict(
-            value_to_get: str, rename_to: str
-        ) -> _YoloDatasetPaths:
+        def get_path_from_raw_yaml(value_to_get: str, rename_to: str) -> Path | None:
             if value_to_get not in self.raw_yaml_data:
-                return yolo_dataset_paths
+                return None
 
             raw_value: Any = self.raw_yaml_data[value_to_get]
 
             if isinstance(raw_value, str):
-                yolo_dataset_paths[rename_to] = Path(raw_value)
+                return Path(raw_value)
             else:
                 raise ValidationError(
                     f"The value for '{value_to_get}' in the yaml data was expected to be a "
                     + f"string, but was {type(raw_value)}."
                 )
-
-            return yolo_dataset_paths
 
         paths: dict[str, str] = {
             "path": "base",
@@ -203,11 +198,11 @@ class _YoloDatasetConfig(BaseModel):
             "test": "test_images",
         }
         for yaml_key, dataset_path_key in paths.items():
-            yolo_dataset_paths: _YoloDatasetPaths = add_raw_path_to_dict(
-                yaml_key, dataset_path_key
-            )
+            path: Path | None = get_path_from_raw_yaml(yaml_key, dataset_path_key)
+            if path is not None:
+                yolo_dataset_paths[dataset_path_key] = path
 
-        return yolo_dataset_paths
+        return cast(_YoloDatasetPaths, yolo_dataset_paths)
 
     @cached_property
     def dataset_type(self) -> _YoloDatasetType:
@@ -221,8 +216,6 @@ class _YoloDatasetConfig(BaseModel):
         match sorted(pose_specific_keys_in_raw_yaml_data):
             case ["kpt_names", "kpt_shape"]:
                 return _YoloDatasetType.POSE
-            case []:
-                return _YoloDatasetType.DETECT
             case ["kpt_names"]:
                 raise KeyError(
                     "Yaml data contained a value for 'kpt_names' but not 'kpt_shape'."
@@ -231,6 +224,8 @@ class _YoloDatasetConfig(BaseModel):
                 raise KeyError(
                     "Yaml data contained a value for 'kpt_shape' but not 'kpt_names'."
                 )
+            case _:
+                return _YoloDatasetType.DETECT
 
     @cached_property
     def train_images_path(self) -> Path:
@@ -429,7 +424,7 @@ class _YoloDataset(BaseModel):
             "train_labels_path",
             "val_labels_path",
         ]
-        if self.dataset_config._raw_paths["test_images"] is not None:
+        if self.dataset_config._raw_paths.get("test_images") is not None:
             attributes_to_check += [
                 "test_images_path",
                 "test_labels_path",
@@ -466,7 +461,7 @@ class _YoloDataset(BaseModel):
     def validate_image_exists_for_all_annotations(self) -> _YoloDataset:
         """Validates that for each"""
         for split, annotations_in_split in self.annotations.items():
-            image_stems_in_split: list[Path] = [i.stem for i in self.images[split]]
+            image_stems_in_split: list[str] = [i.stem for i in self.images[split]]
 
             for ann in annotations_in_split:
                 if ann.stem not in image_stems_in_split:
@@ -478,7 +473,7 @@ class _YoloDataset(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def warn_if_extra_dir_exists_in_images(self) -> _YoloDatasetConfig:
+    def warn_if_extra_dir_exists_in_images(self) -> Self:
         """Warns the user if an extra directory exists in the images folder not accounted for in the config."""
         dirs_accounted_for: set[str] = {"train", "val"} | set(
             self.dataset_config.validation_set_image_paths.keys()
@@ -506,7 +501,7 @@ class _YoloDataset(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def warn_if_extra_dir_exists_in_labels(self) -> _YoloDatasetConfig:
+    def warn_if_extra_dir_exists_in_labels(self) -> Self:
         """Warns the user if an extra directory exists in the labels folder not accounted for in the config."""
         dirs_accounted_for: set[str] = {"train", "val"} | set(
             self.dataset_config.validation_set_label_paths.keys()
@@ -538,7 +533,7 @@ class _YoloDataset(BaseModel):
     def images(self) -> dict[str, list[Path]]:
         """The path to every image in the dataset organized by split."""
         img_extensions: list[str] = [".jpg", ".jpeg", ".png"]
-        folders: dict[str, Path] = {
+        folders: dict[str, Path | None] = {
             "train": self.dataset_config.train_images_path,
             "val": self.dataset_config.val_images_path,
             "test": self.dataset_config.test_images_path,
@@ -547,19 +542,21 @@ class _YoloDataset(BaseModel):
         folders = {k: v for (k, v) in folders.items() if v is not None}
         images: dict[str, list[Path]] = {}
         for split_or_val_set_name, folderpath in folders.items():
+            if folderpath is None:
+                continue
             images_in_folder: list[Path] = [
                 im_path
                 for im_path in folderpath.glob("*")
                 if im_path.suffix.lower() in img_extensions
             ]
-            images[split_or_val_set_name] = images_in_folder
+            images[split_or_val_set_name] = sorted(images_in_folder)
 
         return images
 
     @cached_property
     def annotations(self) -> dict[str, list[Path]]:
         """The path to every annotation txt file in the dataset organized by split."""
-        folders: dict[str, Path] = {
+        folders: dict[str, Path | None] = {
             "train": self.dataset_config.train_labels_path,
             "val": self.dataset_config.val_labels_path,
             "test": self.dataset_config.test_labels_path,
@@ -569,8 +566,10 @@ class _YoloDataset(BaseModel):
 
         annotations: dict[str, list[Path]] = {}
         for split_or_val_set_name, folderpath in folders.items():
+            if folderpath is None:
+                continue
             annotations_in_folder: list[Path] = list(folderpath.glob("*.txt"))
-            annotations[split_or_val_set_name] = annotations_in_folder
+            annotations[split_or_val_set_name] = sorted(annotations_in_folder)
 
         return annotations
 
@@ -590,19 +589,12 @@ class _YoloDataset(BaseModel):
         with open(path_to_yolo_annotation_file, "r") as f:
             lines: list[str] = f.readlines()
 
-        match self.dataset_config.dataset_type:
-            case _YoloDatasetType.DETECT:
-                file_reading_fn: Callable[[list[str]], list[Annotation]] = (
-                    self.read_yolo_detect_file
-                )
-
-            case _YoloDatasetType.POSE:
-                file_reading_fn: Callable[[list[str]], list[Annotation]] = (
-                    self.read_yolo_pose_file
-                )
-
         try:
-            return file_reading_fn(lines)
+            match self.dataset_config.dataset_type:
+                case _YoloDatasetType.DETECT:
+                    return self.read_yolo_detect_file(lines)  # pyright: ignore
+                case _YoloDatasetType.POSE:
+                    return self.read_yolo_pose_file(lines)  # pyright: ignore
         except YoloDatasetError as yde:
             raise YoloDatasetError(
                 "An exception has occured while reading file "
