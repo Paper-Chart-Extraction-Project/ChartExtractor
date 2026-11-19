@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from dataset.types import ImageId
 
 
-class AnnotatedImage(BaseModel):
+class AnnotatedImage[T: Annotation](BaseModel):
     """An image paired with annotations.
 
     Attributes:
@@ -29,7 +29,7 @@ class AnnotatedImage(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     image: Image | ImageMetadata
-    annotations: list[Annotation] = Field(default_factory=list)
+    annotations: list[T] = Field(default_factory=list)
     image_id: ImageId = Field(default=None, validate_default=True)
     image_metadata: dict[str, Any] = Field(default_factory=dict)
 

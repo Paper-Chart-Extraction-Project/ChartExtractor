@@ -1,12 +1,10 @@
 """Contains the VisionDataset class."""
 
 import warnings
-from collections import Counter
 from functools import reduce
-from typing import Any, NotRequired, Required, TypedDict
+from typing import Any, NotRequired, Required, Self, TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-from typing_extensions import Self
 
 from .annotated_image import AnnotatedImage
 from .exceptions import DatasetError, OverlappingSplitsError
@@ -14,7 +12,7 @@ from .types import ImageId
 from .warnings import EmptyDatasetWarning, EmptyEvaluationSetWarning, EmptySplitWarning
 
 
-class _Splits(TypedDict):
+class Splits(TypedDict):
     """A typed dictionary requiring a 'train' and 'val' key, and optional 'test' key."""
 
     train: Required[set[ImageId]]
@@ -30,7 +28,7 @@ class VisionDataset(BaseModel):
             The images with annotations that form the dataset.
         dataset_metadata (dict[str, Any]):
             The datasets metadata, if it has any.
-        splits (_Splits):
+        splits (Splits):
             The splits for the dataset. Must include splits for 'train' and 'val'. May optionally
             include a 'test' split.
         evaluation_sets (dict[str, set[ImageId]]):
@@ -46,12 +44,12 @@ class VisionDataset(BaseModel):
 
     annotated_images: list[AnnotatedImage] = Field(default_factory=list)
     dataset_metadata: dict[str, Any] = Field(default_factory=dict)
-    splits: _Splits
+    splits: Splits
     evaluation_sets: dict[str, set[ImageId]] = Field(default_factory=dict)
 
     @field_validator("splits")
     @classmethod
-    def check_splits_are_disjoint(cls, splits: _Splits) -> _Splits:
+    def check_splits_are_disjoint(cls, splits: Splits) -> Splits:
         """Ensures that splits don't share images."""
         if "test" in splits:
             pairs_to_check: list[tuple[str, str]] = [
@@ -137,7 +135,7 @@ class VisionDataset(BaseModel):
         raise DatasetError(err_msg)
 
     @field_validator("splits", mode="before")
-    def check_extra_splits_do_not_exist(cls, splits: _Splits) -> _Splits:
+    def check_extra_splits_do_not_exist(cls, splits: Splits) -> Splits:
         """Ensures that splits outside of 'train', 'val', and 'test' do not appear in the splits."""
         extra_keys: set[str] = set(splits.keys()) - {"train", "val", "test"}
 

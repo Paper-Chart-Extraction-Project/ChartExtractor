@@ -20,7 +20,7 @@ from core.annotations import (
     VisibilityStatus,
 )
 from core.geometry import Point, Rectangle
-from image import Image, ImageMetadata
+from image import ImageMetadata
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -133,7 +133,7 @@ class _YoloDatasetConfig(BaseModel):
         return raw_yaml_data
 
     @model_validator(mode="after")
-    def all_keypoint_keys_exist(self) -> "_YoloDatasetConfig":
+    def all_keypoint_keys_exist(self) -> _YoloDatasetConfig:
         """Ensures all the keypoint keys exist if the config is for a pose dataset."""
         try:
             _ = self.dataset_type
@@ -143,7 +143,7 @@ class _YoloDatasetConfig(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def all_path_parent_dirs_is_image(self) -> "_YoloDatasetConfig":
+    def all_path_parent_dirs_is_image(self) -> _YoloDatasetConfig:
         """Ensures that the parent directory of all the image paths is 'images'."""
         for split in ["train_images", "val_images", "test_images"]:
             if self._raw_paths.get(split) is None:
@@ -157,7 +157,7 @@ class _YoloDatasetConfig(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def warn_if_relative_path_used_for_base_path(self) -> "_YoloDatasetConfig":
+    def warn_if_relative_path_used_for_base_path(self) -> _YoloDatasetConfig:
         """Warns the user if they supply a yaml file where the base path is relative."""
         base_path: Path | None = self._raw_paths.get("base")
         if base_path is None:
@@ -391,7 +391,7 @@ class _YoloDatasetConfig(BaseModel):
         return KeypointShape(num_keypoints=num_keypoints, num_dimensions=num_dimensions)
 
     @classmethod
-    def from_path(cls, path_to_dataset_yaml: Path) -> "_YoloDatasetConfig":
+    def from_path(cls, path_to_dataset_yaml: Path) -> _YoloDatasetConfig:
         """Creates a _YoloDatasetConfig object by reading data from a yaml file.
 
         Args:
@@ -421,7 +421,7 @@ class _YoloDataset(BaseModel):
     dataset_config: _YoloDatasetConfig
 
     @model_validator(mode="after")
-    def validate_all_paths_exist(self) -> "_YoloDataset":
+    def validate_all_paths_exist(self) -> _YoloDataset:
         """Validates that all the folder paths the should exist, do."""
         attributes_to_check: list[str] = [
             "train_images_path",
@@ -463,7 +463,7 @@ class _YoloDataset(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def validate_image_exists_for_all_annotations(self) -> "_YoloDataset":
+    def validate_image_exists_for_all_annotations(self) -> _YoloDataset:
         """Validates that for each"""
         for split, annotations_in_split in self.annotations.items():
             image_stems_in_split: list[Path] = [i.stem for i in self.images[split]]
@@ -478,7 +478,7 @@ class _YoloDataset(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def warn_if_extra_dir_exists_in_images(self) -> "_YoloDatasetConfig":
+    def warn_if_extra_dir_exists_in_images(self) -> _YoloDatasetConfig:
         """Warns the user if an extra directory exists in the images folder not accounted for in the config."""
         dirs_accounted_for: set[str] = {"train", "val"} | set(
             self.dataset_config.validation_set_image_paths.keys()
@@ -506,7 +506,7 @@ class _YoloDataset(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def warn_if_extra_dir_exists_in_labels(self) -> "_YoloDatasetConfig":
+    def warn_if_extra_dir_exists_in_labels(self) -> _YoloDatasetConfig:
         """Warns the user if an extra directory exists in the labels folder not accounted for in the config."""
         dirs_accounted_for: set[str] = {"train", "val"} | set(
             self.dataset_config.validation_set_label_paths.keys()
@@ -773,7 +773,7 @@ class _YoloDataset(BaseModel):
         cls,
         folderpath: Path,
         yaml_file_name: str = "dataset.yaml",
-    ) -> "_YoloDataset":
+    ) -> _YoloDataset:
         """Creates a _YoloDataset from a folderpath.
 
         Args:
