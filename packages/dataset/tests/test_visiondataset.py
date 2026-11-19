@@ -16,7 +16,7 @@ from dataset import (
     VisionDataset,
 )
 
-from .helpers import generate_annotated_image
+from .helpers import generate_empty_annotated_image
 
 
 class TestDatasetCreation:
@@ -34,7 +34,7 @@ class TestDatasetCreation:
     def test_valid_dataset(self, dummy_image_metadata: ImageMetadata):
         """Tests the creation of a dataset with valid splits."""
         annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
+            generate_empty_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
         splits: Splits = {
@@ -53,7 +53,7 @@ class TestDatasetCreation:
     def test_overlapping_splits(self, dummy_image_metadata: ImageMetadata):
         """Tests the creation of a dataset with splits that overlap."""
         annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
+            generate_empty_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
         splits: Splits = {
@@ -73,7 +73,7 @@ class TestDatasetCreation:
     def test_image_missing_from_splits(self, dummy_image_metadata: ImageMetadata):
         """Tests the creation of a dataset where the splits don't fully cover the dataset."""
         annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
+            generate_empty_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
         splits: Splits = {
@@ -93,7 +93,7 @@ class TestDatasetCreation:
     def test_necessary_split_missing(self, dummy_image_metadata: ImageMetadata):
         """Tests the creation of a dataset when a necessary split (val) is missing."""
         annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
+            generate_empty_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
         splits: dict[str, set[ImageId]] = {
@@ -112,7 +112,7 @@ class TestDatasetCreation:
     def test_unnecessary_split_missing(self, dummy_image_metadata: ImageMetadata):
         """Tests the creation of a dataset when an unecessary split (test) is missing."""
         annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
+            generate_empty_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
         splits: Splits = {
@@ -130,7 +130,7 @@ class TestDatasetCreation:
     def test_split_is_empty(self, dummy_image_metadata: ImageMetadata):
         """Tests the creation of a dataset when a split has no image ids in it."""
         annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
+            generate_empty_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
         splits: Splits = {
@@ -150,7 +150,7 @@ class TestDatasetCreation:
     def test_extra_key_in_split_dictionary(self, dummy_image_metadata: ImageMetadata):
         """Test the creation of a dataset when there is an extra entry in the splits dictionary."""
         annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
+            generate_empty_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
         splits: dict[str, set[ImageId]] = {
@@ -171,7 +171,7 @@ class TestDatasetCreation:
     def test_eval_sets_with_valid_names(self, dummy_image_metadata: ImageMetadata):
         """Test the creation of a dataset with valid evaluation sets."""
         annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
+            generate_empty_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
         splits: Splits = {
@@ -192,7 +192,7 @@ class TestDatasetCreation:
     def test_eval_sets_with_invalid_names(self, dummy_image_metadata: ImageMetadata):
         """Test the creation of a dataset with invalid evaluation sets."""
         annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
+            generate_empty_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
         splits: Splits = {
@@ -225,7 +225,7 @@ class TestDatasetCreation:
     def test_eval_set_with_blank_name(self, dummy_image_metadata: ImageMetadata):
         """Test the creation of a dataset with an valid evaluation set that is named ''."""
         annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
+            generate_empty_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
         splits: Splits = {
@@ -247,7 +247,7 @@ class TestDatasetCreation:
     ):
         """Tests the creation of a dataset with splits that include an image not in the dataset."""
         annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
+            generate_empty_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
         splits: Splits = {
@@ -270,7 +270,7 @@ class TestDatasetCreation:
     ):
         """Test the creation of a dataset with an evaluation set that includes an image not in the dataset."""
         annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
+            generate_empty_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
         splits: Splits = {
@@ -293,7 +293,7 @@ class TestDatasetCreation:
     def test_eval_sets_that_overlap(self, dummy_image_metadata: ImageMetadata):
         """Test the creation of a dataset with valid evaluation sets that share image ids."""
         annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
+            generate_empty_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
         splits: Splits = {
@@ -315,7 +315,7 @@ class TestDatasetCreation:
     def test_empty_eval_set(self, dummy_image_metadata: ImageMetadata):
         """Test the creation of a dataset with an evaluation set that is empty."""
         annotated_images: list[AnnotatedImage] = [
-            generate_annotated_image(f"im_{im_id}", dummy_image_metadata)
+            generate_empty_annotated_image(f"im_{im_id}", dummy_image_metadata)
             for im_id in range(5)
         ]
         splits: Splits = {
