@@ -1,220 +1,27 @@
-"""A test module that tests the yolo_dataset module."""
+"""A test module that tests the yolo_dataset module.
+
+For some tests that are testing the validation of the parent classes, the _YoloDetectDataset
+is used, but all the code being tested is general to all child classes of _YoloDataset.
+"""
 
 import textwrap
 from pathlib import Path
 
 import pytest
-from core.annotations import (
-    BoundingBox,
-    BoundingBoxWithKeypoints,
-    Keypoint,
-    VisibilityStatus,
-)
-from core.geometry import Point, Rectangle
 
 from dataset.adapters.yolo import YoloDatasetError, YoloDatasetWarning
 from dataset.adapters.yolo.yolo_dataset import (
     _RawYamlData,
     _YoloDataset,
     _YoloDatasetConfig,
-    _YoloDatasetType,
 )
-
-
-@pytest.fixture
-def yaml_detect_data(tmp_path: Path) -> _RawYamlData:
-    """A dummy dictionary containing data found in a typical 'dataset.yaml' file.
-
-    This dictionary is specifically for a 'detect' model.
-    """
-    return {
-        "path": str(tmp_path),
-        "train": "images/train",
-        "val": "images/val",
-        "test": "images/test",
-        "names": {0: "test_0", 1: "test_1", 2: "test_2"},
-    }
-
-
-@pytest.fixture
-def yaml_pose_data(tmp_path: Path) -> _RawYamlData:
-    """A dummy dictionary containing data found in a typical 'dataset.yaml' file.
-
-    This dictionary is specifically for a 'pose' model.
-    """
-    return {
-        "path": str(tmp_path),
-        "train": "images/train",
-        "val": "images/val",
-        "test": "images/test",
-        "names": {0: "test_0", 1: "test_1", 2: "test_2"},
-        "kpt_shape": [2, 2],
-        "kpt_names": {0: ["left", "right"], 1: ["one", "two"]},
-    }
-
-
-@pytest.fixture
-def yolo_detect_dataset(tmp_path: Path) -> _YoloDataset:
-    """A dummy detect dataset."""
-    dirs_to_create: list[Path] = [
-        Path("test_dataset_valid_folder_structure"),
-        Path("test_dataset_valid_folder_structure") / "images",
-        Path("test_dataset_valid_folder_structure") / "labels",
-        Path("test_dataset_valid_folder_structure") / "images" / "train",
-        Path("test_dataset_valid_folder_structure") / "labels" / "train",
-        Path("test_dataset_valid_folder_structure") / "images" / "val",
-        Path("test_dataset_valid_folder_structure") / "labels" / "val",
-        Path("test_dataset_valid_folder_structure") / "images" / "test",
-        Path("test_dataset_valid_folder_structure") / "labels" / "test",
-    ]
-    yaml_data: str = textwrap.dedent(f"""
-        path: {(tmp_path / "test_dataset_valid_folder_structure").resolve()}
-        train: images/train
-        val: images/val
-        test: images/test
-
-        names:
-            0: test_0
-            1: test_1       
-    """).strip()
-    for dir in dirs_to_create:
-        (tmp_path / dir).mkdir()
-    dataset_yaml: Path = (
-        tmp_path / "test_dataset_valid_folder_structure" / "dataset.yaml"
-    )
-    dataset_yaml.write_text(yaml_data)
-
-    return _YoloDataset.from_folderpath(
-        tmp_path / "test_dataset_valid_folder_structure"
-    )
-
-
-@pytest.fixture
-def yolo_pose_dataset_no_vis(tmp_path: Path) -> _YoloDataset:
-    """A dummy pose dataset."""
-    dirs_to_create: list[Path] = [
-        Path("test_dataset_valid_folder_structure"),
-        Path("test_dataset_valid_folder_structure") / "images",
-        Path("test_dataset_valid_folder_structure") / "labels",
-        Path("test_dataset_valid_folder_structure") / "images" / "train",
-        Path("test_dataset_valid_folder_structure") / "labels" / "train",
-        Path("test_dataset_valid_folder_structure") / "images" / "val",
-        Path("test_dataset_valid_folder_structure") / "labels" / "val",
-        Path("test_dataset_valid_folder_structure") / "images" / "test",
-        Path("test_dataset_valid_folder_structure") / "labels" / "test",
-    ]
-    yaml_data: str = textwrap.dedent(f"""
-        path: {(tmp_path / "test_dataset_valid_folder_structure").resolve()}
-        train: images/train
-        val: images/val
-        test: images/test
-
-        kpt_shape: [2, 2]
-
-        kpt_names:
-            0:
-                - kpt_1
-                - kpt_2
-            1:
-                - kpt_a
-                - kpt_b
-        
-        names:
-            0: test_0
-            1: test_1
-    """).strip()
-    for dir in dirs_to_create:
-        (tmp_path / dir).mkdir()
-    dataset_yaml: Path = (
-        tmp_path / "test_dataset_valid_folder_structure" / "dataset.yaml"
-    )
-    dataset_yaml.write_text(yaml_data)
-
-    return _YoloDataset.from_folderpath(
-        tmp_path / "test_dataset_valid_folder_structure"
-    )
-
-
-@pytest.fixture
-def yolo_pose_dataset_with_vis(tmp_path: Path) -> _YoloDataset:
-    """A dummy pose dataset."""
-    dirs_to_create: list[Path] = [
-        Path("test_dataset_valid_folder_structure"),
-        Path("test_dataset_valid_folder_structure") / "images",
-        Path("test_dataset_valid_folder_structure") / "labels",
-        Path("test_dataset_valid_folder_structure") / "images" / "train",
-        Path("test_dataset_valid_folder_structure") / "labels" / "train",
-        Path("test_dataset_valid_folder_structure") / "images" / "val",
-        Path("test_dataset_valid_folder_structure") / "labels" / "val",
-        Path("test_dataset_valid_folder_structure") / "images" / "test",
-        Path("test_dataset_valid_folder_structure") / "labels" / "test",
-    ]
-    yaml_data: str = textwrap.dedent(f"""
-        path: {(tmp_path / "test_dataset_valid_folder_structure").resolve()}
-        train: images/train
-        val: images/val
-        test: images/test
-
-        kpt_shape: [2, 3]
-
-        kpt_names:
-            0:
-                - kpt_1
-                - kpt_2
-            1:
-                - kpt_a
-                - kpt_b
-        
-        names:
-            0: test_0
-            1: test_1
-    """).strip()
-    for dir in dirs_to_create:
-        (tmp_path / dir).mkdir()
-    dataset_yaml: Path = (
-        tmp_path / "test_dataset_valid_folder_structure" / "dataset.yaml"
-    )
-    dataset_yaml.write_text(yaml_data)
-
-    return _YoloDataset.from_folderpath(
-        tmp_path / "test_dataset_valid_folder_structure"
-    )
+from dataset.adapters.yolo.yolo_detect_dataset import (
+    _YoloDetectDataset,
+)
 
 
 class TestYoloDatasetConfig:
     """A collection of tests for the _YoloDatasetConfig class."""
-
-    def test_all_necessary_keys_in_raw_detect_yaml_data(
-        self, yaml_detect_data: _RawYamlData
-    ):
-        """Tests that no error is raised when all necessary keys exist for a detect dataset."""
-        _YoloDatasetConfig(raw_yaml_data=yaml_detect_data)
-
-    def test_necessary_key_missing_from_raw_detect_yaml_data(
-        self, yaml_detect_data: _RawYamlData
-    ):
-        """Tests that an error is raised when a necessary key doesn't exist in the raw yaml file."""
-        altered_yaml_detect_data: _RawYamlData = yaml_detect_data
-        altered_yaml_detect_data.pop("train")
-
-        with pytest.raises(
-            YoloDatasetError, match="don't exist in the yaml file: train"
-        ):
-            _YoloDatasetConfig(raw_yaml_data=altered_yaml_detect_data)
-
-    def test_all_necessary_keys_missing_from_raw_detect_yaml_data(
-        self, yaml_detect_data: _RawYamlData
-    ):
-        """Tests that an error is raised when all the necessary keys don't exist in the raw yaml file."""
-        altered_yaml_detect_data: _RawYamlData = yaml_detect_data
-        altered_yaml_detect_data.pop("train")
-        altered_yaml_detect_data.pop("val")
-        altered_yaml_detect_data.pop("names")
-
-        with pytest.raises(
-            YoloDatasetError, match="don't exist in the yaml file: names, train, val."
-        ):
-            _YoloDatasetConfig(raw_yaml_data=altered_yaml_detect_data)
 
     def test_all_image_folderpath_parents_are_image(
         self, yaml_detect_data: _RawYamlData
@@ -252,55 +59,19 @@ class TestYoloDatasetConfig:
         with pytest.warns(YoloDatasetWarning, match="is a relative path"):
             _YoloDatasetConfig(raw_yaml_data=altered_yaml_detect_data)
 
-    def test_dataset_type_detect(self, yaml_detect_data: _RawYamlData):
-        """Tests that the dataset type is set to 'detect' when a detection config is supplied."""
-        detect_ds_config: _YoloDatasetConfig = _YoloDatasetConfig(
-            raw_yaml_data=yaml_detect_data
-        )
-
-        assert detect_ds_config.dataset_type == _YoloDatasetType.DETECT
-
-    def test_dataset_type_pose(self, yaml_pose_data: _RawYamlData):
-        """Tests that the dataset type is set to 'pose' when a pose dataset is supplied."""
-        pose_ds_config: _YoloDatasetConfig = _YoloDatasetConfig(
-            raw_yaml_data=yaml_pose_data
-        )
-
-        assert pose_ds_config.dataset_type == _YoloDatasetType.POSE
-
-    def test_dataset_type_pose_but_no_kpt_shape_is_supplied(
-        self, yaml_pose_data: _RawYamlData
-    ):
-        """Tests that the dataset type is set to 'pose' when a yaml file with 'kpt_shape' is missing."""
-        altered_yaml_pose_data: _RawYamlData = yaml_pose_data
-        altered_yaml_pose_data.pop("kpt_shape")
-
-        with pytest.raises(YoloDatasetError, match="'kpt_names' but not 'kpt_shape'"):
-            _YoloDatasetConfig(raw_yaml_data=altered_yaml_pose_data).dataset_type  # noqa: B018
-
-    def test_dataset_type_pose_but_no_kpt_names_is_supplied(
-        self, yaml_pose_data: _RawYamlData
-    ):
-        """Tests that the dataset type is set to 'pose' when a yaml file with 'kpt_names' is missing."""
-        altered_yaml_pose_data: _RawYamlData = yaml_pose_data
-        altered_yaml_pose_data.pop("kpt_names")
-
-        with pytest.raises(YoloDatasetError, match="'kpt_shape' but not 'kpt_names'"):
-            _YoloDatasetConfig(raw_yaml_data=altered_yaml_pose_data).dataset_type  # noqa: B018
-
     def test_labels_path_constructs_properly(self, yaml_pose_data: _RawYamlData):
         """Tests that the labels path is constructed by just swapping the 'images' folder for 'labels'."""
         config: _YoloDatasetConfig = _YoloDatasetConfig(raw_yaml_data=yaml_pose_data)
-        assert (
-            config.train_labels_path == config._raw_paths["base"] / "labels" / "train"
-        )
+        base_path: Path | None = config._raw_paths.get("base")
+        assert base_path is not None
+        assert config.train_labels_path == base_path / "labels" / "train"
 
     def test_extra_validation_set_paths(self, yaml_detect_data: _RawYamlData):
         """Tests that extra validation set paths get added to the 'validation_set_image_paths' attribute."""
         altered_yaml_pose_data: _RawYamlData = yaml_detect_data
         altered_yaml_pose_data["test_2"] = "images/test_2"
         altered_yaml_pose_data.pop("path")
-        config: _YoloDatasetType = _YoloDatasetConfig(raw_yaml_data=yaml_detect_data)
+        config: _YoloDatasetConfig = _YoloDatasetConfig(raw_yaml_data=yaml_detect_data)
 
         assert config.validation_set_image_paths == {"test_2": Path("images/test_2")}
         assert config.validation_set_label_paths == {"test_2": Path("labels/test_2")}
@@ -309,69 +80,6 @@ class TestYoloDatasetConfig:
         """Tests that the names list is created from the dictionary and sorts properly."""
         config: _YoloDatasetConfig = _YoloDatasetConfig(raw_yaml_data=yaml_detect_data)
         assert config.names == ["test_0", "test_1", "test_2"]
-
-    def test_kpt_names_is_a_sorted_list(self, yaml_pose_data: _RawYamlData):
-        """Tests that the names list is created from the dictionary and sorts properly."""
-        config: _YoloDatasetConfig = _YoloDatasetConfig(raw_yaml_data=yaml_pose_data)
-        assert config.kpt_names == [["left", "right"], ["one", "two"]]
-
-    def test_kpt_shape_valid(self, yaml_pose_data: _RawYamlData):
-        """Tests the kpt_shape property with valid yaml data."""
-        config: _YoloDatasetConfig = _YoloDatasetConfig(raw_yaml_data=yaml_pose_data)
-        assert config.kpt_shape == (2, 2)
-
-    def test_kpt_shape_for_detect_dataset(self, yaml_detect_data: _RawYamlData):
-        """Tests the kpt_shape property is None with detect yaml data."""
-        config: _YoloDatasetConfig = _YoloDatasetConfig(raw_yaml_data=yaml_detect_data)
-        assert config.kpt_shape is None
-
-    def test_kpt_shape_too_few_elements(self, yaml_pose_data: _RawYamlData):
-        """Tests the kpt_shape property with missing elements of the tuple."""
-        altered_yaml_data: _RawYamlData = yaml_pose_data
-        altered_yaml_data["kpt_shape"] = (2,)
-
-        with pytest.raises(
-            YoloDatasetError, match="shape of the 'kpt_shape' parameter"
-        ):
-            _ = _YoloDatasetConfig(raw_yaml_data=altered_yaml_data).kpt_shape
-
-    def test_kpt_shape_too_many_elements(self, yaml_pose_data: _RawYamlData):
-        """Tests the kpt_shape property with extra elements of the tuple."""
-        altered_yaml_data: _RawYamlData = yaml_pose_data
-        altered_yaml_data["kpt_shape"] = (2, 3, 2)
-
-        with pytest.raises(
-            YoloDatasetError, match="shape of the 'kpt_shape' parameter"
-        ):
-            _ = _YoloDatasetConfig(raw_yaml_data=altered_yaml_data).kpt_shape
-
-    def test_kpt_shape_num_dimensions_not_2_or_3(self, yaml_pose_data: _RawYamlData):
-        """Tests the kpt_shape property when num_dimensions is not 2 or 3."""
-        altered_yaml_data: _RawYamlData = yaml_pose_data
-        altered_yaml_data["kpt_shape"] = (2, 1)
-
-        with pytest.raises(YoloDatasetError, match="2 or 3, got 1."):
-            _ = _YoloDatasetConfig(raw_yaml_data=altered_yaml_data).kpt_shape
-
-    def test_kpt_shape_non_integer_entries(self, yaml_pose_data: _RawYamlData):
-        """Tests the kpt_shape property when one or both entries is not an integer."""
-        altered_yaml_data: _RawYamlData = yaml_pose_data
-        altered_yaml_data["kpt_shape"] = (2, "1")
-
-        with pytest.raises(YoloDatasetError, match="to be an integer, got"):
-            _ = _YoloDatasetConfig(raw_yaml_data=altered_yaml_data).kpt_shape
-
-    def test_kpt_shape_num_keypoints_not_eq_to_length_of_kpt_names(
-        self, yaml_pose_data: _RawYamlData
-    ):
-        """Tests the kpt_shape property when the num_keypoints entry is not equal to the length of kpt_names."""
-        altered_yaml_data: _RawYamlData = yaml_pose_data
-        altered_yaml_data["kpt_shape"] = (5, 2)
-
-        with pytest.raises(
-            YoloDatasetError, match="does not equal the number of keypoints"
-        ):
-            _ = _YoloDatasetConfig(raw_yaml_data=altered_yaml_data).kpt_shape
 
 
 class TestYoloDatasetFolderStructure:
@@ -436,7 +144,7 @@ class TestYoloDatasetFolderStructure:
         dataset_yaml.write_text(yaml_data)
 
         with pytest.raises(YoloDatasetError, match="but doesn't exist."):
-            _YoloDataset.from_folderpath(
+            _YoloDetectDataset.from_folderpath(
                 tmp_path / "test_dataset_valid_folder_structure"
             )
 
@@ -467,7 +175,7 @@ class TestYoloDatasetFolderStructure:
         dataset_yaml.write_text(yaml_data)
 
         with pytest.raises(YoloDatasetError, match="but doesn't exist."):
-            _YoloDataset.from_folderpath(
+            _YoloDetectDataset.from_folderpath(
                 tmp_path / "test_dataset_valid_folder_structure"
             )
 
@@ -500,7 +208,7 @@ class TestYoloDatasetFolderStructure:
         dataset_yaml.write_text(yaml_data)
 
         with pytest.raises(YoloDatasetError, match="but doesn't exist"):
-            _YoloDataset.from_folderpath(
+            _YoloDetectDataset.from_folderpath(
                 tmp_path / "test_dataset_valid_folder_structure"
             )
 
@@ -534,7 +242,7 @@ class TestYoloDatasetFolderStructure:
         dataset_yaml.write_text(yaml_data)
 
         with pytest.raises(YoloDatasetError, match="but doesn't exist"):
-            _YoloDataset.from_folderpath(
+            _YoloDetectDataset.from_folderpath(
                 tmp_path / "test_dataset_valid_folder_structure"
             )
 
@@ -568,7 +276,7 @@ class TestYoloDatasetFolderStructure:
         dataset_yaml.write_text(yaml_data)
 
         with pytest.raises(YoloDatasetError, match="but doesn't exist"):
-            _YoloDataset.from_folderpath(
+            _YoloDetectDataset.from_folderpath(
                 tmp_path / "test_dataset_valid_folder_structure"
             )
 
@@ -602,7 +310,7 @@ class TestYoloDatasetFolderStructure:
         dataset_yaml.write_text(yaml_data)
 
         with pytest.raises(YoloDatasetError, match="but doesn't exist"):
-            _YoloDataset.from_folderpath(
+            _YoloDetectDataset.from_folderpath(
                 tmp_path / "test_dataset_valid_folder_structure"
             )
 
@@ -640,7 +348,7 @@ class TestYoloDatasetFolderStructure:
         dataset_yaml.write_text(yaml_data)
 
         with pytest.raises(YoloDatasetError, match="but doesn't exist"):
-            _YoloDataset.from_folderpath(
+            _YoloDetectDataset.from_folderpath(
                 tmp_path / "test_dataset_valid_folder_structure"
             )
 
@@ -678,7 +386,7 @@ class TestYoloDatasetFolderStructure:
         dataset_yaml.write_text(yaml_data)
 
         with pytest.raises(YoloDatasetError, match="but doesn't exist"):
-            _YoloDataset.from_folderpath(
+            _YoloDetectDataset.from_folderpath(
                 tmp_path / "test_dataset_valid_folder_structure"
             )
 
@@ -714,7 +422,7 @@ class TestYoloDatasetFolderStructure:
         dataset_yaml.write_text(yaml_data)
 
         with pytest.warns(YoloDatasetWarning, match="not accounted for"):
-            _YoloDataset.from_folderpath(
+            _YoloDetectDataset.from_folderpath(
                 tmp_path / "test_dataset_valid_folder_structure"
             )
 
@@ -750,7 +458,7 @@ class TestYoloDatasetFolderStructure:
         dataset_yaml.write_text(yaml_data)
 
         with pytest.warns(YoloDatasetWarning, match="not accounted for"):
-            _YoloDataset.from_folderpath(
+            _YoloDetectDataset.from_folderpath(
                 tmp_path / "test_dataset_valid_folder_structure"
             )
 
@@ -788,7 +496,7 @@ class TestYoloDatasetImageAndAnnotationFinding:
         )
         dataset_yaml.write_text(yaml_data)
 
-        yds: _YoloDataset = _YoloDataset.from_folderpath(
+        yds: _YoloDetectDataset = _YoloDetectDataset.from_folderpath(
             tmp_path / "test_dataset_valid_folder_structure"
         )
 
@@ -863,7 +571,7 @@ class TestYoloDatasetImageAndAnnotationFinding:
         )
         dataset_yaml.write_text(yaml_data)
 
-        yds: _YoloDataset = _YoloDataset.from_folderpath(
+        yds: _YoloDetectDataset = _YoloDetectDataset.from_folderpath(
             tmp_path / "test_dataset_valid_folder_structure"
         )
 
@@ -927,7 +635,7 @@ class TestYoloDatasetImageAndAnnotationFinding:
         )
         dataset_yaml.write_text(yaml_data)
 
-        yds: _YoloDataset = _YoloDataset.from_folderpath(
+        yds: _YoloDetectDataset = _YoloDetectDataset.from_folderpath(
             tmp_path / "test_dataset_valid_folder_structure"
         )
 
@@ -1040,11 +748,11 @@ class TestYoloDatasetImageAndAnnotationFinding:
         dataset_yaml.write_text(yaml_data)
 
         with pytest.raises(YoloDatasetError, match="without a corresponding image"):
-            _: _YoloDataset = _YoloDataset.from_folderpath(
-                tmp_path / "test_dataset_valid_folder_structure"
+            _YoloDetectDataset.from_folderpath(
+                folderpath=tmp_path / "test_dataset_valid_folder_structure"
             )
 
-    def test_an_images_doesnt_exist_for_an_annotation(self, tmp_path: Path):
+    def test_an_image_doesnt_exist_for_an_annotation(self, tmp_path: Path):
         """Tests validation when one annotation does not have a corresponding image."""
         dirs_to_create: list[Path] = [
             Path("test_dataset_valid_folder_structure"),
@@ -1109,266 +817,6 @@ class TestYoloDatasetImageAndAnnotationFinding:
         dataset_yaml.write_text(yaml_data)
 
         with pytest.raises(YoloDatasetError, match="without a corresponding image"):
-            _: _YoloDataset = _YoloDataset.from_folderpath(
-                tmp_path / "test_dataset_valid_folder_structure"
-            )
-
-
-class TestYoloDatasetDetectAnnotationReading:
-    """A collection of tests for the _YoloDataset class' detect annotation reading."""
-
-    def test_read_detect_annotation_line_valid_annotation(
-        self, yolo_detect_dataset: _YoloDataset
-    ):
-        """Tests detect annotation reading with a valid line."""
-        valid_line: str = "1 0.55 0.44 0.17 0.05\n"
-        true_annotation: BoundingBox = BoundingBox(
-            rectangle=Rectangle.from_center_xywh(0.55, 0.44, 0.17, 0.05),
-            category="test_1",
-        )
-        read_annotation: BoundingBox = yolo_detect_dataset.read_yolo_detect_annotation(
-            valid_line
-        )
-        assert true_annotation.rectangle == read_annotation.rectangle
-        assert true_annotation.category == read_annotation.category
-
-    def test_read_detect_annotation_line_class_id_out_of_bounds(
-        self, yolo_detect_dataset: _YoloDataset
-    ):
-        """Tests that an error is raised with a class id that is out of bounds."""
-        invalid_line: str = "-1 0.55 0.44 0.17 0.05\n"
-        with pytest.raises(YoloDatasetError, match="Class index is out of range"):
-            yolo_detect_dataset.read_yolo_detect_annotation(invalid_line)
-
-        invalid_line: str = "3 0.55 0.44 0.17 0.05\n"
-        with pytest.raises(YoloDatasetError, match="Class index is out of range"):
-            yolo_detect_dataset.read_yolo_detect_annotation(invalid_line)
-
-    def test_read_detect_annotation_line_left_out_of_bounds(
-        self, yolo_detect_dataset: _YoloDataset
-    ):
-        """Tests that a warning is emitted when a bounding box left side is out of bounds."""
-        valid_line: str = "1 0.05 0.44 0.24 0.05\n"
-        with pytest.warns(YoloDatasetWarning, match="left side is out of bounds"):
-            yolo_detect_dataset.read_yolo_detect_annotation(valid_line)
-
-    def test_read_detect_annotation_line_top_out_of_bounds(
-        self, yolo_detect_dataset: _YoloDataset
-    ):
-        """Tests that a warning is emitted when a bounding box top side is out of bounds."""
-        valid_line: str = "1 0.55 0.02 0.24 0.05\n"
-        with pytest.warns(YoloDatasetWarning, match="top side is out of bounds"):
-            yolo_detect_dataset.read_yolo_detect_annotation(valid_line)
-
-    def test_read_detect_annotation_line_right_out_of_bounds(
-        self, yolo_detect_dataset: _YoloDataset
-    ):
-        """Tests that a warning is emitted when a bounding box right side is out of bounds."""
-        valid_line: str = "1 0.95 0.26 0.24 0.17\n"
-        with pytest.warns(YoloDatasetWarning, match="right side is out of bounds"):
-            yolo_detect_dataset.read_yolo_detect_annotation(valid_line)
-
-    def test_read_detect_annotation_line_bottom_out_of_bounds(
-        self, yolo_detect_dataset: _YoloDataset
-    ):
-        """Tests that a warning is emitted when a bounding box right side is out of bounds."""
-        valid_line: str = "1 0.46 0.96 0.14 0.17\n"
-        with pytest.warns(YoloDatasetWarning, match="bottom side is out of bounds"):
-            yolo_detect_dataset.read_yolo_detect_annotation(valid_line)
-
-    def test_read_detect_annotation_line_too_many_entries(
-        self, yolo_detect_dataset: _YoloDataset
-    ):
-        """Tests that an exception is raised when there are too many items in the line."""
-        invalid_line: str = "1 0.46 0.96 0.14 0.17 0.44\n"
-        with pytest.raises(
-            YoloDatasetError, match="Too many entries in detect annotation line."
-        ):
-            yolo_detect_dataset.read_yolo_detect_annotation(invalid_line)
-
-    def test_read_detect_annotation_line_too_few_entries(
-        self, yolo_detect_dataset: _YoloDataset
-    ):
-        """Tests that an exception is raised when there are too few items in the line."""
-        invalid_line: str = "1 0.46 0.96 0.14\n"
-        with pytest.raises(
-            YoloDatasetError, match="Too few entries in detect annotation line."
-        ):
-            yolo_detect_dataset.read_yolo_detect_annotation(invalid_line)
-
-    def test_read_detect_annotation_valid_file(
-        self, tmp_path: Path, yolo_detect_dataset: _YoloDataset
-    ):
-        """Tests reading a valid file of annotations from disk."""
-        file_contents: str = textwrap.dedent("""
-        0 0.5 0.5 0.1 0.1
-        1 0.2 0.8 0.05 0.15
-        0 0.03 0.88 0.03 0.11
-        """).strip("\n")
-        temp_detect_annotation_filepath: Path = tmp_path / "temp_detect_annotation.txt"
-        temp_detect_annotation_filepath.write_text(file_contents)
-
-        yolo_detect_dataset.read_yolo_annotation_file(temp_detect_annotation_filepath)
-
-    def test_read_detect_annotation_invalid_file(
-        self, tmp_path: Path, yolo_detect_dataset: _YoloDataset
-    ):
-        """Tests that the line an error occurs on is put into the exception when it occurs."""
-        file_contents: str = textwrap.dedent("""
-        0 0.5 0.5 0.1 0.1
-        1 0.2 0.8 0.05
-        0 0.03 0.88 0.03 0.11
-        """).strip("\n")
-        temp_detect_annotation_filepath: Path = tmp_path / "temp_detect_annotation.txt"
-        temp_detect_annotation_filepath.write_text(file_contents)
-
-        with pytest.raises(YoloDatasetError, match="while reading line 2"):
-            yolo_detect_dataset.read_yolo_annotation_file(
-                temp_detect_annotation_filepath
-            )
-
-    def test_read_pose_annotation_line_valid(
-        self, yolo_pose_dataset_no_vis: _YoloDataset
-    ):
-        """Tests that a valid pose annotation line can be read."""
-        valid_line: str = "0 0.5 0.55 0.1 0.2 0.5 0.57 0.48 0.54\n"
-        read_annotation: BoundingBoxWithKeypoints = (
-            yolo_pose_dataset_no_vis.read_yolo_pose_annotation(valid_line)
-        )
-        true_bounding_box: BoundingBox = BoundingBox(
-            rectangle=Rectangle.from_center_xywh(0.5, 0.55, 0.1, 0.2), category="test_0"
-        )
-        true_keypoints: list[Keypoint] = [
-            Keypoint(
-                point=Point(x=0.5, y=0.57),
-                category="kpt_1",
-                visibility=VisibilityStatus.VISIBLE,
-            ),
-            Keypoint(
-                point=Point(x=0.48, y=0.54),
-                category="kpt_2",
-                visibility=VisibilityStatus.VISIBLE,
-            ),
-        ]
-        true_annotation: BoundingBoxWithKeypoints = BoundingBoxWithKeypoints(
-            bounding_box=true_bounding_box, keypoints=true_keypoints
-        )
-
-        assert (
-            true_annotation.bounding_box.rectangle
-            == read_annotation.bounding_box.rectangle
-        )
-        assert (
-            true_annotation.bounding_box.category
-            == read_annotation.bounding_box.category
-        )
-        for read_kpt, true_kpt in zip(
-            read_annotation.keypoints, true_annotation.keypoints
-        ):
-            assert read_kpt.point.x == true_kpt.point.x
-            assert read_kpt.point.y == true_kpt.point.y
-            assert read_kpt.category == true_kpt.category
-
-    def test_read_pose_annotation_line_too_many_entries(
-        self, yolo_pose_dataset_no_vis: _YoloDataset
-    ):
-        """Tests that an exception is raised when there are too many items in the line."""
-        invalid_line: str = "0 0.5 0.55 0.1 0.2 0.5 0.57 2 0.48 0.54 2\n"
-
-        with pytest.raises(YoloDatasetError, match="Too many entries"):
-            yolo_pose_dataset_no_vis.read_yolo_pose_annotation(invalid_line)
-
-    def test_read_pose_annotation_line_too_few_entries(
-        self, yolo_pose_dataset_no_vis: _YoloDataset
-    ):
-        """Tests that an exception is raised when there are too few items in the line."""
-        invalid_line: str = "0 0.5 0.55 0.1 0.2 0.5 0.57\n"
-
-        with pytest.raises(YoloDatasetError, match="Too few entries"):
-            yolo_pose_dataset_no_vis.read_yolo_pose_annotation(invalid_line)
-
-    def test_read_pose_annotation_line_with_visibility_data(
-        self, yolo_pose_dataset_with_vis: _YoloDataset
-    ):
-        """Tests reading an annotation that contains visibility data."""
-        valid_line: str = "0 0.5 0.55 0.1 0.2 0.5 0.57 0 0.48 0.54 1\n"
-
-        read_annotation: BoundingBoxWithKeypoints = (
-            yolo_pose_dataset_with_vis.read_yolo_pose_annotation(valid_line)
-        )
-        true_bounding_box: BoundingBox = BoundingBox(
-            rectangle=Rectangle.from_center_xywh(0.5, 0.55, 0.1, 0.2), category="test_0"
-        )
-        true_keypoints: list[Keypoint] = [
-            Keypoint(
-                point=Point(x=0.5, y=0.57),
-                category="kpt_1",
-                visibility=VisibilityStatus.MISSING,
-            ),
-            Keypoint(
-                point=Point(x=0.48, y=0.54),
-                category="kpt_2",
-                visibility=VisibilityStatus.OCCLUDED,
-            ),
-        ]
-        true_annotation: BoundingBoxWithKeypoints = BoundingBoxWithKeypoints(
-            bounding_box=true_bounding_box, keypoints=true_keypoints
-        )
-
-        assert (
-            true_annotation.bounding_box.rectangle
-            == read_annotation.bounding_box.rectangle
-        )
-        assert (
-            true_annotation.bounding_box.category
-            == read_annotation.bounding_box.category
-        )
-        for read_kpt, true_kpt in zip(
-            read_annotation.keypoints, true_annotation.keypoints
-        ):
-            assert read_kpt.point.x == true_kpt.point.x
-            assert read_kpt.point.y == true_kpt.point.y
-            assert read_kpt.category == true_kpt.category
-            assert read_kpt.visibility == true_kpt.visibility
-
-    def test_read_pose_annotation_line_with_erronous_visibility_data(
-        self, yolo_pose_dataset_with_vis: _YoloDataset
-    ):
-        """Tests reading an annotation that contains visibility data that is not in [0, 1, 2]."""
-        invalid_line: str = "0 0.5 0.55 0.1 0.2 0.5 0.57 2 0.48 0.54 4\n"
-
-        with pytest.raises(YoloDatasetError, match="is not in \\[0, 1, 2\\]."):
-            yolo_pose_dataset_with_vis.read_yolo_pose_annotation(invalid_line)
-
-    def test_read_pose_annotation_valid_file(
-        self, tmp_path: Path, yolo_pose_dataset_with_vis: _YoloDataset
-    ):
-        """Tests reading a valid file of pose annotations from disk."""
-        file_contents: str = textwrap.dedent("""
-        0 0.5 0.5 0.1 0.1 0.49 0.51 2 0.46 0.54 1
-        1 0.2 0.8 0.05 0.15 0.22 0.87 2 0.19 0.79 2
-        0 0.03 0.88 0.03 0.11 0.029 0.888 2 0.02 0.85 0
-        """).strip("\n")
-        temp_detect_annotation_filepath: Path = tmp_path / "temp_detect_annotation.txt"
-        temp_detect_annotation_filepath.write_text(file_contents)
-
-        yolo_pose_dataset_with_vis.read_yolo_annotation_file(
-            temp_detect_annotation_filepath
-        )
-
-    def test_read_pose_annotation_invalid_file(
-        self, tmp_path: Path, yolo_pose_dataset_with_vis: _YoloDataset
-    ):
-        """Tests that the line an error occurs on is put into the exception when it occurs."""
-        file_contents: str = textwrap.dedent("""
-        0 0.5 0.5 0.1 0.1 0.49 0.51 2 0.46 0.54 1
-        1 0.2 0.8 0.05 0.15 0.22 0.87 2 0.19 0.79 2
-        0 0.03 0.88 0.03 0.11 0.029 0.888 2 0.02 0.85
-        """).strip("\n")
-        temp_detect_annotation_filepath: Path = tmp_path / "temp_detect_annotation.txt"
-        temp_detect_annotation_filepath.write_text(file_contents)
-
-        with pytest.raises(YoloDatasetError, match="while reading line 3."):
-            yolo_pose_dataset_with_vis.read_yolo_annotation_file(
-                temp_detect_annotation_filepath
+            _YoloDetectDataset.from_folderpath(
+                folderpath=tmp_path / "test_dataset_valid_folder_structure"
             )

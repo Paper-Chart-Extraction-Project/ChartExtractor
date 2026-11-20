@@ -2,25 +2,18 @@
 
 import os
 import warnings
+from abc import abstractmethod
 from collections import namedtuple
-from collections.abc import Callable
 from enum import StrEnum
 from functools import cached_property
-from itertools import batched
 from operator import attrgetter
 from pathlib import Path
-from typing import Any, NotRequired, Required, TypedDict
+from typing import Any, NotRequired, Required, Self, TypedDict, cast
 
 import yaml
 from core.annotations import (
     Annotation,
-    BoundingBox,
-    BoundingBoxWithKeypoints,
-    Keypoint,
-    VisibilityStatus,
 )
-from core.geometry import Point, Rectangle
-from image import ImageMetadata
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -29,9 +22,9 @@ from pydantic import (
     model_validator,
 )
 
-from dataset import AnnotatedImage, ImageId, VisionDataset
+from dataset import VisionDataset
 
-from .exceptions import YoloDatasetError
+from .exceptions import YoloDatasetConfigError, YoloDatasetError
 from .warnings import YoloDatasetWarning
 
 
@@ -66,11 +59,9 @@ class _YoloDatasetPaths(TypedDict):
 
 
 class _YoloDatasetConfig(BaseModel):
-    """Reads, validates, and stores the data of the yolo dataset.yaml config file.
+    """An abstract base class for readings, validating, and storing data from the yolo dataset.yaml config file.
 
     Attributes:
-        dataset_type (_YoloDatasetType):
-            The type of the yolo dataset (detect or pose).
         training_images_path (Path):
             The folder path to the training images.
         val_images_path (Path):
@@ -108,6 +99,15 @@ class _YoloDatasetConfig(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     raw_yaml_data: _RawYamlData
+    reserved_keys: set[str] = {
+        "path",
+        "train",
+        "val",
+        "test",
+        "names",
+        "kpt_shape",
+        "kpt_names",
+    }
 
     @field_validator("raw_yaml_data", mode="before")
     @classmethod
@@ -128,19 +128,9 @@ class _YoloDatasetConfig(BaseModel):
                 + f"in the yaml file: {', '.join(sorted(keys_that_dont_exist))}."
             )
 
-            raise YoloDatasetError(err_msg)
+            raise YoloDatasetConfigError(err_msg)
 
         return raw_yaml_data
-
-    @model_validator(mode="after")
-    def all_keypoint_keys_exist(self) -> _YoloDatasetConfig:
-        """Ensures all the keypoint keys exist if the config is for a pose dataset."""
-        try:
-            _ = self.dataset_type
-        except KeyError as ke:
-            raise YoloDatasetError(f"Error parsing pose dataset yaml file.\n{ke}")
-
-        return self
 
     @model_validator(mode="after")
     def all_path_parent_dirs_is_image(self) -> _YoloDatasetConfig:
@@ -176,25 +166,21 @@ class _YoloDatasetConfig(BaseModel):
     def _raw_paths(self) -> _YoloDatasetPaths:
         """A typed dictionary of paths to the dataset's image folders."""
 
-        yolo_dataset_paths: _YoloDatasetPaths = {}
+        yolo_dataset_paths: dict[str, Path] = {}
 
-        def add_raw_path_to_dict(
-            value_to_get: str, rename_to: str
-        ) -> _YoloDatasetPaths:
+        def get_path_from_raw_yaml(value_to_get: str, rename_to: str) -> Path | None:
             if value_to_get not in self.raw_yaml_data:
-                return yolo_dataset_paths
+                return None
 
             raw_value: Any = self.raw_yaml_data[value_to_get]
 
             if isinstance(raw_value, str):
-                yolo_dataset_paths[rename_to] = Path(raw_value)
+                return Path(raw_value)
             else:
                 raise ValidationError(
                     f"The value for '{value_to_get}' in the yaml data was expected to be a "
                     + f"string, but was {type(raw_value)}."
                 )
-
-            return yolo_dataset_paths
 
         paths: dict[str, str] = {
             "path": "base",
@@ -203,34 +189,11 @@ class _YoloDatasetConfig(BaseModel):
             "test": "test_images",
         }
         for yaml_key, dataset_path_key in paths.items():
-            yolo_dataset_paths: _YoloDatasetPaths = add_raw_path_to_dict(
-                yaml_key, dataset_path_key
-            )
+            path: Path | None = get_path_from_raw_yaml(yaml_key, dataset_path_key)
+            if path is not None:
+                yolo_dataset_paths[dataset_path_key] = path
 
-        return yolo_dataset_paths
-
-    @cached_property
-    def dataset_type(self) -> _YoloDatasetType:
-        """Determines and returns the type of the yolo dataset."""
-        keys_in_raw_yaml_data: set[str] = set(self.raw_yaml_data.keys())
-        pose_specific_keys: set[str] = {"kpt_shape", "kpt_names"}
-        pose_specific_keys_in_raw_yaml_data: set[str] = (
-            pose_specific_keys & keys_in_raw_yaml_data
-        )
-
-        match sorted(pose_specific_keys_in_raw_yaml_data):
-            case ["kpt_names", "kpt_shape"]:
-                return _YoloDatasetType.POSE
-            case []:
-                return _YoloDatasetType.DETECT
-            case ["kpt_names"]:
-                raise KeyError(
-                    "Yaml data contained a value for 'kpt_names' but not 'kpt_shape'."
-                )
-            case ["kpt_shape"]:
-                raise KeyError(
-                    "Yaml data contained a value for 'kpt_shape' but not 'kpt_names'."
-                )
+        return cast(_YoloDatasetPaths, yolo_dataset_paths)
 
     @cached_property
     def train_images_path(self) -> Path:
@@ -271,27 +234,9 @@ class _YoloDatasetConfig(BaseModel):
     @cached_property
     def validation_set_image_paths(self) -> dict[str, Path]:
         """A dictionary of image paths to the extra validation sets."""
-        match self.dataset_type:
-            case _YoloDatasetType.DETECT:
-                reserved_keys: set[str] = {
-                    "path",
-                    "train",
-                    "val",
-                    "test",
-                    "names",
-                }
-            case _YoloDatasetType.POSE:
-                reserved_keys: set[str] = {
-                    "path",
-                    "train",
-                    "val",
-                    "test",
-                    "names",
-                    "kpt_shape",
-                    "kpt_names",
-                }
-
-        validation_set_keys: set[str] = set(self.raw_yaml_data.keys()) - reserved_keys
+        validation_set_keys: set[str] = (
+            set(self.raw_yaml_data.keys()) - self.reserved_keys
+        )
 
         validation_set_img_paths: dict[str, Path] = {}
         for k in validation_set_keys:
@@ -343,55 +288,8 @@ class _YoloDatasetConfig(BaseModel):
             for sk in sorted(self.raw_yaml_data["names"].keys())
         ]
 
-    @cached_property
-    def kpt_names(self) -> list[list[str]] | None:
-        """A list of the names of keypoints."""
-        if self.dataset_type != _YoloDatasetType.POSE:
-            return None
-        return [
-            self.raw_yaml_data["kpt_names"][sk]
-            for sk in sorted(self.raw_yaml_data["kpt_names"].keys())
-        ]
-
-    @cached_property
-    def kpt_shape(self) -> KeypointShape | None:
-        """A tuple containing the number of keypoints and 'dimensions' of each keypoint."""
-        if self.dataset_type != _YoloDatasetType.POSE:
-            return None
-
-        if len(self.raw_yaml_data["kpt_shape"]) != 2:
-            raise YoloDatasetError(
-                "The shape of the 'kpt_shape' parameter in the yolo config is not 2. "
-                f"Expected [num_keypoints, num_dimensions], got {self.raw_yaml_data['kpt_shape']}."
-            )
-
-        num_keypoints: int = self.raw_yaml_data["kpt_shape"][0]
-        num_dimensions: int = self.raw_yaml_data["kpt_shape"][1]
-
-        if not isinstance(num_keypoints, int):
-            raise YoloDatasetError(
-                f"Expected number of keypoints to be an integer, got {type(num_keypoints)!s}."
-            )
-        if not isinstance(num_dimensions, int):
-            raise YoloDatasetError(
-                "Expected number of keypoint dimensions to be an integer, got "
-                f"{type(num_dimensions)!s}."
-            )
-        if num_dimensions not in [2, 3]:
-            raise YoloDatasetError(
-                f"Expected number of keypoint dimensions is 2 or 3, got {num_dimensions}."
-            )
-
-        if num_keypoints != len(self.kpt_names):
-            raise YoloDatasetError(
-                f"Number of keypoints in kpt_shape ({num_keypoints}) does not equal the number "
-                f"of keypoints indicated by kpt_names ({len(self.kpt_names)})."
-            )
-
-        return KeypointShape(num_keypoints=num_keypoints, num_dimensions=num_dimensions)
-
     @classmethod
-    def from_path(cls, path_to_dataset_yaml: Path) -> _YoloDatasetConfig:
+    def from_path(cls, path_to_dataset_yaml: Path) -> Self:
         """Creates a _YoloDatasetConfig object by reading data from a yaml file.
 
         Args:
@@ -404,7 +302,7 @@ class _YoloDatasetConfig(BaseModel):
         with open(path_to_dataset_yaml, "r") as f:
             data: dict[str, Any] = yaml.safe_load(f)
 
-        return _YoloDatasetConfig(raw_yaml_data=data)
+        return cls(raw_yaml_data=data)
 
 
 class _YoloDataset(BaseModel):
@@ -429,7 +327,7 @@ class _YoloDataset(BaseModel):
             "train_labels_path",
             "val_labels_path",
         ]
-        if self.dataset_config._raw_paths["test_images"] is not None:
+        if self.dataset_config._raw_paths.get("test_images") is not None:
             attributes_to_check += [
                 "test_images_path",
                 "test_labels_path",
@@ -449,7 +347,7 @@ class _YoloDataset(BaseModel):
             if not validation_set_image_path.exists():
                 raise YoloDatasetError(
                     f'The validation set path "images/{validation_set_image_path.name}" is '
-                    f"specified in the YOLO config file, but doesn't exist. (path specified: {path})"
+                    f"specified in the YOLO config file, but doesn't exist. (path specified: {path})"  # pyright: ignore
                 )
 
         for (
@@ -458,7 +356,7 @@ class _YoloDataset(BaseModel):
             if not validation_set_label_path.exists():
                 raise YoloDatasetError(
                     f'The validation set path "labels/{validation_set_label_path.name}" is '
-                    f"specified in the YOLO config file, but doesn't exist. (path specified: {path})"
+                    f"specified in the YOLO config file, but doesn't exist. (path specified: {path})"  # pyright: ignore
                 )
         return self
 
@@ -466,7 +364,7 @@ class _YoloDataset(BaseModel):
     def validate_image_exists_for_all_annotations(self) -> _YoloDataset:
         """Validates that for each"""
         for split, annotations_in_split in self.annotations.items():
-            image_stems_in_split: list[Path] = [i.stem for i in self.images[split]]
+            image_stems_in_split: list[str] = [i.stem for i in self.images[split]]
 
             for ann in annotations_in_split:
                 if ann.stem not in image_stems_in_split:
@@ -478,7 +376,7 @@ class _YoloDataset(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def warn_if_extra_dir_exists_in_images(self) -> _YoloDatasetConfig:
+    def warn_if_extra_dir_exists_in_images(self) -> Self:
         """Warns the user if an extra directory exists in the images folder not accounted for in the config."""
         dirs_accounted_for: set[str] = {"train", "val"} | set(
             self.dataset_config.validation_set_image_paths.keys()
@@ -506,7 +404,7 @@ class _YoloDataset(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def warn_if_extra_dir_exists_in_labels(self) -> _YoloDatasetConfig:
+    def warn_if_extra_dir_exists_in_labels(self) -> Self:
         """Warns the user if an extra directory exists in the labels folder not accounted for in the config."""
         dirs_accounted_for: set[str] = {"train", "val"} | set(
             self.dataset_config.validation_set_label_paths.keys()
@@ -538,7 +436,7 @@ class _YoloDataset(BaseModel):
     def images(self) -> dict[str, list[Path]]:
         """The path to every image in the dataset organized by split."""
         img_extensions: list[str] = [".jpg", ".jpeg", ".png"]
-        folders: dict[str, Path] = {
+        folders: dict[str, Path | None] = {
             "train": self.dataset_config.train_images_path,
             "val": self.dataset_config.val_images_path,
             "test": self.dataset_config.test_images_path,
@@ -547,19 +445,21 @@ class _YoloDataset(BaseModel):
         folders = {k: v for (k, v) in folders.items() if v is not None}
         images: dict[str, list[Path]] = {}
         for split_or_val_set_name, folderpath in folders.items():
+            if folderpath is None:
+                continue
             images_in_folder: list[Path] = [
                 im_path
                 for im_path in folderpath.glob("*")
                 if im_path.suffix.lower() in img_extensions
             ]
-            images[split_or_val_set_name] = images_in_folder
+            images[split_or_val_set_name] = sorted(images_in_folder)
 
         return images
 
     @cached_property
     def annotations(self) -> dict[str, list[Path]]:
         """The path to every annotation txt file in the dataset organized by split."""
-        folders: dict[str, Path] = {
+        folders: dict[str, Path | None] = {
             "train": self.dataset_config.train_labels_path,
             "val": self.dataset_config.val_labels_path,
             "test": self.dataset_config.test_labels_path,
@@ -569,11 +469,14 @@ class _YoloDataset(BaseModel):
 
         annotations: dict[str, list[Path]] = {}
         for split_or_val_set_name, folderpath in folders.items():
+            if folderpath is None:
+                continue
             annotations_in_folder: list[Path] = list(folderpath.glob("*.txt"))
-            annotations[split_or_val_set_name] = annotations_in_folder
+            annotations[split_or_val_set_name] = sorted(annotations_in_folder)
 
         return annotations
 
+    @abstractmethod
     def read_yolo_annotation_file(
         self, path_to_yolo_annotation_file: Path
     ) -> list[Annotation]:
@@ -587,193 +490,14 @@ class _YoloDataset(BaseModel):
             The contents of the yolo annotation file as Annotation objects (Bounding boxes for
             detect datasets and bounding boxes with keypoints for pose datasets).
         """
-        with open(path_to_yolo_annotation_file, "r") as f:
-            lines: list[str] = f.readlines()
-
-        match self.dataset_config.dataset_type:
-            case _YoloDatasetType.DETECT:
-                file_reading_fn: Callable[[list[str]], list[Annotation]] = (
-                    self.read_yolo_detect_file
-                )
-
-            case _YoloDatasetType.POSE:
-                file_reading_fn: Callable[[list[str]], list[Annotation]] = (
-                    self.read_yolo_pose_file
-                )
-
-        try:
-            return file_reading_fn(lines)
-        except YoloDatasetError as yde:
-            raise YoloDatasetError(
-                "An exception has occured while reading file "
-                f"{path_to_yolo_annotation_file.resolve()}.\n"
-                f"{yde}"
-            )
-
-    def read_yolo_detect_file(
-        self, yolo_detect_file_contents: list[str]
-    ) -> list[BoundingBox]:
-        """Reads a YOLO detect formatted annotations file."""
-        bbox_annotations: list[BoundingBox] = []
-        for line_ix, ann_line in enumerate(yolo_detect_file_contents):
-            try:
-                new_ann: BoundingBox = self.read_yolo_detect_annotation(ann_line)
-                bbox_annotations.append(new_ann)
-            except YoloDatasetError as yde:
-                raise YoloDatasetError(
-                    f"An exception has occured while reading line {line_ix + 1}.\n{yde}"
-                )
-
-        return bbox_annotations
-
-    def read_yolo_detect_annotation(self, yolo_detect_annotation_line) -> BoundingBox:
-        """Reads a YOLO detect formatted annotation line."""
-        line_entries: list[str] = yolo_detect_annotation_line.strip().split(" ")
-        if len(line_entries) < 5:
-            raise YoloDatasetError(
-                "Too few entries in detect annotation line. "
-                f"Got {len(line_entries)} when 5 were expected.\n"
-                f"Full line: '{yolo_detect_annotation_line}'."
-            )
-        if len(line_entries) > 5:
-            raise YoloDatasetError(
-                "Too many entries in detect annotation line. "
-                f"Got {len(line_entries)} when 5 were expected.\n"
-                f"Full line: '{yolo_detect_annotation_line}'."
-            )
-
-        class_index: int = int(line_entries[0])
-        x_center: float = float(line_entries[1])
-        y_center: float = float(line_entries[2])
-        width: float = float(line_entries[3])
-        height: float = float(line_entries[4])
-
-        rect: Rectangle = Rectangle.from_center_xywh(x_center, y_center, width, height)
-
-        if rect.left < 0:
-            warnings.warn(
-                f"Annotation left side is out of bounds: {rect}", YoloDatasetWarning
-            )
-        if rect.right > 1:
-            warnings.warn(
-                f"Annotation right side is out of bounds: {rect}", YoloDatasetWarning
-            )
-        if rect.top < 0:
-            warnings.warn(
-                f"Annotation top side is out of bounds: {rect}", YoloDatasetWarning
-            )
-        if rect.bottom > 1:
-            warnings.warn(
-                f"Annotation bottom side is out of bounds: {rect}", YoloDatasetWarning
-            )
-
-        if class_index < 0 or class_index > len(self.dataset_config.names) - 1:
-            raise YoloDatasetError(
-                "Class index is out of range for this dataset.\n"
-                f"Class index read: {class_index}. Number of classes from the config "
-                f"{len(self.dataset_config.names)}."
-            )
-
-        class_name: str = self.dataset_config.names[class_index]
-
-        return BoundingBox(rectangle=rect, category=class_name)
-
-    def read_yolo_pose_file(
-        self, yolo_pose_file_contents: list[str]
-    ) -> list[BoundingBoxWithKeypoints]:
-        """Reads a YOLO pose formatted annotations file."""
-        bbox_w_kpts_annotations: list[BoundingBoxWithKeypoints] = []
-        for line_ix, ann_line in enumerate(yolo_pose_file_contents):
-            try:
-                new_ann: BoundingBoxWithKeypoints = self.read_yolo_pose_annotation(
-                    ann_line
-                )
-                bbox_w_kpts_annotations.append(new_ann)
-            except YoloDatasetError as yde:
-                raise YoloDatasetError(
-                    f"An exception has occured while reading line {line_ix + 1}.\n{yde}"
-                )
-
-        return bbox_w_kpts_annotations
-
-    def read_yolo_pose_annotation(
-        self, yolo_pose_annotation_line: str
-    ) -> BoundingBoxWithKeypoints:
-        """Reads a YOLO pose formatted annotation line."""
-        line_entries: list[str] = yolo_pose_annotation_line.strip().split(" ")
-
-        expected_number_of_line_entries: int = 5 + (
-            self.dataset_config.kpt_shape.num_keypoints
-            * self.dataset_config.kpt_shape.num_dimensions
-        )
-        if len(line_entries) < expected_number_of_line_entries:
-            raise YoloDatasetError(
-                "Too few entries in detect annotation line. "
-                f"Got {len(line_entries)} when 5 were expected.\n"
-                f"Full line: '{yolo_pose_annotation_line}'."
-            )
-        if len(line_entries) > expected_number_of_line_entries:
-            raise YoloDatasetError(
-                "Too many entries in detect annotation line. "
-                f"Got {len(line_entries)} when 5 were expected.\n"
-                f"Full line: '{yolo_pose_annotation_line}'."
-            )
-
-        class_index: int = int(line_entries[0])
-        x_center: float = float(line_entries[1])
-        y_center: float = float(line_entries[2])
-        width: float = float(line_entries[3])
-        height: float = float(line_entries[4])
-
-        bbox: BoundingBox = self.read_yolo_detect_annotation(
-            f"{class_index} {x_center} {y_center} {width} {height}"
-        )
-
-        keypoints: list[Keypoint] = []
-        if self.dataset_config.kpt_shape.num_dimensions == 2:
-            for kpt_ix, (kpt_x, kpt_y) in enumerate(batched(line_entries[5:], 2)):
-                vis_status: VisibilityStatus = VisibilityStatus.VISIBLE
-                kpt_name: str = self.dataset_config.kpt_names[class_index][kpt_ix]
-                keypoint: Keypoint = Keypoint(
-                    point=Point(x=float(kpt_x), y=float(kpt_y)),
-                    category=kpt_name,
-                    visibility=vis_status,
-                )
-                keypoints.append(keypoint)
-
-        else:
-            for kpt_ix, (kpt_x, kpt_y, visibility) in enumerate(
-                batched(line_entries[5:], 3)
-            ):
-                match visibility:
-                    case "0":
-                        vis_status: VisibilityStatus = VisibilityStatus.MISSING
-                    case "1":
-                        vis_status: VisibilityStatus = VisibilityStatus.OCCLUDED
-                    case "2":
-                        vis_status: VisibilityStatus = VisibilityStatus.VISIBLE
-                    case _:
-                        raise YoloDatasetError(
-                            f"Visibility status ({visibility}) for keypoint {kpt_ix} is not in "
-                            "[0, 1, 2]."
-                        )
-                kpt_name: str = self.dataset_config.kpt_names[class_index][kpt_ix]
-                print(f"Keypoint name: {kpt_name}")
-                keypoint: Keypoint = Keypoint(
-                    point=Point(x=float(kpt_x), y=float(kpt_y)),
-                    category=kpt_name,
-                    visibility=vis_status,
-                )
-                keypoints.append(keypoint)
-
-        return BoundingBoxWithKeypoints(bounding_box=bbox, keypoints=keypoints)
 
     @classmethod
+    @abstractmethod
     def from_folderpath(
         cls,
         folderpath: Path,
         yaml_file_name: str = "dataset.yaml",
-    ) -> _YoloDataset:
+    ) -> Self:
         """Creates a _YoloDataset from a folderpath.
 
         Args:
@@ -786,83 +510,11 @@ class _YoloDataset(BaseModel):
         Returns:
             A _YoloDataset pointing to the yolo dataset on disk.
         """
-        dataset_config: _YoloDatasetConfig = _YoloDatasetConfig.from_path(
-            path_to_dataset_yaml=folderpath / yaml_file_name
-        )
-        yolo_dataset: _YoloDataset = _YoloDataset(
-            path_to_dataset=folderpath,
-            dataset_config=dataset_config,
-        )
-        return yolo_dataset
 
+    @abstractmethod
     def read_to_vision_dataset(self) -> VisionDataset:
         """Reads a yolo dataset from disk into a VisionDataset.
 
         Returns:
             A VisionDataset with the contents of the yolo dataset from disk.
         """
-        images: dict[str, dict[ImageId, ImageMetadata]] = {
-            split: {
-                im_path.stem: ImageMetadata(path=im_path)
-                for im_path in split_image_paths
-            }
-            for split, split_image_paths in self.images.items()
-        }
-        annotations: dict[str, dict[ImageId, list[Annotation]]] = {
-            split: {
-                ann_path.stem: self.read_yolo_annotation_file(
-                    path_to_yolo_annotation_file=ann_path
-                )
-                for ann_path in split_annotation_paths
-            }
-            for split, split_annotation_paths in self.annotations.items()
-        }
-
-        annotated_images: list[AnnotatedImage] = []
-        for split, image_id_to_image_metadata_map in images.items():
-            for img_id, image_metadata in image_id_to_image_metadata_map.items():
-                annotated_image: AnnotatedImage = AnnotatedImage(
-                    image=image_metadata,
-                    annotations=annotations[split][img_id],
-                    image_id=img_id,
-                )
-                annotated_images.append(annotated_image)
-
-        splits: dict[str, set[ImageId]] = {
-            split: set(images[split].keys())
-            for split in ("train", "val", "test")
-            if split in images
-        }
-        extra_val_sets: dict[str, set[ImageId]] = {
-            split: set(images[split].keys())
-            for split in sorted(set(images.keys()) - {"train", "val", "test"})
-        }
-
-        return VisionDataset(
-            annotated_images=annotated_images,
-            dataset_metadata={},  # todo: dump the config to a dictionary.
-            splits=splits,
-            evaluation_sets=extra_val_sets,
-        )
-
-
-def read_yolo_dataset(
-    folderpath: Path,
-    yaml_file_name: str = "dataset.yaml",
-) -> VisionDataset:
-    """Reads a YOLO dataset from a path to the dataset's root folder.
-
-    Args:
-        folderpath (Path):
-            The path to the root of the yolo dataset's folder.
-        yaml_file_name (str):
-            The filename of the dataset yaml config file.
-
-    Returns:
-        A VisionDataset containing the contents of the yolo dataset.
-    """
-    yolo_dataset: _YoloDataset = _YoloDataset.from_folderpath(
-        folderpath=folderpath,
-        yaml_file_name=yaml_file_name,
-    )
-    return yolo_dataset.read_to_vision_dataset()
