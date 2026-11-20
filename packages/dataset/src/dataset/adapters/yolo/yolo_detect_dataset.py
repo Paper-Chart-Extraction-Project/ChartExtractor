@@ -130,7 +130,7 @@ class _YoloDetectDataset(_YoloDataset):
         cls,
         folderpath: Path,
         yaml_file_name: str = "dataset.yaml",
-    ) -> _YoloDataset:
+    ) -> _YoloDetectDataset:
         """Creates a _YoloDataset from a folderpath.
 
         Args:
@@ -146,7 +146,7 @@ class _YoloDetectDataset(_YoloDataset):
         dataset_config: _YoloDetectDatasetConfig = _YoloDetectDatasetConfig.from_path(
             path_to_dataset_yaml=folderpath / yaml_file_name
         )
-        yolo_dataset: _YoloDataset = _YoloDetectDataset(
+        yolo_dataset: _YoloDetectDataset = _YoloDetectDataset(
             path_to_dataset=folderpath,
             dataset_config=dataset_config,
         )

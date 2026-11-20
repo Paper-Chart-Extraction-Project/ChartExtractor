@@ -4,8 +4,8 @@ from .exceptions import (
     YoloDatasetError,
     YoloDatasetStructureError,
 )
+from .read_yolo_dataset import read_yolo_dataset
 from .warnings import RelativeDatasetPathWarning, YoloDatasetWarning
-from .yolo_dataset import read_yolo_dataset
 
 __all__: list[str] = [
     "RelativeDatasetPathWarning",

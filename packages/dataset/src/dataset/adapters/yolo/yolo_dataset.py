@@ -518,25 +518,3 @@ class _YoloDataset(BaseModel):
         Returns:
             A VisionDataset with the contents of the yolo dataset from disk.
         """
-
-
-def read_yolo_dataset(
-    folderpath: Path,
-    yaml_file_name: str = "dataset.yaml",
-) -> VisionDataset:
-    """Reads a YOLO dataset from a path to the dataset's root folder.
-
-    Args:
-        folderpath (Path):
-            The path to the root of the yolo dataset's folder.
-        yaml_file_name (str):
-            The filename of the dataset yaml config file.
-
-    Returns:
-        A VisionDataset containing the contents of the yolo dataset.
-    """
-    yolo_dataset: _YoloDataset = _YoloDataset.from_folderpath(
-        folderpath=folderpath,
-        yaml_file_name=yaml_file_name,
-    )
-    return yolo_dataset.read_to_vision_dataset()
