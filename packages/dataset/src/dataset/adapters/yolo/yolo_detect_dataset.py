@@ -10,16 +10,56 @@ from image import ImageMetadata
 
 from dataset import AnnotatedImage, DetectVisionDataset, ImageId, Splits
 
-from .exceptions import YoloDatasetError
+from .exceptions import YoloDatasetConfigError, YoloDatasetError
 from .warnings import YoloDatasetWarning
 from .yolo_dataset import _YoloDataset, _YoloDatasetConfig
 
 
 class _YoloDetectDatasetConfig(_YoloDatasetConfig):
-    """Reads, validates, and stores data from a yolo detect dataset.yaml file.
+    """Reads, validates, and stores data from a yolo detect dataset.yaml file."""
 
-    Identical to the base class, but exists for typing reasons.
-    """
+    @classmethod
+    def create_dataset_yaml_for_detect_vision_dataset(
+        cls,
+        detect_vision_dataset: DetectVisionDataset,
+        output_folderpath: Path,
+        indent: int = 2,
+    ) -> str:
+        """Creates dataset.yaml content as a string for a given detect vision dataset.
+
+        Args:
+            detect_vision_dataset (DetectVisionDataset):
+                The detect dataset to create the dataset yaml for.
+            output_folderpath (Path):
+                The folderpath that will be saved to. Used to fill in the 'path' entry.
+            indent (int):
+                The number of lines to indent.
+
+        Returns:
+            A string containing the data for a dataset.yaml file for a yolo detect dataset.
+        """
+        if not output_folderpath.is_dir():
+            raise YoloDatasetConfigError(
+                f"Output folderpath supplied leads to a file, not a folder: {output_folderpath}."
+            )
+
+        yaml_lines: list[str] = []
+        yaml_lines.append(f"path: {output_folderpath.resolve()}")
+
+        for split_name in detect_vision_dataset.splits:
+            yaml_lines.append(f"{split_name}: images/{split_name}")
+
+        if detect_vision_dataset.evaluation_sets:
+            yaml_lines.append("")
+
+        for eval_set_name in detect_vision_dataset.evaluation_sets:
+            yaml_lines.append(f"{eval_set_name}: images/{eval_set_name}")
+
+        yaml_lines.append("")
+        yaml_lines.append("names:")
+        for name_ix, name in enumerate(detect_vision_dataset.names):
+            yaml_lines.append(" " * indent + f"{name_ix}: {name}")
+        return "\n".join(yaml_lines)
 
 
 class _YoloDetectDataset(_YoloDataset):
@@ -165,7 +205,7 @@ class _YoloDetectDataset(_YoloDataset):
             }
             for split, split_image_paths in self.images.items()
         }
-        annotations: dict[str, dict[ImageId, list[Annotation]]] = {
+        annotations: dict[str, dict[ImageId, list[BoundingBox]]] = {  # pyright: ignore
             split: {
                 ann_path.stem: self.read_yolo_annotation_file(
                     path_to_yolo_annotation_file=ann_path

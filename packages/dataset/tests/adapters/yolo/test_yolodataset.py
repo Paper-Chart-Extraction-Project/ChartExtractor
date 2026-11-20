@@ -9,7 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from dataset.adapters.yolo import YoloDatasetError, YoloDatasetWarning
+from dataset.adapters.yolo import (
+    YoloDatasetError,
+    YoloDatasetWarning,
+)
 from dataset.adapters.yolo.yolo_dataset import (
     _RawYamlData,
     _YoloDataset,

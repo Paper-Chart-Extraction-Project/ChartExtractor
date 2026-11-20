@@ -7,6 +7,7 @@ import pytest
 from core.annotations import BoundingBox
 from core.geometry import Rectangle
 
+from dataset import DetectVisionDataset
 from dataset.adapters.yolo import (
     YoloDatasetConfigError,
     YoloDatasetError,
@@ -168,3 +169,63 @@ class TestYoloDetectDatasetAnnotationReading:
             yolo_detect_dataset.read_yolo_annotation_file(
                 temp_detect_annotation_filepath
             )
+
+
+class TestCreateDatasetYaml:
+    """A collection of tests for the _YoloDetectDatasetConfig's method for creating dataset.yaml data."""
+
+    def test_folderpath_leads_to_file(
+        self,
+        tmp_path: Path,
+        yaml_detect_data: _RawYamlData,
+        detect_vision_dataset: DetectVisionDataset,
+    ):
+        """Tests that the method errors when a filepath is supplied instead of a folderpath."""
+        (tmp_path / "file.txt").touch()
+        ydc: _YoloDetectDatasetConfig = _YoloDetectDatasetConfig(
+            raw_yaml_data=yaml_detect_data
+        )
+        with pytest.raises(YoloDatasetConfigError, match="file, not a folder"):
+            ydc.create_dataset_yaml_for_detect_vision_dataset(
+                detect_vision_dataset, tmp_path / "file.txt"
+            )
+
+    def test_folderpath_leads_to_folder(
+        self,
+        tmp_path: Path,
+        yaml_detect_data: _RawYamlData,
+        detect_vision_dataset: DetectVisionDataset,
+    ):
+        """Tests that the method errors when a folderpath is correctly supplied."""
+        ydc: _YoloDetectDatasetConfig = _YoloDetectDatasetConfig(
+            raw_yaml_data=yaml_detect_data
+        )
+        ydc.create_dataset_yaml_for_detect_vision_dataset(
+            detect_vision_dataset, tmp_path
+        )
+
+    def test_yaml_data(
+        self,
+        tmp_path: Path,
+        yaml_detect_data: _RawYamlData,
+        detect_vision_dataset: DetectVisionDataset,
+    ):
+        """Tests that the dataset yaml data outputted is accurate."""
+        ydc: _YoloDetectDatasetConfig = _YoloDetectDatasetConfig(
+            raw_yaml_data=yaml_detect_data
+        )
+        computed_yaml_data: str = ydc.create_dataset_yaml_for_detect_vision_dataset(
+            detect_vision_dataset, tmp_path
+        )
+        true_yaml_data: str = textwrap.dedent(
+            f"""
+            path: {tmp_path}
+            train: images/train
+            val: images/val
+
+            names:
+              0: a
+              1: b
+            """
+        ).strip("\n")
+        assert computed_yaml_data == true_yaml_data
