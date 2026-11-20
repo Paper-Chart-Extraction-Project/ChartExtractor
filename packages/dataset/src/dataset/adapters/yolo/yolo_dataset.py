@@ -30,7 +30,7 @@ from pydantic import (
 
 from dataset import AnnotatedImage, ImageId, VisionDataset
 
-from .exceptions import YoloDatasetError
+from .exceptions import YoloDatasetConfigError, YoloDatasetError
 from .warnings import YoloDatasetWarning
 
 
@@ -65,11 +65,9 @@ class _YoloDatasetPaths(TypedDict):
 
 
 class _YoloDatasetConfig(BaseModel):
-    """Reads, validates, and stores the data of the yolo dataset.yaml config file.
+    """An abstract base class for readings, validating, and storing data from the yolo dataset.yaml config file.
 
     Attributes:
-        dataset_type (_YoloDatasetType):
-            The type of the yolo dataset (detect or pose).
         training_images_path (Path):
             The folder path to the training images.
         val_images_path (Path):
@@ -107,6 +105,15 @@ class _YoloDatasetConfig(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     raw_yaml_data: _RawYamlData
+    reserved_keys: set[str] = {
+        "path",
+        "train",
+        "val",
+        "test",
+        "names",
+        "kpt_shape",
+        "kpt_names",
+    }
 
     @field_validator("raw_yaml_data", mode="before")
     @classmethod
@@ -127,19 +134,9 @@ class _YoloDatasetConfig(BaseModel):
                 + f"in the yaml file: {', '.join(sorted(keys_that_dont_exist))}."
             )
 
-            raise YoloDatasetError(err_msg)
+            raise YoloDatasetConfigError(err_msg)
 
         return raw_yaml_data
-
-    @model_validator(mode="after")
-    def all_keypoint_keys_exist(self) -> _YoloDatasetConfig:
-        """Ensures all the keypoint keys exist if the config is for a pose dataset."""
-        try:
-            _ = self.dataset_type
-        except KeyError as ke:
-            raise YoloDatasetError(f"Error parsing pose dataset yaml file.\n{ke}")
-
-        return self
 
     @model_validator(mode="after")
     def all_path_parent_dirs_is_image(self) -> _YoloDatasetConfig:
@@ -205,29 +202,6 @@ class _YoloDatasetConfig(BaseModel):
         return cast(_YoloDatasetPaths, yolo_dataset_paths)
 
     @cached_property
-    def dataset_type(self) -> _YoloDatasetType:
-        """Determines and returns the type of the yolo dataset."""
-        keys_in_raw_yaml_data: set[str] = set(self.raw_yaml_data.keys())
-        pose_specific_keys: set[str] = {"kpt_shape", "kpt_names"}
-        pose_specific_keys_in_raw_yaml_data: set[str] = (
-            pose_specific_keys & keys_in_raw_yaml_data
-        )
-
-        match sorted(pose_specific_keys_in_raw_yaml_data):
-            case ["kpt_names", "kpt_shape"]:
-                return _YoloDatasetType.POSE
-            case ["kpt_names"]:
-                raise KeyError(
-                    "Yaml data contained a value for 'kpt_names' but not 'kpt_shape'."
-                )
-            case ["kpt_shape"]:
-                raise KeyError(
-                    "Yaml data contained a value for 'kpt_shape' but not 'kpt_names'."
-                )
-            case _:
-                return _YoloDatasetType.DETECT
-
-    @cached_property
     def train_images_path(self) -> Path:
         """The path to the training images directory."""
         train_image_path: Path = self._raw_paths["train_images"]
@@ -266,27 +240,9 @@ class _YoloDatasetConfig(BaseModel):
     @cached_property
     def validation_set_image_paths(self) -> dict[str, Path]:
         """A dictionary of image paths to the extra validation sets."""
-        match self.dataset_type:
-            case _YoloDatasetType.DETECT:
-                reserved_keys: set[str] = {
-                    "path",
-                    "train",
-                    "val",
-                    "test",
-                    "names",
-                }
-            case _YoloDatasetType.POSE:
-                reserved_keys: set[str] = {
-                    "path",
-                    "train",
-                    "val",
-                    "test",
-                    "names",
-                    "kpt_shape",
-                    "kpt_names",
-                }
-
-        validation_set_keys: set[str] = set(self.raw_yaml_data.keys()) - reserved_keys
+        validation_set_keys: set[str] = (
+            set(self.raw_yaml_data.keys()) - self.reserved_keys
+        )
 
         validation_set_img_paths: dict[str, Path] = {}
         for k in validation_set_keys:
@@ -337,53 +293,6 @@ class _YoloDatasetConfig(BaseModel):
             self.raw_yaml_data["names"][sk]
             for sk in sorted(self.raw_yaml_data["names"].keys())
         ]
-
-    @cached_property
-    def kpt_names(self) -> list[list[str]] | None:
-        """A list of the names of keypoints."""
-        if self.dataset_type != _YoloDatasetType.POSE:
-            return None
-        return [
-            self.raw_yaml_data["kpt_names"][sk]
-            for sk in sorted(self.raw_yaml_data["kpt_names"].keys())
-        ]
-
-    @cached_property
-    def kpt_shape(self) -> KeypointShape | None:
-        """A tuple containing the number of keypoints and 'dimensions' of each keypoint."""
-        if self.dataset_type != _YoloDatasetType.POSE:
-            return None
-
-        if len(self.raw_yaml_data["kpt_shape"]) != 2:
-            raise YoloDatasetError(
-                "The shape of the 'kpt_shape' parameter in the yolo config is not 2. "
-                f"Expected [num_keypoints, num_dimensions], got {self.raw_yaml_data['kpt_shape']}."
-            )
-
-        num_keypoints: int = self.raw_yaml_data["kpt_shape"][0]
-        num_dimensions: int = self.raw_yaml_data["kpt_shape"][1]
-
-        if not isinstance(num_keypoints, int):
-            raise YoloDatasetError(
-                f"Expected number of keypoints to be an integer, got {type(num_keypoints)!s}."
-            )
-        if not isinstance(num_dimensions, int):
-            raise YoloDatasetError(
-                "Expected number of keypoint dimensions to be an integer, got "
-                f"{type(num_dimensions)!s}."
-            )
-        if num_dimensions not in [2, 3]:
-            raise YoloDatasetError(
-                f"Expected number of keypoint dimensions is 2 or 3, got {num_dimensions}."
-            )
-
-        if num_keypoints != len(self.kpt_names):
-            raise YoloDatasetError(
-                f"Number of keypoints in kpt_shape ({num_keypoints}) does not equal the number "
-                f"of keypoints indicated by kpt_names ({len(self.kpt_names)})."
-            )
-
-        return KeypointShape(num_keypoints=num_keypoints, num_dimensions=num_dimensions)
 
     @classmethod
     def from_path(cls, path_to_dataset_yaml: Path) -> _YoloDatasetConfig:
