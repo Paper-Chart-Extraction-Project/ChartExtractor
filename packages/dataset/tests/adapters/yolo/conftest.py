@@ -5,7 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from dataset.adapters.yolo.yolo_dataset import _RawYamlData, _YoloDataset
+from dataset.adapters.yolo.yolo_dataset import _RawYamlData
+from dataset.adapters.yolo.yolo_detect_dataset import _YoloDetectDataset
+from dataset.adapters.yolo.yolo_pose_dataset import _YoloPoseDataset
 
 
 @pytest.fixture
@@ -41,7 +43,7 @@ def yaml_pose_data(tmp_path: Path) -> _RawYamlData:
 
 
 @pytest.fixture
-def yolo_detect_dataset(tmp_path: Path) -> _YoloDataset:
+def yolo_detect_dataset(tmp_path: Path) -> _YoloDetectDataset:
     """A dummy detect dataset."""
     dirs_to_create: list[Path] = [
         Path("test_dataset_valid_folder_structure"),
@@ -71,13 +73,13 @@ def yolo_detect_dataset(tmp_path: Path) -> _YoloDataset:
     )
     dataset_yaml.write_text(yaml_data)
 
-    return _YoloDataset.from_folderpath(
+    return _YoloDetectDataset.from_folderpath(
         tmp_path / "test_dataset_valid_folder_structure"
     )
 
 
 @pytest.fixture
-def yolo_pose_dataset_no_vis(tmp_path: Path) -> _YoloDataset:
+def yolo_pose_dataset_no_vis(tmp_path: Path) -> _YoloPoseDataset:
     """A dummy pose dataset."""
     dirs_to_create: list[Path] = [
         Path("test_dataset_valid_folder_structure"),
@@ -117,13 +119,13 @@ def yolo_pose_dataset_no_vis(tmp_path: Path) -> _YoloDataset:
     )
     dataset_yaml.write_text(yaml_data)
 
-    return _YoloDataset.from_folderpath(
+    return _YoloPoseDataset.from_folderpath(
         tmp_path / "test_dataset_valid_folder_structure"
     )
 
 
 @pytest.fixture
-def yolo_pose_dataset_with_vis(tmp_path: Path) -> _YoloDataset:
+def yolo_pose_dataset_with_vis(tmp_path: Path) -> _YoloPoseDataset:
     """A dummy pose dataset."""
     dirs_to_create: list[Path] = [
         Path("test_dataset_valid_folder_structure"),
@@ -163,6 +165,6 @@ def yolo_pose_dataset_with_vis(tmp_path: Path) -> _YoloDataset:
     )
     dataset_yaml.write_text(yaml_data)
 
-    return _YoloDataset.from_folderpath(
+    return _YoloPoseDataset.from_folderpath(
         tmp_path / "test_dataset_valid_folder_structure"
     )
